@@ -422,7 +422,7 @@ export function PlannedHealthScreen({
           disabled={blocked || saving} onPress={() => confirmDelete(editingRecord)} /></View>}
       </View>
     </BottomSheet>
-    <Dialog visible={discardVisible} title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions
+    <Dialog visible={discardVisible} title="Lämna utan att spara?" confirmLabel="Lämna utan att spara" compactActions
       onRequestClose={() => setDiscardVisible(false)} onConfirm={() => { setDiscardVisible(false); resetForm(); }}>
       <MessageCard>Ändringen är inte sparad. Din tidigare plan påverkas inte.</MessageCard>
     </Dialog>

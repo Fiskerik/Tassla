@@ -1,0 +1,709 @@
+{
+  "mode": "review",
+  "panel": "development",
+  "evidence_dir": "docs/design/evidence/development-panel-composition-01/review",
+  "results": [
+    {
+      "check": "Development shows three distinct milestone icon rows at 375px",
+      "result": "PASS",
+      "row_count": 3,
+      "icons_visible": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "check": "Development uses a 24/30 bold title with compact portrait spacing at 375px",
+      "result": "PASS",
+      "title_style": {
+        "fontSize": "24px",
+        "lineHeight": "30px",
+        "fontWeight": "700"
+      },
+      "title_box": {
+        "x": 68,
+        "y": 61,
+        "width": 239,
+        "height": 30
+      },
+      "hero_box": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 225.515625
+      },
+      "gap_pt": 13
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 39.5,
+        "y": 224.9375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 375px",
+      "result": "PASS",
+      "gap_pt": 85.703125,
+      "puppy_range": {
+        "x": 84.296875,
+        "y": 307.515625,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 216.703125,
+        "y": 305.515625,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 29.328125,
+        "y": 244.9375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 375px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 39.5,
+        "y": 224.9375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 375px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 225.515625
+      }
+    },
+    {
+      "check": "Development guide returns directly to Development at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development shows three distinct milestone icon rows at 430px",
+      "result": "PASS",
+      "row_count": 3,
+      "icons_visible": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "check": "Development uses a 24/30 bold title with compact portrait spacing at 430px",
+      "result": "PASS",
+      "title_style": {
+        "fontSize": "24px",
+        "lineHeight": "30px",
+        "fontWeight": "700"
+      },
+      "title_box": {
+        "x": 68,
+        "y": 61,
+        "width": 294,
+        "height": 30
+      },
+      "hero_box": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 263.4375
+      },
+      "gap_pt": 13
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 67,
+        "y": 262.859375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 430px",
+      "result": "PASS",
+      "gap_pt": 85.703125,
+      "puppy_range": {
+        "x": 111.796875,
+        "y": 345.4375,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 244.203125,
+        "y": 343.4375,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 56.828125,
+        "y": 282.859375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 430px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 67,
+        "y": 262.859375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 430px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 263.4375
+      }
+    },
+    {
+      "check": "Development guide returns directly to Development at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development short viewport scrolls with no horizontal overflow at 140% text proxy",
+      "result": "PASS",
+      "horizontal_overflow": false,
+      "scroll_height": 667
+    },
+    {
+      "check": "Last milestone link remains fully reachable above fixed navigation after scrolling",
+      "result": "PASS",
+      "row": {
+        "x": 37,
+        "y": 656.515625,
+        "width": 301,
+        "height": 94
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 751,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Development guide roundtrip restores its own rendered offset",
+      "result": "PASS",
+      "before": {
+        "top": 384,
+        "max": 384,
+        "client": 562,
+        "scroll": 946
+      },
+      "after": {
+        "top": 384,
+        "max": 384,
+        "client": 562,
+        "scroll": 946
+      }
+    },
+    {
+      "check": "Development return restores the separate Home offset",
+      "result": "PASS",
+      "before": {
+        "top": 60,
+        "max": 157,
+        "client": 562,
+        "scroll": 719
+      },
+      "after": {
+        "top": 60,
+        "max": 157,
+        "client": 562,
+        "scroll": 719
+      }
+    },
+    {
+      "check": "Checklist return preserves the Home flow offset",
+      "result": "PASS",
+      "before": {
+        "top": 60,
+        "max": 157,
+        "client": 562,
+        "scroll": 719
+      },
+      "after": {
+        "top": 60,
+        "max": 157,
+        "client": 562,
+        "scroll": 719
+      }
+    },
+    {
+      "check": "Home → Checklist restores the third independent route offset",
+      "result": "PASS",
+      "before": {
+        "top": 59,
+        "max": 59,
+        "client": 562,
+        "scroll": 621
+      },
+      "after": {
+        "top": 59,
+        "max": 59,
+        "client": 562,
+        "scroll": 621
+      }
+    },
+    {
+      "check": "Leaving the Home child flow for non-preserved Training clears the old Home scroll offset",
+      "result": "PASS",
+      "after_flow_exit": {
+        "top": 0,
+        "max": 157,
+        "client": 562,
+        "scroll": 719
+      }
+    },
+    {
+      "check": "Account, dog, breed, exact DOB, age and review-scope changes clear route offsets before reuse",
+      "result": "PASS",
+      "scopes": [
+        {
+          "dimension": "account",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "account-generation",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "dog-id",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "breed",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "exact-birth-date",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "derived-age",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        },
+        {
+          "dimension": "review-public",
+          "state": {
+            "top": 0,
+            "max": 384,
+            "client": 562,
+            "scroll": 946
+          }
+        }
+      ]
+    },
+    {
+      "check": "Development phase ranges and age pill remain readable with the 140% text layout proxy",
+      "result": "PASS",
+      "no_document_overflow": true,
+      "phase_range_within_screen": true,
+      "range_right": 216.109375,
+      "hero_right": 351,
+      "age_label_single_line": true,
+      "age_label_height": 22.40625
+    },
+    {
+      "check": "Development remains scrollable at 140% with content above the bottom menu",
+      "result": "PASS",
+      "content": {
+        "x": 24,
+        "y": 396.90625,
+        "width": 327,
+        "height": 153.1875
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 606,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Development guide loading state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide retry invokes the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide error state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development missing birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development invalid birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development future birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "early age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 5.195193741083216 53.4427755198343",
+        "length": 6.699926853179932
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        5.195193741083216,
+        53.4427755198343
+      ],
+      "marker_center_in_arc": [
+        5.203125,
+        53.4375
+      ],
+      "endpoint_error_pt": 0.007931258916784145
+    },
+    {
+      "check": "normal age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 11.812896716272121 43.429416701750284",
+        "length": 18.790517807006836
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        11.812896716272121,
+        43.429416701750284
+      ],
+      "marker_center_in_arc": [
+        11.8125,
+        43.421875
+      ],
+      "endpoint_error_pt": 0.007541701750284346
+    },
+    {
+      "check": "Age label remains a 44pt control at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 39.5,
+        "y": 224.9375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Age progress remains visible when the age label is hidden and restored at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "midpoint age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 148 9",
+        "length": 162.015380859375
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        148,
+        9
+      ],
+      "marker_center_in_arc": [
+        148.0,
+        9.0
+      ],
+      "endpoint_error_pt": 0.0
+    },
+    {
+      "check": "early age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 5.195193741083216 53.4427755198343",
+        "length": 6.699926853179932
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        5.195193741083216,
+        53.4427755198343
+      ],
+      "marker_center_in_arc": [
+        5.203125,
+        53.4375
+      ],
+      "endpoint_error_pt": 0.007931258916784145
+    },
+    {
+      "check": "normal age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 11.812896716272121 43.429416701750284",
+        "length": 18.790517807006836
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        11.812896716272121,
+        43.429416701750284
+      ],
+      "marker_center_in_arc": [
+        11.8125,
+        43.421875
+      ],
+      "endpoint_error_pt": 0.007541701750284346
+    },
+    {
+      "check": "Age label remains a 44pt control at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 67,
+        "y": 262.859375,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Age progress remains visible when the age label is hidden and restored at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "midpoint age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "linecap": "round",
+        "d": "M 4 60 A 144 51 0 0 1 148 9",
+        "length": 162.015380859375
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 60 A 144 51 0 0 1 292 60"
+      },
+      "progress_endpoint": [
+        148,
+        9
+      ],
+      "marker_center_in_arc": [
+        148.0,
+        9.0
+      ],
+      "endpoint_error_pt": 0.0
+    },
+    {
+      "check": "Age arc length increases monotonically from early puppy to normal puppy to midpoint",
+      "result": "PASS",
+      "lengths": {
+        "early": 6.699926853179932,
+        "normal": 18.790517807006836,
+        "midpoint": 162.015380859375
+      }
+    },
+    {
+      "check": "adult age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "adult age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 375px",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 207,
+        "height": 46
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "14px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action wraps without portrait overlap at the 140% text proxy",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 207,
+        "height": 62
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 430px",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 211.46875,
+        "height": 44
+      },
+      "portrait": {
+        "x": 294,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "14px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 430px",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

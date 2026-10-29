@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
+import type { PublishedFaq } from '../../data/workspace-data';
 import { MessageCard, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import { AppBar, Card, SectionHeader, Skeleton } from '../../components/ui';
 import { tokens } from '../../theme/tokens';
@@ -27,6 +28,9 @@ export function KnowledgeScreen({
   onBack,
   items = [],
   contentState = 'ready',
+  faqItems = [],
+  faqState = 'loading',
+  onRetryFaq = () => undefined,
   focusedContentId = null,
   onSelectContent = () => undefined,
   onRetry = () => undefined,
@@ -45,6 +49,9 @@ export function KnowledgeScreen({
   returnToDevelopment?: boolean;
   items?: readonly HomeContent[];
   contentState?: ContentState;
+  faqItems?: readonly PublishedFaq[];
+  faqState?: ContentState;
+  onRetryFaq?: () => void;
   focusedContentId?: string | null;
   onSelectContent?: (id: string | null) => void;
   onRetry?: () => void;
@@ -211,7 +218,8 @@ export function KnowledgeScreen({
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && hasSearchQuery && displayedItems.length > 0
         ? <Text style={styles.searchCount} accessibilityLiveRegion="polite">{displayedItems.length === 1 ? '1 träff' : `${displayedItems.length} träffar`}</Text>
         : null}
-      {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={reviewEnabled} /> : null}
+      {tab === 'FAQ' && !selectedItem ? <FAQScreen context="by_age" reviewEnabled={reviewEnabled} items={faqItems}
+        state={faqState} onRetry={onRetryFaq} onOpenSource={openSource} sourceMessage={sourceMessage} /> : null}
 
       {showGuideScreen && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && displayedItems.length > 0 ? <View style={styles.guideList}>
         {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}
@@ -248,20 +256,18 @@ export function KnowledgeScreen({
             return <Text key={`${selectedItem.id}:paragraph:${index}`} style={[styles.bodyParagraph, index === introductionIndex && styles.articleIntro]}>{block.text}</Text>;
           })}
         </View>
-        {selectedItem.sources.length > 0 ? <>
-        <Text style={styles.sourcesHeading} accessibilityRole="header">Källor</Text>
-        {selectedItem.sources.map((source, index) => {
-          const safeUrl = getSafeContentSourceUrl(source);
-          return <View key={`${selectedItem.id}:${index}`} style={styles.sourceRow}>
-            {iconsLoaded && <Ionicons name={safeUrl ? 'link-outline' : 'document-text-outline'} size={tokens.size.iconSm} color={tokens.colors.primary} />}
-            <View style={styles.sourceCopy}>
-              <Text style={styles.sourceText}>{source}</Text>
-              {safeUrl && <QuietButton title="Öppna extern källa" onPress={() => { void openSource(source); }} />}
-            </View>
-          </View>;
-        })}
-        </> : null}
-        {sourceMessage !== '' && <MessageCard>{sourceMessage}</MessageCard>}
+        {selectedItem.sources.length > 0 ? <View style={styles.articleReferences} testID="article-references">
+          {selectedItem.sources.map((source, index) => {
+            const safeUrl = getSafeContentSourceUrl(source);
+            if (!safeUrl) return <Text key={`${selectedItem.id}:${index}`} style={styles.sourceFallback}>{`${index + 1}) ${source}`}</Text>;
+            return <Pressable key={`${selectedItem.id}:${index}`} accessibilityRole="link"
+              accessibilityLabel={`Öppna källa ${index + 1}: ${new URL(safeUrl).hostname}`}
+              style={styles.sourceReference} onPress={() => { void openSource(source); }}>
+              <Text style={styles.sourceReferenceText}>{index + 1})</Text>
+            </Pressable>;
+          })}
+        </View> : null}
+        {sourceMessage !== '' && <Text accessibilityLiveRegion="polite" style={styles.sourceMessage}>{sourceMessage}</Text>}
         </View>
       </View> : null}
 
@@ -357,10 +363,11 @@ const styles = StyleSheet.create({
   bodyParagraph: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm, textAlign: 'left' },
   bodyList: { marginTop: tokens.spacing.sm, alignItems: 'flex-start' },
   bodyListItem: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
-  sourcesHeading: { ...tokens.typography.label, color: tokens.colors.primary, marginTop: tokens.spacing.xl, marginBottom: tokens.spacing.sm },
-  sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm, borderTopWidth: tokens.size.stroke, borderTopColor: tokens.colors.border, paddingVertical: tokens.spacing.md },
-  sourceCopy: { flex: 1, gap: tokens.spacing.xs },
-  sourceText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  articleReferences: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 0 },
+  sourceReference: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  sourceReferenceText: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
+  sourceFallback: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginRight: tokens.spacing.sm },
+  sourceMessage: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   relatedSection: { marginTop: tokens.spacing.xl, gap: tokens.spacing.sm },
   relatedHeading: { ...tokens.typography.heading, color: tokens.colors.primary, textAlign: 'left' },
   relatedScroll: { marginHorizontal: -tokens.layout.pageInset },

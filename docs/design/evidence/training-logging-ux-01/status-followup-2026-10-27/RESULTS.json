@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-27",
+  "fixture": "synthetic review; confirmed active journey",
+  "viewport": "375x844",
+  "render": "render.png",
+  "comparison": "panel-6-comparison.png",
+  "behavior": {
+    "active": "PASS: no pause or maintenance action; active exercise can be opened",
+    "paused": "PASS: offers 'Fortsätt med nästa övning'; no pause or maintenance action"
+  },
+  "visual_critic": "PASS for the requested action-row change; screenshot review only, not full panel acceptance",
+  "limitations": [
+    "Synthetic React Native Web evidence; not native iOS or live data/RLS verification",
+    "The full legacy verify-flow-training.py stopped at its post-reset start-button expectation; this path was not part of the requested resumption/action-row change"
+  ]
+}

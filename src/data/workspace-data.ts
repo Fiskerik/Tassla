@@ -6,6 +6,7 @@ import { isCanonicalAccidentKinds, LOG_EVENT_TYPES, type AccidentKind, type LogE
 import { dedupeLocalDateMarkers, localMonthRange } from '../features/puppy-log/log-calendar-model';
 import type { HomeContent, OwnedDog } from './app-data';
 import type { InsightsPeriod } from '../features/puppy-log/insights-model';
+import { isChecklistContext, type ChecklistContext } from '../features/knowledge/checklist-model';
 import {
   emptyTrainingProgression,
   isTrainingProgressionResult,
@@ -353,6 +354,31 @@ interface PublishedVersionRow {
   content_breed_targets: { breed_id: string }[];
 }
 
+export interface PublishedFaq {
+  id: string;
+  contentId: string;
+  version: number;
+  slug: string;
+  context: ChecklistContext;
+  question: string;
+  answer: string;
+  sources: string[];
+  isAiGenerated: boolean;
+}
+
+interface PublishedFaqRow {
+  id: string;
+  content_id: string;
+  version: number;
+  status: string;
+  title: string;
+  body: string;
+  context: unknown;
+  sources: unknown;
+  is_ai_generated: unknown;
+  content_items: { slug: string; content_type: string };
+}
+
 interface ProgressRow {
   dog_id: string;
   program_version_id: string;
@@ -386,24 +412,41 @@ export async function withRequestDeadline<T>(
   }
 }
 
+export type DogEventCursor = { occurredAt: string; id: string };
+
+/** Keep the raw Postgres timestamp: Date would truncate its microseconds. */
+export function dogEventCursor(row: Pick<DogEventRecord, 'occurred_at' | 'id'>): DogEventCursor {
+  const timestamp = row.occurred_at;
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}(?::?\d{2})?)$/.test(timestamp)
+    || !Number.isFinite(Date.parse(timestamp)) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)) {
+    throw new Error('Invalid log pagination cursor');
+  }
+  return { occurredAt: timestamp, id: row.id };
+}
+
 export async function fetchDogEvents(
   client: SupabaseClient,
   dogId: string,
-  offset = 0,
+  cursor: DogEventCursor | null = null,
   limit = WORKSPACE_PAGE_SIZE,
   timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   parentSignal?: AbortSignal,
 ): Promise<DogEventRecord[]> {
   return withRequestDeadline(async (signal) => {
-    const { data, error } = await client.from('dog_events')
+    let query = client.from('dog_events')
       .select(EVENT_COLUMNS)
       .eq('dog_id', dogId)
-      .in('event_type', [...LOG_EVENT_TYPES])
+      .in('event_type', [...LOG_EVENT_TYPES]);
+    if (cursor !== null) {
+      const safe = dogEventCursor({ occurred_at: cursor.occurredAt, id: cursor.id });
+      query = query.or(`occurred_at.lt."${safe.occurredAt}",and(occurred_at.eq."${safe.occurredAt}",id.lt.${safe.id})`);
+    }
+    const { data, error } = await query
       .order('occurred_at', { ascending: false })
       .order('id', { ascending: false })
-      .range(offset, offset + limit - 1)
+      .limit(limit)
       .abortSignal(signal);
-    if (error || !Array.isArray(data) || !data.every(isDogEventRecord)) throw new Error('Could not load dog events');
+    if (error || !Array.isArray(data) || !data.every((row) => isDogEventRecord(row) && row.dog_id === dogId)) throw new Error('Could not load dog events');
     return data;
   }, timeoutMs, parentSignal);
 }
@@ -1126,6 +1169,36 @@ export async function fetchPublishedContentVersions(
   }, timeoutMs, parentSignal);
 }
 
+/** Read only published FAQ versions; FAQ data never enters HomeContent. */
+export async function fetchPublishedFaqs(
+  client: SupabaseClient,
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  parentSignal?: AbortSignal,
+): Promise<PublishedFaq[]> {
+  return withRequestDeadline(async (signal) => {
+    const { data, error } = await client.from('content_versions')
+      .select('id,content_id,version,status,title,body,context,sources,is_ai_generated,content_items!inner(slug,content_type)')
+      .eq('status', 'published')
+      .eq('content_items.content_type', 'faq')
+      .setHeader('X-Client-Info', 'tassla-faq/1')
+      .abortSignal(signal);
+    const rows: unknown = data;
+    if (error || !Array.isArray(rows) || !rows.every(isPublishedFaqRow)) throw new Error('Could not load published FAQs');
+    const slugs = new Set<string>();
+    const ids = new Set<string>();
+    return (rows as PublishedFaqRow[]).map((row) => {
+      if (slugs.has(row.content_items.slug) || ids.has(row.id)) throw new Error('Duplicate published FAQ identity');
+      slugs.add(row.content_items.slug);
+      ids.add(row.id);
+      return {
+        id: row.id, contentId: row.content_id, version: row.version, slug: row.content_items.slug,
+        context: row.context as ChecklistContext, question: row.title, answer: row.body,
+        sources: row.sources as string[], isAiGenerated: row.is_ai_generated as boolean,
+      };
+    });
+  }, timeoutMs, parentSignal);
+}
+
 /** Complete published library with recommendation flags; filters never gate reading. */
 export async function fetchKnowledgeContent(
   client: SupabaseClient, dog: OwnedDog, ageWeeks: number | null,
@@ -1329,19 +1402,22 @@ export async function applyTrainingProgressionOperation(
   let failure: unknown = null;
   let result: TrainingProgressionResult | null = null;
   try {
-    const response = await withRequestDeadline(async (signal) => await client.rpc('apply_training_operation', {
-      p_dog_id: dogId,
-      p_program_version_id: action.programVersionId,
-      p_operation_id: operationId,
-      p_action: action.kind,
-      p_step_id: 'stepId' in action ? action.stepId : null,
-      p_feedback: action.kind === 'record_session' ? action.feedback : null,
-    }).abortSignal(signal), timeoutMs);
+    const response = await withRequestDeadline(async (signal) => action.kind === 'undo_step'
+      ? await client.rpc('undo_training_milestone', {
+        p_dog_id: dogId, p_program_version_id: action.programVersionId, p_operation_id: operationId,
+        p_step_id: action.stepId, p_expected_milestone_id: action.expectedMilestoneId,
+      }).abortSignal(signal)
+      : await client.rpc('apply_training_operation', {
+        p_dog_id: dogId, p_program_version_id: action.programVersionId, p_operation_id: operationId,
+        p_action: action.kind, p_step_id: 'stepId' in action ? action.stepId : null,
+        p_feedback: action.kind === 'record_session' ? action.feedback : null,
+      }).abortSignal(signal), timeoutMs);
     if (!response.error && isTrainingProgressionResult(response.data)
       && response.data.operation_id === operationId
       && response.data.dog_id === dogId
       && response.data.program_version_id === action.programVersionId
-      && response.data.action === action.kind) {
+      && response.data.action === action.kind
+      && (action.kind !== 'undo_step' || (response.data.milestone_id === action.expectedMilestoneId && response.data.active_step_id === action.stepId))) {
       result = response.data;
     } else {
       failure = response.error ?? new Error('Training operation response did not match the request');
@@ -1569,6 +1645,25 @@ function isPublishedVersionRow(value: unknown): value is PublishedVersionRow {
     && typeof (parent as Record<string, unknown>).content_type === 'string'
     && Array.isArray(targets) && targets.every((target) => Boolean(target) && typeof target === 'object'
       && typeof (target as Record<string, unknown>).breed_id === 'string');
+}
+
+function isPublishedFaqRow(value: unknown): value is PublishedFaqRow {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Record<string, unknown>;
+  const parent = row.content_items;
+  return typeof row.id === 'string' && typeof row.content_id === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.content_id)
+    && typeof row.version === 'number' && Number.isInteger(row.version) && row.version > 0
+    && row.status === 'published' && typeof row.title === 'string' && row.title.trim().length > 0
+    && typeof row.body === 'string' && row.body.trim().length > 0
+    && isChecklistContext(row.context)
+    && Array.isArray(row.sources) && row.sources.every((source) => typeof source === 'string')
+    && typeof row.is_ai_generated === 'boolean'
+    && Boolean(parent) && typeof parent === 'object' && !Array.isArray(parent)
+    && typeof (parent as Record<string, unknown>).slug === 'string'
+    && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test((parent as Record<string, unknown>).slug as string)
+    && (parent as Record<string, unknown>).content_type === 'faq';
 }
 
 function isProgressRow(value: unknown): value is ProgressRow {

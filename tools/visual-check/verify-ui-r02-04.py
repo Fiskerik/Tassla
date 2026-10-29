@@ -217,7 +217,7 @@ with sync_playwright() as playwright:
 
     open_screen("reminders")
     master = page.get_by_role("checkbox", name="Tillåt Tasslas påminnelser på den här enheten")
-    training = page.get_by_role("checkbox", name="Lägg till en frivillig träningspåminnelse")
+    training = page.get_by_role("checkbox", name="Påminn om träning")
     master_unchecked_color = master.evaluate("element => getComputedStyle(element.querySelector('div')).backgroundColor")
     master.click()
     master_checked_color = master.evaluate("element => getComputedStyle(element.querySelector('div')).backgroundColor")
@@ -242,7 +242,7 @@ with sync_playwright() as playwright:
 
     page.goto(f"{base}?screen=reminders&save=failed")
     page.wait_for_timeout(250)
-    failed_training = page.get_by_role("checkbox", name="Lägg till en frivillig träningspåminnelse")
+    failed_training = page.get_by_role("checkbox", name="Påminn om träning")
     failed_master = page.get_by_role("checkbox", name="Tillåt Tasslas påminnelser på den här enheten")
     failed_initial_color = failed_master.evaluate("element => getComputedStyle(element.querySelector('div')).backgroundColor")
     failed_training.click()

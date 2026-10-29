@@ -119,7 +119,7 @@ function fullCalendarYears(start: string, end: string): number {
   return years;
 }
 
-function addMonthsClamped(date: string, monthOffset: number): string {
+export function addMonthsClamped(date: string, monthOffset: number): string {
   const original = new Date(parseDate(date));
   const monthIndex = original.getUTCFullYear() * 12 + original.getUTCMonth() + monthOffset;
   const year = Math.floor(monthIndex / 12);

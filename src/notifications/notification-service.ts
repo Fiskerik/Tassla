@@ -7,6 +7,7 @@ import {
   MAX_HEALTH_REMINDERS,
   REMINDER_FEATURE,
   createNextTrainingFireTime,
+  nextPhaseFireTime,
   createLocalFireTime,
   isNotificationPreferences,
   isUuid,
@@ -14,6 +15,7 @@ import {
   planReminderPayload,
   reminderLogicalKey,
   trainingReminderPayload,
+  otherReminderPayload,
   type NotificationPreferences,
   type ReminderPayload,
 } from './notification-model';
@@ -65,6 +67,7 @@ export interface ReminderReconcileInput extends ReminderContext {
   now: Date;
   overCap?: boolean;
   blockedPlanIds?: ReadonlySet<string>;
+  birthDate?: string | null;
 }
 
 function isGranted(permission: Notifications.NotificationPermissionsStatus): boolean {
@@ -104,7 +107,7 @@ function nativeTrigger(fireAt: Date): Notifications.NotificationTriggerInput {
 function asData(payload: ReminderPayload): Record<string, unknown> {
   return payload.target === 'health'
     ? { feature: REMINDER_FEATURE, ownerId: payload.ownerId, dogId: payload.dogId, target: 'health', planId: payload.planId }
-    : { feature: REMINDER_FEATURE, ownerId: payload.ownerId, dogId: payload.dogId, target: 'training' };
+    : { feature: REMINDER_FEATURE, ownerId: payload.ownerId, dogId: payload.dogId, target: payload.target };
 }
 function isOwnedBy(request: Notifications.NotificationRequest, ownerId: string): ReminderPayload | null {
   const payload = parseReminderPayload(request.content.data);
@@ -264,6 +267,18 @@ export class ReminderService {
       if (input.preferences.trainingEnabled) {
         const local = createNextTrainingFireTime(input.preferences.trainingMinutes, input.now);
         const payload = trainingReminderPayload(input.ownerId, input.dogId);
+        const key = payload && reminderLogicalKey(payload);
+        if (local.status === 'scheduled' && payload && key) desired.set(key, { payload, fireAt: local.date });
+      }
+      if (input.preferences.routineEnabled && input.preferences.routineMinutes !== undefined) {
+        const local = createNextTrainingFireTime(input.preferences.routineMinutes, input.now);
+        const payload = otherReminderPayload(input.ownerId, input.dogId, 'routine');
+        const key = payload && reminderLogicalKey(payload);
+        if (local.status === 'scheduled' && payload && key) desired.set(key, { payload, fireAt: local.date });
+      }
+      if (input.preferences.phaseEnabled) {
+        const local = nextPhaseFireTime(input.birthDate, input.now);
+        const payload = otherReminderPayload(input.ownerId, input.dogId, 'phase');
         const key = payload && reminderLogicalKey(payload);
         if (local.status === 'scheduled' && payload && key) desired.set(key, { payload, fireAt: local.date });
       }

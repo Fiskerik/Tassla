@@ -12,10 +12,13 @@ export type AnalyticsService = {
 /** Product analytics is best effort. RPCs enforce consent and the allowlist again on the server. */
 export function createAnalyticsService(rpc: AnalyticsRpc): AnalyticsService {
   let consent: boolean | null = null;
+  let consentGeneration = 0;
   return {
     async getConsent() {
+      const generation = ++consentGeneration;
       try {
         const result = await rpc('get_beta_metrics_consent');
+        if (generation !== consentGeneration) return null;
         if (result.error) {
           consent = null;
           return null;
@@ -23,14 +26,16 @@ export function createAnalyticsService(rpc: AnalyticsRpc): AnalyticsService {
         consent = result.data === true;
         return consent;
       } catch {
-        consent = null;
+        if (generation === consentGeneration) consent = null;
         return null;
       }
     },
     async setConsent(enabled) {
+      const generation = ++consentGeneration;
       if (!enabled) consent = false;
       try {
         const result = await rpc('set_beta_metrics_consent', { p_enabled: enabled });
+        if (generation !== consentGeneration) return false;
         if (result.error || result.data !== true) return false;
         consent = enabled;
         return true;

@@ -8,20 +8,24 @@ test('motion durations live in tokens and stay within the approved range', () =>
   const tokens = read('src/theme/tokens.ts');
   const motionBlock = tokens.match(/motion:\s*\{([^}]+)\}/)?.[1];
   assert.ok(motionBlock, 'motion tokens are present');
-  const durations = [...motionBlock.matchAll(/(press|enter|release|progress|toastEnter|toastExit|check):\s*(\d+)/g)].map((match) => Number(match[2]));
-  assert.ok(durations.length >= 7);
+  const durations = [...motionBlock.matchAll(/(press|enter|mainTabEnter|release|progress|toastEnter|toastExit|check):\s*(\d+)/g)].map((match) => Number(match[2]));
+  assert.ok(durations.length >= 8);
   for (const duration of durations) assert.ok(duration >= 120 && duration <= 350, `${duration}ms is outside 120–350ms`);
 });
 
-test('ScreenTransition skips mount motion and accepts an explicit directional distance', () => {
+test('ScreenTransition skips mount motion and accepts an explicit duration, direction, distance and light fade', () => {
   const motion = read('src/components/ui/Motion.tsx');
   assert.match(motion, /distance = tokens\.motion\.distance/);
-  assert.match(motion, /distance\?: number/);
+  assert.match(motion, /duration = tokens\.motion\.enter, opacityFrom = 0/);
+  assert.match(motion, /distance\?: number; duration\?: number; opacityFrom\?: number/);
   assert.match(motion, /const previousTransitionKey = useRef\(transitionKey\)/);
   assert.match(motion, /const keyChanged = previousTransitionKey\.current !== transitionKey/);
   assert.match(motion, /if \(!keyChanged \|\| reduced\) \{ progress\.setValue\(1\); return; \}/);
   assert.match(motion, /progress\.stopAnimation\(\)/);
+  assert.match(motion, /duration, easing: Easing\.out\(Easing\.cubic\), useNativeDriver: true/);
   assert.match(motion, /outputRange: \[shift, 0\]/);
+  assert.match(motion, /outputRange: \[opacityFrom, 1\]/);
+  assert.match(motion, /const opacity = reduced \? 1/);
 });
 
 test('animated feedback uses the shared reduced-motion hook and native driver except progress width', () => {

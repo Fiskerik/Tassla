@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFonts } from 'expo-font';
 import * as ExpoCrypto from 'expo-crypto';
 import * as Notifications from 'expo-notifications';
+import { progressionAnalyticsEvent } from '../../analytics/training-progression-events';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppScreen, MessageCard, PageHeading, PrimaryButton, QuietButton } from '../../components/AppPrimitives';
 import {
@@ -14,6 +15,7 @@ import {
   deleteTrainingProgress,
   fetchDogEventById,
   fetchDogEvents,
+  dogEventCursor,
   fetchDogEventInsights,
   fetchDogLogMonthMarkers,
   fetchHealthWeightById,
@@ -27,6 +29,7 @@ import {
   fetchPlannedHealthChecklistRange,
   fetchExactPublishedTrainingStep,
   fetchKnowledgeContent,
+  fetchPublishedFaqs,
   fetchTrainingWorkspace,
   fetchExactHistoricalTrainingSources,
   applyTrainingProgressionOperation,
@@ -52,6 +55,7 @@ import {
   type DogEventOperation,
   type DogEventChanges,
   type DogEventRecord,
+  type DogEventCursor,
   type HealthWeightChanges,
   type HealthWeightOperation,
   type HealthWeightRecord,
@@ -64,6 +68,7 @@ import {
   type PlannedHealthRecord,
   type PlannedHealthType,
   type PublishedTrainingProgram,
+  type PublishedFaq,
   type HistoricalTrainingSource,
   type HistoricalTrainingStepDetail,
   type WriteOutcome,
@@ -93,6 +98,7 @@ import {
   type DailyActivityRangeSnapshot,
   type DailyRoutine,
   type DailyRoutineCreateInput,
+  type DailyRoutineDay,
   type DailyRoutineDayDraft,
   type DailyRoutineWriteResult,
   type DailyTrainingSelection,
@@ -115,6 +121,7 @@ import {
   type OwnedDogProfileChanges,
 } from '../../data/app-data';
 import { localDate } from '../onboarding/dog';
+import { latestTrainingReflection } from './home-reflection';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
@@ -129,6 +136,7 @@ import { checklistMemoryScope, keepChecklistMemoryForScope, updateChecklistMemor
 import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCacheForScope } from '../knowledge/checklist-data';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
+import { selectNextHomeTraining } from './home-training-suggestion';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
@@ -189,7 +197,7 @@ type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChan
 const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 
-function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[]): DogEventRecord[] {
+function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[], pinnedIds: ReadonlySet<string> = new Set()): DogEventRecord[] {
   const baselineById = new Map(baseline.map((row) => [row.id, row]));
   const currentById = new Map(current.map((row) => [row.id, row]));
   const deletedLocally = new Set(baseline.filter((row) => !currentById.has(row.id)).map((row) => row.id));
@@ -197,6 +205,9 @@ function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: rea
   const merged = new Map<string, DogEventRecord>();
   for (const row of fetched) {
     if (!deletedLocally.has(row.id)) merged.set(row.id, changedLocally.get(row.id) ?? row);
+  }
+  for (const row of current) {
+    if (pinnedIds.has(row.id) && !merged.has(row.id)) merged.set(row.id, row);
   }
   for (const row of changedLocally.values()) merged.set(row.id, row);
   return [...merged.values()].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
@@ -316,6 +327,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [content, setContent] = useState<HomeContent[]>([]);
   const [contentState, setContentState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [contentSelectionKey, setContentSelectionKey] = useState<string | null>(null);
+  const [faqRead, setFaqRead] = useState<{ selectionKey: string; state: 'loading' | 'ready' | 'error'; items: PublishedFaq[] } | null>(null);
+  const [faqRetry, setFaqRetry] = useState(0);
   const [knowledgeFocus, setKnowledgeFocus] = useState<{ selectionKey: string; contentId: string | null; returnPage: 'home' | 'more' | 'training' | 'development' } | null>(null);
   const [developmentFocus, setDevelopmentFocus] = useState<{ selectionKey: string } | null>(null);
   const [knowledgeDetailOpen, setKnowledgeDetailOpen] = useState(false);
@@ -475,6 +488,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const logReadFlight = useRef<LogReadFlight | null>(null);
   const logPaginationGeneration = useRef(0);
   const logPaginationFlight = useRef<LogPaginationFlight | null>(null);
+  const logPageCursor = useRef<DogEventCursor | null>(null);
+  const logHasMore = useRef(false);
+  const logPinnedEventIds = useRef(new Set<string>());
+  const logActiveEditorId = useRef<string | null>(null);
+  const [logLoadedThrough, setLogLoadedThrough] = useState<DogEventCursor | null>(null);
   const logCalendarGeneration = useRef(0);
   const logCalendarFlight = useRef<{ key: string; controller: AbortController } | null>(null);
   const healthReadQueue = useRef<Promise<void>>(Promise.resolve());
@@ -482,10 +500,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const plannedHealthReadQueue = useRef<Promise<void>>(Promise.resolve());
   const { signOut, session, accountGeneration, isCurrentAccount, signOutCurrentAccountLocally,
     reportNotificationCleanupFailure, reportDeletedAccountCleanupFailure } = useAuth();
+  const analyticsOwnerId = session?.user.id ?? null;
   const analyticsService = useMemo(() => createAnalyticsService(async (name, args) => {
+    if (!analyticsOwnerId || !isCurrentAccount(analyticsOwnerId, accountGeneration)) return { data: null, error: new Error('Account changed') };
     const result = await client.rpc(name, args as never);
     return { data: result.data, error: result.error };
-  }), [client]);
+  }), [client, analyticsOwnerId, accountGeneration, isCurrentAccount]);
 
   useEffect(() => {
     let active = true;
@@ -504,6 +524,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   useEffect(() => {
     if (page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
+  }, [analyticsConsent, analyticsService, page]);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && page === 'home' && analyticsConsent === true) void analyticsService.track('home_viewed');
+    });
+    return () => subscription.remove();
   }, [analyticsConsent, analyticsService, page]);
   useEffect(() => {
     if (page !== 'home' && page !== 'checklist' && page !== 'training' && !(page === 'log' && logView === 'overview')) return undefined;
@@ -579,6 +605,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setLogRefreshError(false);
         setLogState('loading');
       }
+      logPageCursor.current = null;
+      logHasMore.current = false;
+      logPinnedEventIds.current.clear();
+      logActiveEditorId.current = null;
+      setLogLoadedThrough(null);
       setLogStateLifetime(currentLogLifetime);
     }
     previousLogLifetime.current = currentLogLifetime;
@@ -590,6 +621,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const profileLifetime = useRef('');
   const previousProfileLifetime = useRef('');
   const contentGeneration = useRef(0);
+  const faqGeneration = useRef(0);
   const trainingGeneration = useRef(0);
   const homeToday = localDate();
   // An unknown date has no age-based content selection and must not crash Home.
@@ -694,7 +726,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
   }, [accountGeneration, currentSelectionKey, dog.id, insightsOrigin, page, session?.user.id]);
 
-  const changeLogView = useCallback((next: 'today' | 'overview') => {
+  const changeLogView = useCallback((next: 'today' | 'overview', options?: { preserveEventId?: string }) => {
     if (next === 'overview') {
       if (!insightsOrigin || insightsOrigin.kind !== 'profile') setInsightsOrigin({ kind: 'log' });
       insightsRequestGeneration.current += 1;
@@ -704,13 +736,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setLogView('overview');
       return;
     }
+    if (options?.preserveEventId && logLifetime.current === currentLogLifetime
+      && eventRows.current.some((row) => row.id === options.preserveEventId)) logPinnedEventIds.current.add(options.preserveEventId);
     insightsRequestGeneration.current += 1;
     insightsFlight.current?.controller.abort();
     insightsFlight.current = null;
     setInsightsState({ status: 'loading' });
     setLogView('today');
     if (insightsOrigin?.kind === 'log') setInsightsOrigin(null);
-  }, [insightsOrigin]);
+  }, [currentLogLifetime, insightsOrigin]);
 
   const changeInsightsPeriod = useCallback((period: InsightsPeriod) => {
     if (period === insightsPeriod) return;
@@ -904,6 +938,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   const reloadEvents = useCallback((intent: 'initial' | 'refresh' = 'initial'): Promise<boolean> => {
     const scope = currentLogLifetime;
+    if (intent === 'refresh' && logPaginationFlight.current?.scope === scope) {
+      logPaginationGeneration.current += 1;
+      logPaginationFlight.current.controller.abort();
+      logPaginationFlight.current = null;
+      setLoadingMore(false);
+      setLoadMoreError(false);
+    }
     const existing = logReadFlight.current;
     if (existing?.scope === scope) {
       if (intent === 'refresh') {
@@ -932,15 +973,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
     const isCurrent = () => mounted.current && !controller.signal.aborted
       && logReadGeneration.current === generation && logLifetime.current === scope && logReadFlight.current === flight;
-    const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, 0, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
+    const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, null, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
       if (!isCurrent()) return false;
-      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current);
+      const nextCursor = rows.length ? dogEventCursor(rows[rows.length - 1]) : null;
+      const pinnedIds = new Set(logPinnedEventIds.current);
+      if (logActiveEditorId.current) pinnedIds.add(logActiveEditorId.current);
+      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current, pinnedIds);
+      logPinnedEventIds.current.clear();
+      logPageCursor.current = nextCursor;
+      setLogLoadedThrough(nextCursor);
       eventRows.current = merged;
       setEvents(merged);
       logDataLifetimeRef.current = scope;
       setLogDataLifetime(scope);
       setLogStateLifetime(scope);
-      setHasMore(rows.length === PAGE_SIZE);
+      logHasMore.current = rows.length === PAGE_SIZE;
+      setHasMore(logHasMore.current);
       setLogState('ready');
       setLogRefreshError(false);
       return true;
@@ -964,6 +1012,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     logReadFlight.current = flight;
     return promise;
   }, [client, currentLogLifetime, dog.id, serializeEventRead]);
+
+  const refreshInsightsAndEvents = useCallback(() => {
+    refreshInsights();
+    void reloadEvents('refresh');
+  }, [refreshInsights, reloadEvents]);
+
+  const setActiveLogEditor = useCallback((id: string | null) => {
+    if (logLifetime.current === currentLogLifetime) logActiveEditorId.current = id;
+  }, [currentLogLifetime]);
 
   const serializeHealthRead = useCallback(<T,>(read: () => Promise<T>): Promise<T> => {
     const request = healthReadQueue.current.catch(() => undefined).then(read);
@@ -1028,7 +1085,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         plans = selection.records;
         overCap = selection.overCap;
       }
-      const result = await reminderService.reconcile({ ...context, preferences: notificationPreferences, plans, now, overCap, blockedPlanIds });
+      const result = await reminderService.reconcile({ ...context, preferences: notificationPreferences, plans, now, overCap, blockedPlanIds, birthDate: dog.birth_date });
       if (!mounted.current || !reminderService.isCurrent(context)) return;
       setReminderResult(result);
       if (result.status === 'permission-denied') setNotificationPermission('denied');
@@ -1049,7 +1106,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setNotificationMessage('Påminnelserna kunde inte stämmas av. Försök igen när anslutningen fungerar.');
       setNotificationMessageError(true);
     }
-  }, [client, dog.id, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
+  }, [client, dog.id, dog.birth_date, notificationPreferences, notificationPreferencesReady, plannedHealthBusy, plannedHealthState]);
 
   const reloadTraining = useCallback(async (options: { force?: boolean; supersede?: boolean; publishToDaily?: boolean; deferCommit?: boolean } = {}): Promise<TrainingWorkspaceSnapshot> => {
     const { force = false, supersede = false, publishToDaily = false, deferCommit = false } = options;
@@ -1279,6 +1336,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       if (payload.target === 'training') {
         if (!reminderService.isCurrent(context)) return;
         setPage('training');
+      } else if (payload.target === 'routine' || payload.target === 'phase') {
+        if (!reminderService.isCurrent(context)) return;
+        setPage(payload.target === 'routine' ? 'checklist' : 'development');
       } else {
         const plan = await fetchPlannedHealthById(client, context.dogId, payload.planId!);
         if (!reminderService.isCurrent(context)) return;
@@ -1425,11 +1485,12 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   useEffect(() => {
     if (page !== 'log' || logView !== 'overview') return undefined;
+    const timer = setTimeout(() => { void reloadEvents(logDataLifetimeRef.current === currentLogLifetime ? 'refresh' : 'initial'); }, 0);
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refreshInsights();
+      if (state === 'active') refreshInsightsAndEvents();
     });
-    return () => subscription.remove();
-  }, [logView, page, refreshInsights]);
+    return () => { clearTimeout(timer); subscription.remove(); };
+  }, [currentLogLifetime, logView, page, refreshInsightsAndEvents, reloadEvents]);
 
   useEffect(() => {
     if (page !== 'log' || logView !== 'overview' || logBusy) return undefined;
@@ -1484,6 +1545,22 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
     return () => controller.abort();
   }, [age, client, currentSelectionKey, dog]);
+
+  useEffect(() => {
+    const generation = ++faqGeneration.current;
+    const controller = new AbortController();
+    const isCurrent = () => mounted.current && !controller.signal.aborted
+      && faqGeneration.current === generation && currentSelectionKeyRef.current === currentSelectionKey;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- FAQ read state is scoped to this dog/session selection.
+    setFaqRead({ selectionKey: currentSelectionKey, state: reviewContentEnabled ? 'ready' : 'loading', items: [] });
+    if (reviewContentEnabled) return () => controller.abort();
+    void fetchPublishedFaqs(client, undefined, controller.signal).then((items) => {
+      if (isCurrent()) setFaqRead({ selectionKey: currentSelectionKey, state: 'ready', items });
+    }).catch(() => {
+      if (isCurrent()) setFaqRead({ selectionKey: currentSelectionKey, state: 'error', items: [] });
+    });
+    return () => controller.abort();
+  }, [client, currentSelectionKey, faqRetry]);
 
   useEffect(() => {
     const needsDailyRefresh = page === 'home' || page === 'progress' || page === 'training'
@@ -1659,6 +1736,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [client, currentDailyLifetime, currentPlannedHealthLifetime, currentSelectionKey, dog.id, page, plannedHealthChecklistFocus, plannedHealthChecklistRetry, reloadPlannedHealth, serializePlannedHealthRead]);
 
   const visibleContent = contentSelectionKey === currentSelectionKey ? content : [];
+  const visibleFaqItems = faqRead?.selectionKey === currentSelectionKey ? faqRead.items : [];
+  const visibleFaqState = faqRead?.selectionKey === currentSelectionKey ? faqRead.state : 'loading';
   const visibleHealthWeights = healthWeightDataLifetime === currentHealthWeightLifetime ? healthWeights : [];
   const visibleHealthState = healthWeightDataLifetime === currentHealthWeightLifetime ? healthState : 'loading';
   const visibleHealthPending = healthPending;
@@ -1718,6 +1797,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
+  const nextTrainingSuggestion = selectNextHomeTraining(training.programs);
   const trainingProgressionSummary = training.progressionState === 'ready'
     ? latestHomeTrainingSummary(training.progression, training.programs) : null;
   const progressionPendingPrefix = `${currentTrainingOwnerDogScope}:`;
@@ -2007,7 +2087,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   async function loadMoreEvents() {
     const lifetime = logLifetime.current;
     const existing = logPaginationFlight.current;
-    if (existing?.scope === lifetime || loadingMore || !hasMore) return;
+    if (existing?.scope === lifetime || loadingMore || !logHasMore.current) return;
     if (existing) {
       logPaginationGeneration.current += 1;
       existing.controller.abort();
@@ -2023,13 +2103,28 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setLoadingMore(true);
     setLoadMoreError(false);
     try {
-      const next = await serializeEventRead(() => fetchDogEvents(client, dog.id, eventRows.current.length, PAGE_SIZE, undefined, controller.signal));
+      const { next, baseline, cursor } = await serializeEventRead(async () => {
+        if (!logHasMore.current) return { next: null, baseline: null, cursor: null };
+        const cursor = logPageCursor.current;
+        if (!cursor) throw new Error('Log pagination cursor is unavailable');
+        const baseline = eventRows.current.slice();
+        const next = await fetchDogEvents(client, dog.id, cursor, PAGE_SIZE, undefined, controller.signal);
+        return { next, baseline, cursor };
+      });
       if (!isCurrent()) return;
+      if (!next || !baseline || !cursor) return;
+      const nextCursor = next.length ? dogEventCursor(next[next.length - 1]) : logPageCursor.current;
+      if (next.length && nextCursor?.occurredAt === cursor.occurredAt && nextCursor.id === cursor.id) {
+        throw new Error('Log pagination did not advance');
+      }
       setLoadMoreError(false);
-      const merged = [...eventRows.current, ...next.filter((row) => !eventRows.current.some((existing) => existing.id === row.id))];
+      const merged = mergeConfirmedLogRows([...baseline, ...next], baseline, eventRows.current);
+      logPageCursor.current = nextCursor;
+      setLogLoadedThrough(nextCursor);
       eventRows.current = merged;
       setEvents(merged);
-      setHasMore(next.length === PAGE_SIZE);
+      logHasMore.current = next.length === PAGE_SIZE;
+      setHasMore(logHasMore.current);
     } catch {
       if (!isCurrent()) return;
       setLoadMoreError(true);
@@ -2071,6 +2166,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         if (mutation.kind === 'insert') {
           const confirmedEvent = outcome.value;
           if (confirmedEvent) {
+            logPinnedEventIds.current.add(confirmedEvent.id);
             const localEvent = toLogEvent(confirmedEvent);
             const merged = [...eventRows.current.filter((event) => event.id !== localEvent.id), confirmedEvent].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             eventRows.current = merged;
@@ -2080,6 +2176,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         }
         if (mutation.kind === 'update') {
           if (outcome.value) {
+            logPinnedEventIds.current.add(outcome.value.id);
             eventRows.current = [...eventRows.current.filter((event) => event.id !== mutation.id), outcome.value].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             setEvents(eventRows.current);
           }
@@ -2209,6 +2306,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         if (!isCurrent()) return false;
         if (found) {
           pendingLogMutation.current = null;
+          logPinnedEventIds.current.add(found.id);
           const merged = [...eventRows.current.filter((event) => event.id !== found.id), found].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
           eventRows.current = merged;
           setEvents(merged);
@@ -2951,6 +3049,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   async function applyProgressionAction(action: TrainingProgressionAction): Promise<'saved' | 'failed' | 'unknown'> {
     if (accountDeletionInvalidated.current) return 'failed';
+    const analyticsSnapshot = training.progressionState === 'ready' ? training.progression : null;
     const ownerDogScope = currentTrainingOwnerDogScope;
     const pendingKey = `${ownerDogScope}:${action.programVersionId}`;
     const existing = pendingTrainingProgressions[pendingKey];
@@ -2973,7 +3072,11 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         });
         if (isTrainingMutationCurrent(lease) && currentTrainingOwnerDogScope === ownerDogScope) {
           try {
-            await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+            const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
+            if (analyticsSnapshot && refreshed.progressionState === 'ready' && isTrainingMutationCurrent(lease)) {
+              const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, refreshed.progression, dog.id, action, operationId);
+              if (analyticsEvent) void analyticsService.track(analyticsEvent);
+            }
           } catch {
             setTrainingError('Ändringen sparades, men den uppdaterade träningsresan kunde inte hämtas. Försök igen.');
           }
@@ -3202,6 +3305,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     dailyMutationInFlight.current = false;
     if (mounted.current) setDailyBusyKey(null);
     return outcome;
+  }
+
+  async function completeRoutineAndMeasure(row: DailyRoutineDay, itemId: string, completed: boolean) {
+    const lifetime = dailyLifetime.current;
+    const ownerId = session?.user.id;
+    const generation = accountGeneration;
+    const result = await runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
+    if (completed && result?.status === 'saved' && mounted.current && dailyLifetime.current === lifetime
+      && ownerId && isCurrentAccount(ownerId, generation)) {
+      void analyticsService.track('routine_completed');
+    }
   }
 
   async function createRoutineForToday(input: DailyRoutineCreateInput): Promise<{ status: 'saved' | 'failed' | 'unknown' } | undefined> {
@@ -3476,7 +3590,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const pageContent = renderPage();
   const transitionDirection = navigationDirection(previousPage, page);
   const mainTabToMainTab = isMainTabDestination(previousPage) && isMainTabDestination(page);
-  const transitionDistance = mainTabToMainTab ? tokens.motion.pageDistance : tokens.motion.distance;
+  const transitionDistance = mainTabToMainTab ? tokens.motion.mainTabDistance : tokens.motion.distance;
+  const transitionDuration = mainTabToMainTab ? tokens.motion.mainTabEnter : tokens.motion.enter;
+  const transitionOpacityFrom = mainTabToMainTab ? tokens.motion.mainTabOpacityFrom : 0;
   const knowledgeRouteContentId = focusedKnowledgeContentId && visibleGuideContent.some((item) => item.id === focusedKnowledgeContentId)
     ? focusedKnowledgeContentId : undefined;
   const defaultRouteScroll = visiblePage === 'log' ? logViewScrollKeys(logView) : productRouteScrollKeys(visiblePage,
@@ -3493,8 +3609,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     ? 'development' : visiblePage;
   return <AppScreen scrollKey={routeScroll.scrollKey} preserveScrollKey={routeScroll.preserveScrollKey} scrollMemoryScope={`${currentSelectionKey}:${currentDailyLifetime}`}
     footer={accountDeleteBusy || accountDeleteStatus === 'confirmed' || accountDeleteStatus === 'unknown' ? undefined : <BottomNav active={activeMainTabDestination(activeTabPage)} onChange={navigateMainTab} />}
-    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' : false}
-    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsights : undefined}
+    refreshing={page === 'home' || page === 'progress' ? dailyRefreshing : page === 'log' && logView === 'today' ? logRefreshing : page === 'log' && logView === 'overview' ? insightsState.status === 'loading' || logRefreshing : false}
+    onRefresh={page === 'home' || page === 'progress' ? () => { void reloadDailyActivity(true, false); } : page === 'log' && logView === 'today' ? () => { void reloadEvents('refresh'); } : page === 'log' && logView === 'overview' ? refreshInsightsAndEvents : undefined}
     refreshAccessibilityLabel={page === 'log' && logView === 'overview' ? 'Uppdatera insikter' : page === 'log' ? 'Uppdatera loggen' : 'Uppdatera Hem'}>
     <Dialog visible={Boolean(profileExitDialog)} title={pendingProfileExitPrompt?.title ?? 'Lämna hundprofilen?'}
       confirmLabel="Lämna utan att spara" cancelLabel="Fortsätt redigera" confirmVariant="destructive"
@@ -3515,7 +3631,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }} /> : null}
     </> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
-      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}>{pageContent}</ScreenTransition>
+      <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}
+        duration={transitionDuration} opacityFrom={transitionOpacityFrom}>{pageContent}</ScreenTransition>
     </MainSwipeNavigation>
   </AppScreen>;
 
@@ -3530,7 +3647,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onRetryMutation={pendingDailyWriteForOwner?.phase === 'unknown' ? retryDailyMutation : undefined}
       onManage={() => openHomeChecklist(true)} onOpenChecklist={() => openHomeChecklist()}
       onOpenTrainingStep={(programId, stepId) => openHomeTrainingStep(programId, stepId, 'progress')}
-      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }} />;
+      onSetRoutineCompletion={(row, itemId, completed) => { void completeRoutineAndMeasure(row, itemId, completed); }} />;
     if (page === 'checklist') return <DailyChecklistScreen key={`${currentDailyLifetime}:checklist:${homeChecklistScope?.openManagerOnEntry ? 'manager' : 'list'}`}
       dateKey={dailyDateKey ?? ''} dailyScopeKey={currentDailyLifetime} routineRecovery={routineRecovery}
       onRoutineRecoveryChange={(draft, conflict) => routineDraftStore.update(currentDailyOwnerScope, dog.id, currentDailyLifetime, draft, conflict, routineDraftOwnerGeneration)}
@@ -3548,7 +3665,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onOpenUpcomingRoutine={openUpcomingRoutine} onOpenPlannedHealth={openUpcomingHealthPlan}
       upcomingRoutines={checklistRangeView?.scope === currentChecklistRangeScope ? checklistRangeView.routines ?? [] : []}
       onSetRoutineCompletion={(row, itemId, completed) => {
-        void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed));
+        void completeRoutineAndMeasure(row, itemId, completed);
       }}
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
       trainingOptions={dailyTrainingOptions}
@@ -3597,12 +3714,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       healthHistoryState={healthHistoryState}
       plans={plannedHealth}
       logState={visibleLogState}
+      logPendingOrUnknown={quickLogMutation?.status === 'pending' || quickLogMutation?.status === 'unsure'}
       planState={plannedHealthState}
       nextStep={visibleTrainingState === 'ready' ? nextStep?.title : undefined}
       trainingState={visibleTrainingState}
       trainingProgression={trainingProgressionSummary}
+      trainingReflection={visibleTrainingState === 'ready' && training.progressionState === 'ready'
+        ? latestTrainingReflection(training.progression, training.programs, dog.id, new Set(Object.keys(progressionPendingByVersion))) : null}
       trainingProgressionState={training.progressionState}
       pendingProgression={homeProgressionPending}
+      nextTrainingSuggestion={nextTrainingSuggestion}
       onOpenTrainingJourney={(programVersionId) => {
         setTrainingProgramFocus(programVersionId);
         navigateMainTab('training');
@@ -3654,7 +3775,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const mutationId = ExpoCrypto.randomUUID();
         void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row, routine, mutationId));
       }}
-      onSetRoutineCompletion={(row, itemId, completed) => { void runDailyMutation(`complete-routine:${row.id}:${itemId}`, () => setRoutineDayCompletion(client, row, itemId, completed)); }}
+      onSetRoutineCompletion={(row, itemId, completed) => { void completeRoutineAndMeasure(row, itemId, completed); }}
       onAddTrainingToDay={(option) => {
         if (!dailyDateKey) return;
         const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId, step_id: option.stepId, date_key: dailyDateKey, time_zone: dailyTimeZone };
@@ -3692,17 +3813,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (page === 'log') return <LogScreen events={displayEvents} onAdd={addEvent}
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
+      onActiveEditorChange={setActiveLogEditor}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
       layoutOwnerId={session?.user.id}
-      loading={visibleLogState === 'loading'} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
+      loading={visibleLogState === 'loading'} refreshing={logRefreshing} loadError={visibleLogState === 'error'} refreshError={logRefreshError} onReload={() => { void retryEvents(); }}
       busy={logBusy} mutation={quickLogMutation} loadMoreError={loadMoreError} onRetry={retryLogMutation} onCancel={cancelLogMutation}
-      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore}
+      onUndo={(id) => { void undoQuickLog(id); }} hasMore={hasMore} loadingMore={loadingMore} loadedThrough={logLoadedThrough}
       onLoadMore={() => { void loadMoreEvents(); }} view={logView} onViewChange={changeLogView}
       profileOrigin={profileInsightsOriginMatches(insightsOrigin, currentSelectionKey, accountGeneration, dog.id)}
       onReturnToProfile={returnToProfileFromInsights} insightsPeriod={insightsPeriod} onInsightsPeriodChange={changeInsightsPeriod}
-      insightsState={insightsState} onRefreshInsights={refreshInsights} dogName={dog.name} />;
+      insightsState={insightsState} onRefreshInsights={refreshInsightsAndEvents} dogName={dog.name} />;
     if (page === 'training') return <>
       {visibleTrainingState === 'loading' && <PageHeading title="Träning" description="Hämtar publicerade program…" />}
       {visibleTrainingState === 'error' && <>
@@ -3779,7 +3901,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
     if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen
-      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences}
+      key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences} birthDate={dog.birth_date}
       saved={notificationSaved && !notificationStorageError} busy={notificationBusy || !notificationPreferencesReady}
       statusMessage={notificationStorageError ? 'Påminnelsevalen kunde inte läsas säkert. Inga nya påminnelser schemaläggs.' : notificationMessage}
       statusError={notificationStorageError || notificationMessageError} permissionState={notificationPermission}
@@ -3882,6 +4004,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       returnToDevelopment={knowledgeFocus?.selectionKey === currentSelectionKey && knowledgeFocus.returnPage === 'development'}
       items={visibleGuideContent}
       contentState={visibleContentState}
+      faqItems={visibleFaqItems}
+      faqState={visibleFaqState}
+      onRetryFaq={() => setFaqRetry((value) => value + 1)}
       focusedContentId={focusedKnowledgeContentId}
       onDetailChange={setKnowledgeDetailOpen}
       onSelectContent={(contentId) => setKnowledgeFocus({
@@ -3965,7 +4090,7 @@ function reminderStatusSummary(result: ReminderReconcileResult | null, preferenc
   if (permission === 'denied' || result?.status === 'permission-denied') return 'Enheten nekar notiser; Tassla fungerar ändå.';
   if (result?.status === 'unknown') return 'Vi kunde inte kontrollera om en plan sparades. Påminnelsen väntar tills du har kontrollerat ändringen.';
   if (result?.status === 'failed') return 'Påminnelserna kunde inte stämmas av.';
-  if (result?.status === 'over-cap') return 'Schemalagda högst 40 planer och en träningspåminnelse. Ytterligare planer schemaläggs inte.';
+  if (result?.status === 'over-cap') return 'Högst 40 hälsoplaner schemaläggs. Ytterligare planer får ingen påminnelse.';
   if (result?.status === 'scheduled') return result.scheduledCount + ' lokala påminnelser schemalagda i ' + result.timezone + '. Schemaläggning är ingen leveransbekräftelse.';
   return 'Påminnelsernas status kontrolleras.';
 }

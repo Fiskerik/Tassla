@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
+from urllib.parse import quote
 from pathlib import Path
 
 from playwright.sync_api import expect, sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[2]
+IMAGE_FOCUS_INVENTORY = json.loads((ROOT / 'docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json').read_text(encoding='utf-8'))
 DAILY_CHECKLIST_SOURCE = (ROOT / 'src/features/home/DailyChecklistScreen.tsx').read_text(encoding='utf-8')
 DAILY_ACTIVITY_SOURCE = (ROOT / 'src/components/ui/DailyActivityItem.tsx').read_text(encoding='utf-8')
 REVIEW = os.environ.get('TASSLA_UI_REVIEW') == 'true'
@@ -29,10 +32,12 @@ def record(name: str, passed: bool, details: dict[str, object] | None = None) ->
         print(f'PASS {name}')
 
 
-def home_url(scenario: str = 'ready', daily_mutation: str | None = None, *, image_fixture: str | None = None) -> str:
+def home_url(scenario: str = 'ready', daily_mutation: str | None = None, *, image_fixture: str | None = None,
+             age_scenario: str | None = None) -> str:
     mutation = f'&dailyMutation={daily_mutation}' if daily_mutation else ''
     images = f'&imageFixture={image_fixture}' if image_fixture else ''
-    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}{images}'
+    age = f'&ageScenario={age_scenario}' if age_scenario else ''
+    return f'{BASE}/?screen=home&homeScenario={scenario}{mutation}{images}{age}'
 
 
 def first_day_url(day_add: str | None = None) -> str:
@@ -40,12 +45,15 @@ def first_day_url(day_add: str | None = None) -> str:
     return f'{BASE}/?screen=home&state=empty&firstDay=true{outcome}'
 
 
-def development_url(*, guides_state: str | None = None, age_scenario: str | None = None) -> str:
+def development_url(*, guides_state: str | None = None, age_scenario: str | None = None,
+                    dog_name: str | None = None) -> str:
     query = ['screen=development']
     if guides_state:
         query.append(f'developmentGuidesState={guides_state}')
     if age_scenario:
         query.append(f'ageScenario={age_scenario}')
+    if dog_name:
+        query.append(f'developmentDogName={quote(dog_name)}')
     return f"{BASE}/?{'&'.join(query)}"
 
 
@@ -82,6 +90,87 @@ def article_reader_url(article_id: str | None = None, related_mode: str | None =
     selected = f'&articleId={article_id}' if article_id else ''
     related = f'&relatedMode={related_mode}' if related_mode else ''
     return f'{BASE}/?screen=knowledge&imageFixture=article-reader{selected}{related}'
+
+
+def verify_knowledge_image_focus(browser) -> None:
+    expected = {item['key']: item for item in IMAGE_FOCUS_INVENTORY['mappings']}
+    for width, height in ((375, 844), (430, 844)):
+        page = browser.new_page(viewport={'width': width, 'height': height})
+        page_errors: list[str] = []
+        page.on('pageerror', lambda error: page_errors.append(str(error)))
+        page.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit', wait_until='networkidle')
+        audit = page.get_by_test_id('knowledge-image-focus-audit')
+        expect(audit).to_be_visible()
+        row_ids = audit.locator('[data-testid^="knowledge-image-focus-row-"]').evaluate_all(
+            "nodes => nodes.map(node => node.getAttribute('data-testid').replace('knowledge-image-focus-row-', ''))")
+        record(f'Knowledge focus audit includes the complete local mapping set at {width}px',
+               len(row_ids) == len(expected) and set(row_ids) == set(expected),
+               {'count': len(row_ids), 'expected_count': len(expected), 'missing': sorted(set(expected) - set(row_ids)),
+                'unexpected': sorted(set(row_ids) - set(expected))})
+        width_results = []
+        for key in sorted(expected):
+            mapping = expected[key]
+            row = page.get_by_test_id(f'knowledge-image-focus-row-{key}')
+            expect(row).to_be_visible()
+            meta_text = page.get_by_test_id(f'knowledge-image-focus-meta-{key}').inner_text()
+            meta = [part.strip() for part in meta_text.split('·')]
+            source = mapping['asset']
+            focus = IMAGE_FOCUS_INVENTORY['assets'][source]['focus']
+            parts_match = len(meta) >= 7 and meta[0] == mapping['contentId'] and meta[1] == f"v{mapping['version']}"
+            if mapping.get('slug'):
+                parts_match = parts_match and meta[2] == mapping['slug']
+            else:
+                parts_match = parts_match and meta[2] == 'no slug'
+            parts_match = parts_match and meta[3] == source
+            actual_focus = [float(re.search(r'[-+]?\d*\.?\d+', meta[index]).group()) for index in (4, 5, 6)] if len(meta) >= 7 else []
+            expected_focus = [focus['x'], focus['y'], focus['zoom']]
+            row_ok = parts_match and len(actual_focus) == 3 and all(abs(actual - target) < 0.005 for actual, target in zip(actual_focus, expected_focus))
+            frames = []
+            for frame_key, target_ratio in (('featured', 16 / 9), ('related', 4 / 3), ('reader', 16 / 9)):
+                frame = page.get_by_test_id(f'knowledge-image-focus-{key}-{frame_key}')
+                box = frame.bounding_box()
+                image = frame.locator('img')
+                src = image.get_attribute('src') if image.count() else None
+                loaded = image.evaluate('(node) => node.complete && node.naturalWidth > 0') if image.count() else False
+                ratio = box['width'] / box['height'] if box and box['height'] else 0
+                frame_ok = box is not None and abs(ratio - target_ratio) < 0.025 and loaded and bool(src) and source.rsplit('.', 1)[0] in src
+                row_ok = row_ok and frame_ok
+                frames.append({'frame': frame_key, 'ratio': ratio, 'target_ratio': target_ratio, 'image_loaded': loaded,
+                               'actual_src': src, 'expected_source': source, 'pass': frame_ok})
+            row_result = {'key': key, 'content_id': mapping['contentId'], 'version': mapping['version'], 'slug': mapping.get('slug'),
+                          'asset': source, 'focus': focus, 'rendered_focus': actual_focus, 'pass': row_ok, 'frames': frames}
+            width_results.append(row_result)
+            record(f'{key}: face-focused source and all three crop frames at {width}px', row_ok,
+                   {'source': source, 'rendered_focus': actual_focus, 'frames': frames})
+            row.scroll_into_view_if_needed()
+            row.screenshot(path=str(OUT / f'knowledge-image-focus-{key}-{width}.png'))
+        no_overflow = page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+        record(f'Knowledge focus audit has no horizontal overflow or browser errors at {width}px', no_overflow and not page_errors,
+               {'overflow': not no_overflow, 'page_errors': page_errors})
+        (OUT / f'knowledge-image-focus-{width}-results.json').write_text(json.dumps(width_results, ensure_ascii=False, indent=2) + '\n')
+        page.close()
+
+    short_page = browser.new_page(viewport={'width': 375, 'height': 667})
+    short_page.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit', wait_until='networkidle')
+    short_page.wait_for_timeout(100)
+    scroll = short_page.get_by_test_id('knowledge-image-focus-audit').evaluate(
+        '(node) => ({clientHeight: node.clientHeight, scrollHeight: node.scrollHeight, scrollTop: node.scrollTop})')
+    short_page.get_by_test_id(f"knowledge-image-focus-row-{IMAGE_FOCUS_INVENTORY['mappings'][-1]['key']}").scroll_into_view_if_needed()
+    scroll['scrollTopAfterLastRow'] = short_page.get_by_test_id('knowledge-image-focus-audit').evaluate('(node) => node.scrollTop')
+    short_overflow = short_page.evaluate('document.documentElement.scrollWidth > innerWidth + 1')
+    short_page.screenshot(path=str(OUT / 'knowledge-image-focus-short-375x667.png'), full_page=True)
+    record('Knowledge image rows remain reachable without horizontal overflow at 375×667',
+           scroll['scrollHeight'] > scroll['clientHeight'] and scroll['scrollTopAfterLastRow'] > 0 and not short_overflow,
+           {'scroll': scroll, 'horizontal_overflow': short_overflow})
+    short_page.close()
+
+    contact = browser.new_page(viewport={'width': 1000, 'height': 2300})
+    contact.goto(f'{BASE.rstrip("/")}/?screen=knowledge&imageFixture=image-focus-audit&focusContactSheet=true', wait_until='networkidle')
+    contact.screenshot(path=str(OUT / 'knowledge-image-focus-contact-sheet.png', ), full_page=True)
+    record('Contact sheet renders every audited mapping with three crop ratios',
+           contact.get_by_test_id('knowledge-image-focus-audit').locator('[data-testid^="knowledge-image-focus-row-"]').count() == len(expected),
+           {'mapping_count': len(expected), 'viewport': {'width': 1000, 'height': 2300}})
+    contact.close()
 
 
 def visible_destinations(page) -> list[dict[str, object]]:
@@ -132,8 +221,25 @@ def verify_development_views(browser) -> None:
         expect(page.get_by_test_id('development-screen')).to_be_visible()
         expect(page.get_by_text('11 veckor · Valp', exact=True)).to_be_visible()
         expect(page.get_by_text('Nästa milstolpar', exact=True)).to_be_visible()
-        expect(page.get_by_text('Granskade milstolpar är inte tillgängliga ännu', exact=True)).to_be_visible()
+        expect(page.get_by_text('Ungefärligt – hundar utvecklas olika.', exact=True)).to_be_visible()
+        expect(page.get_by_role('link', name='Öppna källa 2: Tandömsning')).to_be_visible()
         expect(page.get_by_text('Standardbild', exact=True)).to_have_count(0)
+        milestone_rows = page.locator('[data-testid^="development-milestone-"]:not([data-testid*="-icon-"])')
+        milestone_count = milestone_rows.count()
+        milestone_icons = [page.get_by_test_id(f'development-milestone-icon-{key}').is_visible()
+                           for key in ('new-experiences', 'teething', 'adolescence')]
+        record(f'Development shows three distinct milestone icon rows at {width}px',
+               milestone_count == 3 and all(milestone_icons),
+               {'row_count': milestone_count, 'icons_visible': milestone_icons})
+        screen_title = page.get_by_role('heading', name='Lunas utveckling', exact=True)
+        title_box = screen_title.bounding_box()
+        hero_box = page.get_by_test_id('development-hero').bounding_box()
+        title_style = screen_title.evaluate("element => { const style = getComputedStyle(element); return { fontSize: style.fontSize, lineHeight: style.lineHeight, fontWeight: style.fontWeight }; }")
+        title_gap = hero_box['y'] - (title_box['y'] + title_box['height']) if title_box and hero_box else None
+        record(f'Development uses a 24/30 bold title with compact portrait spacing at {width}px',
+               title_style == {'fontSize': '24px', 'lineHeight': '30px', 'fontWeight': '700'}
+               and title_gap is not None and 12 <= title_gap <= 20,
+               {'title_style': title_style, 'title_box': title_box, 'hero_box': hero_box, 'gap_pt': title_gap})
         age_pill = page.get_by_test_id('development-age-pill')
         age_pill_box = age_pill.bounding_box()
         record(f'Development age pill has a 44pt touch target at {width}px',
@@ -159,7 +265,8 @@ def verify_development_views(browser) -> None:
         record(f'Development age pill toggles off and back on from the marker at {width}px', True,
                {'initial_pill': age_pill_box})
         image = page.get_by_test_id('development-screen').locator('img').first.bounding_box()
-        image_is_prominent = image is not None and image['height'] >= 260
+        image_ratio = image['height'] / image['width'] if image and image['width'] else 0
+        image_is_prominent = image is not None and image['height'] >= 210 and 0.65 <= image_ratio <= 0.72
         record(f'Development hero retains its large unique generic image at {width}px', image_is_prominent, {'image_box': image})
         if REVIEW:
             guide = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True)
@@ -184,35 +291,38 @@ def verify_development_views(browser) -> None:
                {'page_errors': page_errors})
         page.close()
 
+    short_page = browser.new_page(viewport={'width': 375, 'height': 667})
+    short_page.goto(development_url(), wait_until='networkidle')
+    expect(short_page.get_by_test_id('development-milestones')).to_be_visible()
+    short_page.screenshot(path=str(OUT / 'development-short-375x667.png'), full_page=True)
+    short_page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
+      const style = getComputedStyle(element);
+      const size = parseFloat(style.fontSize);
+      const line = parseFloat(style.lineHeight);
+      if (Number.isFinite(size)) element.style.fontSize = `${size * 1.4}px`;
+      if (Number.isFinite(line)) element.style.lineHeight = `${line * 1.4}px`;
+    })""")
+    large_text_no_overflow = short_page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    short_page.screenshot(path=str(OUT / 'development-text-140-375x667.png'), full_page=True)
+    record('Development short viewport scrolls with no horizontal overflow at 140% text proxy',
+           large_text_no_overflow,
+           {'horizontal_overflow': not large_text_no_overflow,
+            'scroll_height': short_page.evaluate('document.documentElement.scrollHeight')})
+    short_page.close()
 
-def verify_development_states(browser) -> None:
-    for state in ('loading', 'error'):
-        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
-        page.goto(development_url(guides_state=state), wait_until='networkidle')
-        if state == 'loading':
-            expect(page.get_by_role('progressbar', name='Laddar innehåll')).to_have_count(2)
-        else:
-            expect(page.get_by_text('Guiderna kunde inte hämtas just nu.', exact=True)).to_be_visible()
-            retry = page.get_by_role('button', name='Hämta utvecklingsguider igen', exact=True)
-            expect(retry).to_be_visible()
-            page.screenshot(path=str(OUT / 'development-guides-error-375.png'), full_page=True)
-            retry.click()
-            record('Development guide retry invokes the supplied retry action',
-                   page.evaluate('window.__developmentGuideRetryCalls === 1'))
-        page.screenshot(path=str(OUT / f'development-guides-{state}-375.png'), full_page=True)
-        page.close()
-        record(f'Development guide {state} state renders distinctly', True)
+    last_row_page = browser.new_page(viewport={'width': 375, 'height': 844})
+    last_row_page.goto(development_url(), wait_until='networkidle')
+    last_row = last_row_page.get_by_test_id('development-milestone-adolescence')
+    last_row.scroll_into_view_if_needed()
+    last_row_box = last_row.bounding_box()
+    bottom_nav_box = last_row_page.get_by_role('tablist', name='Huvudmeny').bounding_box()
+    row_reachable = last_row_box is not None and bottom_nav_box is not None and last_row_box['height'] >= 44 \
+        and last_row_box['y'] + last_row_box['height'] <= bottom_nav_box['y']
+    record('Last milestone link remains fully reachable above fixed navigation after scrolling', row_reachable,
+           {'row': last_row_box, 'bottom_nav': bottom_nav_box})
+    last_row_page.screenshot(path=str(OUT / 'development-last-milestone-reachable-375.png'), full_page=True)
+    last_row_page.close()
 
-    for scenario in ('missing', 'invalid', 'future'):
-        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
-        page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
-        expect(page.get_by_text('Ålder och fas', exact=True)).to_be_visible()
-        expect(page.get_by_text('Åldersresan visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
-        expect(page.get_by_test_id('development-age-pill')).to_have_count(0)
-        expect(page.get_by_text('Åldersrelevanta guider visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
-        page.screenshot(path=str(OUT / f'development-age-{scenario}-375.png'), full_page=True)
-        page.close()
-        record(f'Development {scenario} birth date uses the neutral unknown-age state', True)
 
     if not REVIEW:
         return
@@ -221,7 +331,7 @@ def verify_development_states(browser) -> None:
     # changes only its memory-scope token; ProductWorkspace's real scope fields are
     # separately asserted by the Node route test.
     page = browser.new_page(viewport={'width': 375, 'height': 699})
-    page.goto(home_url(), wait_until='networkidle')
+    page.goto(home_url('seven'), wait_until='networkidle')
     expect(page.get_by_test_id('review-app-viewport')).to_be_visible()
     set_vertical_scroll(page, 82)
     development_entry = page.get_by_role('button', name='Visa utveckling för Luna', exact=True)
@@ -332,6 +442,153 @@ def verify_development_states(browser) -> None:
     page.screenshot(path=str(OUT / 'development-text-140-bottom-375.png'))
     page.close()
 
+
+
+def verify_development_states(browser) -> None:
+    for state in ('loading', 'error'):
+        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
+        page.goto(development_url(guides_state=state), wait_until='networkidle')
+        if state == 'loading':
+            expect(page.get_by_role('progressbar', name='Laddar innehåll')).to_have_count(2)
+        else:
+            expect(page.get_by_text('Guiderna kunde inte hämtas just nu.', exact=True)).to_be_visible()
+            retry = page.get_by_role('button', name='Hämta utvecklingsguider igen', exact=True)
+            expect(retry).to_be_visible()
+            page.screenshot(path=str(OUT / 'development-guides-error-375.png'), full_page=True)
+            retry.click()
+            record('Development guide retry invokes the supplied retry action',
+                   page.evaluate('window.__developmentGuideRetryCalls === 1'))
+        page.screenshot(path=str(OUT / f'development-guides-{state}-375.png'), full_page=True)
+        page.close()
+        record(f'Development guide {state} state renders distinctly', True)
+
+    for scenario in ('missing', 'invalid', 'future'):
+        page = browser.new_page(viewport={'width': 375, 'height': 844 + 0})
+        page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
+        expect(page.get_by_text('Ålder och fas', exact=True)).to_be_visible()
+        expect(page.get_by_text('Åldersresan visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
+        expect(page.get_by_test_id('development-age-pill')).to_have_count(0)
+        expect(page.get_by_text('Åldersrelevanta guider visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'development-age-{scenario}-375.png'), full_page=True)
+        page.close()
+        record(f'Development {scenario} birth date uses the neutral unknown-age state', True)
+
+
+def verify_development_progress(browser) -> None:
+    progress_lengths: dict[str, float] = {}
+    for width in (375, 430):
+        for scenario in ('early', 'normal', 'midpoint'):
+            page = browser.new_page(viewport={'width': width, 'height': 844})
+            page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
+            progress = page.get_by_test_id('development-age-progress')
+            track = page.get_by_test_id('development-age-arc-track')
+            arc_clip = page.get_by_test_id('development-age-arc-clip')
+            marker = page.get_by_test_id('development-age-marker')
+            expect(progress).to_be_visible()
+            expect(track).to_be_visible()
+            progress_attributes = progress.evaluate("element => ({ stroke: element.getAttribute('stroke'), linecap: element.getAttribute('stroke-linecap'), d: element.getAttribute('d'), length: element.getTotalLength() })")
+            track_attributes = track.evaluate("element => ({ stroke: element.getAttribute('stroke'), d: element.getAttribute('d') })")
+            endpoint = progress.evaluate("element => { const values = element.getAttribute('d').match(/[-+]?(?:\\d*\\.)?\\d+(?:e[-+]?\\d+)?/gi).map(Number); return values.slice(-2); }")
+            clip_box = arc_clip.bounding_box()
+            marker_box = marker.bounding_box()
+            marker_center = [marker_box['x'] + marker_box['width'] / 2 - clip_box['x'], marker_box['y'] + marker_box['height'] / 2 - clip_box['y']] if clip_box and marker_box else None
+            marker_error = max(abs(endpoint[index] - marker_center[index]) for index in (0, 1)) if marker_center else None
+            record(f'{scenario} age renders a green progress arc over a neutral track at {width}px',
+                   progress_attributes['stroke'] in ('#217448', 'rgb(33, 116, 72)')
+                   and track_attributes['stroke'] in ('#E9E5DE', 'rgb(233, 229, 222)')
+                   and progress_attributes['d'] != track_attributes['d']
+                   and progress_attributes['linecap'] == 'round'
+                   and marker_error is not None and marker_error < 1.5,
+                   {'progress': progress_attributes, 'track': track_attributes, 'progress_endpoint': endpoint,
+                    'marker_center_in_arc': marker_center, 'endpoint_error_pt': marker_error})
+            if width == 375:
+                progress_lengths[scenario] = float(progress_attributes['length'])
+            page.screenshot(path=str(OUT / f'development-progress-{scenario}-{width}.png'), full_page=True)
+            if scenario == 'normal':
+                age_label = page.get_by_test_id('development-age-pill')
+                age_label_box = age_label.bounding_box()
+                record(f'Age label remains a 44pt control at {width}px',
+                       age_label_box is not None and age_label_box['width'] >= 44 and age_label_box['height'] >= 44,
+                       {'box': age_label_box})
+                age_label.click()
+                expect(page.get_by_test_id('development-age-progress')).to_be_visible()
+                marker = page.get_by_test_id('development-age-marker-toggle')
+                marker.click()
+                expect(page.get_by_test_id('development-age-pill')).to_be_visible()
+                record(f'Age progress remains visible when the age label is hidden and restored at {width}px', True)
+            page.close()
+
+    record('Age arc length increases monotonically from early puppy to normal puppy to midpoint',
+           progress_lengths.get('early', 0) < progress_lengths.get('normal', 0) < progress_lengths.get('midpoint', 0),
+           {'lengths': progress_lengths})
+
+    for width in (375, 430):
+        for scenario in ('adult', 'missing', 'invalid', 'future'):
+            page = browser.new_page(viewport={'width': width, 'height': 844})
+            page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
+            expect(page.get_by_test_id('development-age-progress')).to_have_count(0)
+            expect(page.get_by_test_id('development-age-arc-track')).to_have_count(0)
+            if scenario == 'adult':
+                expect(page.get_by_text('Vuxen', exact=True)).to_be_visible()
+            page.screenshot(path=str(OUT / f'development-age-{scenario}-{width}.png'), full_page=True)
+            page.close()
+            record(f'{scenario} age state does not show an inapplicable age arc at {width}px', True)
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page.goto(development_url(dog_name='Doos'), wait_until='networkidle')
+        expect(page.get_by_role('button', name='Tillbaka till Hem', exact=True)).to_be_visible()
+        expect(page.get_by_text('Doos utveckling', exact=True)).to_be_visible()
+        page.screenshot(path=str(OUT / f'development-doos-title-{width}.png'), full_page=True)
+        page.close()
+        record(f'Dog name ending in s renders without a duplicated genitive s at {width}px', True)
+
+    for width in (375, 430):
+        page = browser.new_page(viewport={'width': width, 'height': 844})
+        page.goto(home_url(age_scenario='midpoint'), wait_until='networkidle')
+        phase_button = page.get_by_test_id('home-development-phase')
+        expect(phase_button).to_be_visible()
+        expect(phase_button).to_have_attribute('aria-label', 'Visa utveckling för Luna')
+        phase_label = page.get_by_text('Ungefärlig fas: UNGHUND', exact=True)
+        expect(phase_label).to_be_visible()
+        button_box = phase_button.bounding_box()
+        portrait_box = page.get_by_test_id('home-dog-portrait').bounding_box()
+        button_style = phase_button.evaluate("element => { const style = getComputedStyle(element); const label = getComputedStyle(element.querySelector('[dir=auto]')); return { background: style.backgroundColor, borderColor: style.borderColor, borderWidth: style.borderWidth, radius: style.borderRadius, labelColor: label.color, labelWeight: label.fontWeight }; }")
+        portrait_clearance = button_box is not None and portrait_box is not None and button_box['x'] + button_box['width'] <= portrait_box['x']
+        record(f'Home phase action reads as a button and clears the portrait at {width}px',
+               button_box is not None and button_box['height'] >= 44 and portrait_clearance
+               and button_style['background'] == 'rgb(255, 252, 247)'
+               and button_style['borderColor'] == 'rgb(33, 116, 72)'
+               and button_style['borderWidth'] == '1px'
+               and button_style['radius'] == '14px'
+               and button_style['labelColor'] == 'rgb(33, 116, 72)'
+               and button_style['labelWeight'] == '700'
+               and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+               {'button': button_box, 'portrait': portrait_box, 'clear': portrait_clearance, 'style': button_style})
+        page.screenshot(path=str(OUT / f'home-development-phase-midpoint-{width}.png'), full_page=True)
+        if width == 375:
+            page.evaluate("""() => {
+              const root = document.querySelector('[data-testid="home-development-phase"]');
+              root?.querySelectorAll('*').forEach((element) => {
+                const style = getComputedStyle(element);
+                const size = parseFloat(style.fontSize);
+                const line = parseFloat(style.lineHeight);
+                if (Number.isFinite(size)) element.style.fontSize = `${size * 1.4}px`;
+                if (Number.isFinite(line)) element.style.lineHeight = `${line * 1.4}px`;
+              });
+            }""")
+            scaled_button = phase_button.bounding_box()
+            portrait_box = page.get_by_test_id('home-dog-portrait').bounding_box()
+            scaled_clearance = scaled_button is not None and portrait_box is not None and scaled_button['x'] + scaled_button['width'] <= portrait_box['x']
+            record('Home phase action wraps without portrait overlap at the 140% text proxy',
+                   scaled_clearance and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+                   {'button': scaled_button, 'portrait': portrait_box, 'clear': scaled_clearance})
+            page.screenshot(path=str(OUT / 'home-development-phase-midpoint-text-140-375.png'), full_page=True)
+        phase_button.click()
+        expect(page.get_by_test_id('development-screen')).to_be_visible()
+        expect(page.get_by_text('Lunas utveckling', exact=True)).to_be_visible()
+        page.close()
+        record(f'Home phase action opens the existing Development route at {width}px', True)
 
 def verify_insights_views(browser) -> None:
     for width in (375, 430):
@@ -957,8 +1214,7 @@ def verify_article_reader(browser) -> None:
         expect(search).to_have_value('En artikel utan hundmatchning')
         record(f'Published-library search opens a non-recommended article and preserves search on Back at {width}px', not page_errors,
                {'page_errors': page_errors})
-        search.fill('')
-        page.get_by_role('button', name='Alla artiklar', exact=True).click()
+        search.fill('Rumsrenhet')
 
         lower_article = page.get_by_role('button', name='Läs Rumsrenhet – så hjälper du valpen att lyckas', exact=True)
         lower_article.scroll_into_view_if_needed()
@@ -976,6 +1232,18 @@ def verify_article_reader(browser) -> None:
         intro_weight = intro.evaluate('element => getComputedStyle(element).fontWeight')
         subheading = page.get_by_role('heading', name='När ska ni gå ut?', exact=True)
         subheading_color = subheading.evaluate('element => getComputedStyle(element).color')
+        references = page.get_by_test_id('article-references')
+        reference_links = references.get_by_role('link')
+        expect(reference_links).to_have_count(3)
+        reference_labels = [reference_links.nth(index).inner_text() for index in range(3)]
+        reference_boxes = [reference_links.nth(index).bounding_box() for index in range(3)]
+        visible_article_text = article_container.inner_text()
+        record(f'Article sources render as tightly grouped numbered links at {width}px',
+               reference_labels == ['1)', '2)', '3)']
+               and all(box is not None and box['width'] == 44 and box['height'] == 44 for box in reference_boxes)
+               and all(abs(reference_boxes[index + 1]['x'] - (reference_boxes[index]['x'] + 44)) <= 1 for index in range(2))
+               and 'https://' not in visible_article_text,
+               {'labels': reference_labels, 'link_targets': reference_boxes, 'raw_url_visible': 'https://' in visible_article_text})
         record(f'Article detail resets to top, uses an unboxed reader and full-width 16:9 hero at {width}px',
                article_position is not None and article_position['top'] <= 2
                and hero_box is not None and abs(hero_box['x']) <= 1 and abs(hero_box['width'] - width) <= 2
@@ -987,6 +1255,8 @@ def verify_article_reader(browser) -> None:
         page.screenshot(path=str(OUT / f'article-reader-top-{width}.png'), full_page=True)
 
         set_vertical_scroll(page, 100000)
+        references.scroll_into_view_if_needed()
+        page.screenshot(path=str(OUT / f'article-reader-references-{width}.png'), full_page=True)
         expect(page.get_by_text('Fler artiklar för din hund', exact=True)).to_be_visible()
         carousel = page.get_by_test_id('knowledge-related-carousel')
         carousel_metrics = carousel.evaluate("element => ({clientWidth: element.clientWidth, scrollWidth: element.scrollWidth, scrollLeft: element.scrollLeft})")
@@ -1014,7 +1284,7 @@ def verify_article_reader(browser) -> None:
         page.wait_for_timeout(100)
         switched_position = vertical_scroll_state(page)
         page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
-        expect(page.get_by_role('button', name='För dig', exact=True)).to_be_visible()
+        expect(search).to_have_value('Rumsrenhet')
         restored_position = vertical_scroll_state(page)
         record(f'Switching carousel articles resets to top and Back restores the scrolled library position at {width}px',
                switched_position is not None and switched_position['top'] <= 2
@@ -1292,6 +1562,23 @@ def verify_progress_additional_states(browser) -> None:
     page.close()
 
 
+if os.environ.get('TASSLA_UI_PANEL') == 'development':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_development_views(browser)
+        verify_development_states(browser)
+        verify_development_progress(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'development', 'evidence_dir': str(OUT), 'results': results, 'failures': failures}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
 if os.environ.get('TASSLA_UI_PANEL') == 'progress':
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
@@ -1397,6 +1684,23 @@ if os.environ.get('TASSLA_UI_PANEL') == 'article-reader':
     raise SystemExit(1 if failures else 0)
 
 
+if os.environ.get('TASSLA_UI_PANEL') == 'knowledge-image-focus':
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            headless=True,
+            executable_path=os.environ.get('TASSLA_UI_CHROMIUM', '/usr/bin/chromium'),
+            args=['--no-sandbox'],
+        )
+        verify_knowledge_image_focus(browser)
+        browser.close()
+    report = {'mode': 'review' if REVIEW else 'public', 'panel': 'knowledge-image-focus',
+              'evidence_dir': str(OUT), 'results': results, 'failures': failures,
+              'catalog_status': IMAGE_FOCUS_INVENTORY['catalog_snapshot']['deployed_catalog']}
+    (OUT / 'RESULTS.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(f'RESULTS {len(results) - len(failures)}/{len(results)} PASS; evidence={OUT}')
+    raise SystemExit(1 if failures else 0)
+
+
 if os.environ.get('TASSLA_UI_PANEL') in ('image-diversity', 'knowledge-images'):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
@@ -1478,7 +1782,7 @@ with sync_playwright() as playwright:
             expect(page.get_by_role('button', name='Öppna Checklistor', exact=True)).to_be_visible()
         else:
             expect(page.get_by_text('Skapa en rutin eller välj ett träningssteg att ha med idag.', exact=True)).to_be_visible()
-            record(f'public empty day has no 0/0 progress at {width}px', page.get_by_role('progressbar').count() == 0)
+            record(f'public empty day has no 0/0 progress at {width}px', page.locator('[role="progressbar"][aria-label$="dagsuppgifter klara"]').count() == 0)
         page.screenshot(path=str(OUT / f'home-default-{width}.png'), full_page=True)
 
         # The arrow opens the full Checklistor route.
@@ -1558,7 +1862,7 @@ with sync_playwright() as playwright:
         if message:
             expect(page.get_by_text(message, exact=True)).to_be_visible()
         if scenario in ('empty', 'unknown', 'partial'):
-            record(f'{scenario} daily source does not show 0/0', page.get_by_role('progressbar').count() == 0)
+            record(f'{scenario} daily source does not show 0/0', page.locator('[role="progressbar"][aria-label$="dagsuppgifter klara"]').count() == 0)
         if scenario == 'error':
             expect(page.get_by_role('button', name='Hämta dagens uppgifter igen', exact=True)).to_be_visible()
         if scenario in ('unknown', 'partial'):
@@ -1568,7 +1872,7 @@ with sync_playwright() as playwright:
         record(f'{scenario} state keeps one checklist control', True)
 
     if REVIEW:
-        # Seven items preserve the total while the compact Home preview stays at five.
+        # Seven items preserve the total while the compact Home preview stays at three.
         page = browser.new_page(viewport={'width': 375, 'height': 876})
         page.goto(home_url('seven'), wait_until='networkidle')
         expect(page.get_by_text('2/7 · Framsteg', exact=True)).to_be_visible()

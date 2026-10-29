@@ -68,6 +68,7 @@ Följande är lokala köstatusar på 2e230be, inte ett påstående om live datab
 | VISION-R02-2 | done | Ägarvalda dagsrutiner och källhärledd träningsprogress. Lokala public/review-renderingar verifierades; Supabase/RLS och native kvarstår. |
 | VISION-R02-3 / 3B / 3C | done | Logga, Träning och Kunskap har avgränsade visuella migrationsposter. De stänger inte automatiskt hela panelresan. |
 | VISION-R02-4A–4H | done | Stödskärmar har rev02-migreringar, bland annat hälsa, pass, profil, påminnelser, konto och onboarding. |
+| DEVELOPMENT-PANEL-COMPOSITION-01 | done, pushad | Panel 2:s Utveckling: hundporträtt med överlagrad grön kronologisk båge, opt-in 24/30 pt titel och grupperade milstolpar. Critic, QA och Frozen Reviewer PASS; commit `1aa0768` pushad till `origin/knowledge/d3-catalog-delivery`. Extern källgranskning/native/produktionsdata är separata; se taskrapport och evidens. |
 | UX-CONTINUE-CARD-01 | done | Panel 6:s fortsättkort renderat och granskat; native/Dynamic Type och liveprogress är separata kontroller. |
 | UX-LOG-EDITOR-01 | done | Loggeditor, återhämtning, legacy-status och delta-review passerade lokala kontroller; native och live RLS ej testade. |
 | UX-WORKSPACE-RETENTION-01 | done | Scopead in-memory data mellan flikar; lokal QA/Reviewer enligt rapport. Detta bevisar inte live databasretention. |
@@ -90,6 +91,10 @@ Tidigare MVP- och byggpaket har detaljerad historik i [HISTORY-2026.md](../relea
 ## Historiska källfiler
 
 Följande behålls för spårbarhet. Läs sammanfattningen ovan först; originalen är inte separata aktuella instruktioner:
+
+## DEVELOPMENT-PANEL-COMPOSITION-01 — leveranscloseout (2026-10-28)
+
+På `knowledge/d3-catalog-delivery` har panel 2:s Utvecklingsvy fått ett dominant hundporträtt med överlagrad grön kronologisk åldersbåge, kort fasförklaring, större opt-in rubrik och kompakt grupperad milstolpsyta. UI Critic, supplemental oberoende QA och Frozen Reviewer **PASS**; `CI=1 pnpm check` 99/99 testfiler; public/review 52/52 och 60/60. QA bekräftade 81 paths inom 17 deklarerade samt slutliga statusar. Den första Frozen Reviewer-blockeringen gällde enbart synkad dokumentationsräkning och loggposter, åtgärdat före slutligt PASS. Tasken är done som UI-/rendercheckpoint. Commit `1aa0768` pushad till `origin/knowledge/d3-catalog-delivery`; push-hooken passerade `pnpm check` (842 PASS, 1 skip). Milstolparnas externa sakgranskning och native tillgänglighet förblir separata/öppna.
 
 - [0001-stack.md](0001-stack.md)
 - [0003-auth.md](0003-auth.md)
@@ -317,3 +322,73 @@ V5-koden och migrationen implementerar separat hundradering från Hundprofil. RP
 QA hittade och blockerade en race innan closeout: om kontoägaren bytte hund medan delete väntade kunde den hundnycklade arbetsytan avmonteras och tappa serverbekräftelsen. `ProductWorkspace` använder nu konto/session-generation som svarsspärr och låter samma ägares bekräftade delete eller frånvaroläsning nå AppFlow även efter avmontering. Om hundurvalsgenerationen ändrats läser AppFlow om ägarens RLS-filtrerade lista; ny aktiv hund behålls om den finns. Regressionstester kör de faktiska utdragna arbetsyte-/root-hanterarna för delete, statusläsning efter avmontering, hundbyte, kontogenerationsbyte och sista hund → initial profil.
 
 Post-implementation UI Critic PASS; Security statisk re-review PASS; oberoende QA PASS inklusive race recheck; frozen Reviewer PASS efter uppdatering av lifetime-kontrakt och Master Log. `CI=1 pnpm check` 84/84 och dog-profile-delete RN Web verifierare 9/9 vid 375/430, kort viewport och 140 % text. Queue validation, Python compilation och `git diff --check` PASS. Migration/SQL rollback-probe är inte körd; tvåsessions concurrency, live Supabase/RLS/deploy, native VoiceOver/TalkBack och TestFlight är **NOT TESTABLE**. Ingen verklig profil eller konto raderades. `ACCOUNT-DELETE-STATUS-01` är fortfarande blocked/unknown, utan retry; bildfokus och checklistbockars form är separata planerade backlogs.
+
+### 2026-10-26 — KNOWLEDGE-PHASE-CATALOG-01 lokal implementation v8
+
+Ägarens instruktion fortsätter Kunskapspaketet och godkänner D3 faschecklistekatalogens lokala implementation. D3 lägger till sex granskade fasversioner och 18 stabila punkter, en strukturerad JSON-bunt/validator, separata draft-import-/publiceringsskript, publicerad-only appadapter samt låga fasbilder där varje hundansikte syns. Källor visas bara som små `1)`/`2)`-länkar; UI Critic godkände extragapet borttaget samtidigt som varje länk behåller 44×44 pt tryckyta.
+
+Koordinatorn körde migrationskedjan och relevanta SQL-prober i isolerad disposable PostgreSQL 16.15: draft-import två gånger, idempotens, vägran vid ändrad granskad titel, separat publicering och rollbackad published-only RLS/owner-data-prob passerade. Containern hade `--network none`, inga host ports, read-only repository mount och syntetiska fixturer. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload-mutationstest, full `pnpm check` (85/85), UI-verifierare (128 PASS, 0 FAIL/page errors vid 375/430), kövalidering och diff/path-audit passerar. Review-channel `pnpm bundle:ios` exporterade JS och assets till `dist/ios`, utan att verifiera signering eller fysisk enhet. Plan v8 Critic PROCEED; oberoende QA och frozen Reviewer PASS.
+
+Detta är lokal/syntetisk verifiering. Oberoende QA och frozen Reviewer gav PASS utan blockerande fynd. Nästa steg är commit/push av branchen, därefter planering av en separat FAQ-katalog-task. Ingen live Supabase migration, import, publicering eller readback kördes; fjärrkatalogstatus är okänd. Ingen native iPhone/TestFlight, VoiceOver/TalkBack eller Dynamic Type-verifiering gjordes. Checklistornas käll- och copygranskning är inte veterinärsignoff för övriga artiklar. Innehåll förblir draft/review-pending; publicering kräver separat mandat. Se [D3-taskens verifiering](../design/evidence/knowledge-d3-catalog-v1/VERIFICATION.md) och [implementationplan](../tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md).
+
+### 2026-10-26 — REPO-PUSH-HOOK-CLEANUP-01
+
+Push-hooken för den nya branchen `knowledge/d3-catalog-delivery` körde `pnpm check` (776 pass, 1 skip), men full-tree `git diff --check` stoppade på två trailing spaces i `codemagic.yaml:23`. Plan v1 fick Critic PROCEED och Architect APPROVE; YAML-innehållet parsas likadant före/efter. Den lokala ändringen tar endast bort slutblankstegen. Full `pnpm check` passerar igen med 85/85 testfiler; `git diff --ignore-space-at-eol` för YAML och `git diff --check origin/main` passerar. Oberoende QA och frozen Reviewer PASS. Nästa steg är whitespace-only commit och nytt pushförsök med hooken aktiv; inga hooks kringgås.
+
+### 2026-10-28 — KNOWLEDGE-IMAGE-FOCUS-01 v2
+
+Architect **APPROVE** på v2:s lokala mappingaudit. UI Critic REVIEW **PASS**: alla sju lokala källbilder behåller hundansiktena i tre beskärningar; inga bildmappningar ändrades. Inventeringen har 24 lokala identiteter och ett test som jämför källkodens versionerade bild-/fokusmappingar samt samtliga assetreferenser, så nytillkomna poster inte kan utelämnas tyst. Kontaktark, per-mapping skärmbilder och `RESULTS.json` visar 54/54 lokala renderkontroller vid 375/430 px, plus kort viewport 375×667.
+
+`CI=1 pnpm check` **PASS** efter en omkörning med tillåten nätverksåtkomst: TypeScript, Edge TypeScript, ESLint, 828 tester PASS och 1 skip. Det fokuserade testet/ESLint för den sista test-parsern passerar, liksom Python-kompilering, kövalidering och diff-check. Oberoende QA **PASS** efter att köversion/sökvägsmetadata korrigerades och återvaliderades; UI Critic REVIEW och Frozen Reviewer **PASS**. Commit `dd38a3d` är pushad till `origin/knowledge/d3-catalog-delivery` 2026-10-28. Fullständiga reviewanteckningar och bildunderlag finns i `docs/design/evidence/knowledge-image-focus-2026-10-25/review/REVIEWS.md`. Livekatalog, saknade Drive-runtime-ID:n och native/TestFlight är **NOT TESTABLE**; inga produkt-, innehålls-, asset- eller databasändringar ingår.
+
+### 2026-10-28 — DEVELOPMENT-PROGRESS-AFFORDANCE-01 implementation checkpoint
+
+Architect **APPROVE** v3 och UI Critic REVIEW **PASS**. Hemmets fasrad är nu en tydlig tokeniserad knapp; utvecklingsrubriken visar `Doos utveckling` utan extra s; den gröna progressbågen följer hundens kronologiska ålder mot 24 månader och lämnar återstoden neutral. Bågen finns inte i vuxet eller ogiltigt/okänt födelsedatum. Semantik, navigation och åldersberäkning är oförändrade.
+
+RN Web public **32/32** och review **32/32**; early/normal/midpoint progresslängd växer monotont, adult/missing/invalid/future har ingen båge, och fasraden klarar 375/430, UNGHUND vid 375 samt 140 % CSS-text utan porträttöverlapp. `CI=1 pnpm check` **PASS**: 829 test PASS och 1 skip. Oberoende beteende/visuell QA **PASS** för den begärda ändringen; en scope-audit räknade 66 ändrade/nya filer och fann samtliga inom de 12 deklarerade skrivvägarna. Slutbilder, jämförelse, `RESULTS.json` och review finns i `docs/design/evidence/development-progress-affordance-01/`.
+
+QA håller helpanelens komposition/bildspråk/innehållstäthet **ÖPPNA**: referensens stora hundporträtt och båge ingår i en tätare layout, medan nuvarande appvy har separat bildremsa, båge och efterföljande block. Backlog `DEVELOPMENT-PANEL-COMPOSITION-01` skapad för separat planering; den är inte blockerare för den avgränsade ändringen. Frozen Reviewer **PASS**; commit/push på befintlig branch följer. Native VoiceOver, Dynamic Type och TestFlight är **NOT TESTABLE**.
+
+
+### 2026-10-28 — LOG-POTTY-ICON-PATTERN-01 v4 implementation checkpoint
+
+Logg visar nu Kiss med gul yta och tre små droppar; Vatten behåller sin blå en-dropsymbol. Samma variant används i snabbval, historik, typval, långtrycksedigering och mönstersammanfattning. Kiss-ikonerna döljs för skärmläsare där en tydlig föräldraetikett redan finns, medan Olyckas typinformation bevaras. Sammanfattningen visar kategori/antal och ungefärligt medianintervall i två nivåer. Räkning, filter och källhändelser ändras inte.
+
+UI Critic REVIEW **PASS**; amberkontrast är 5,38:1. Uppdaterad RN Web public/review verifiering 22/22 vardera, 0 page errors, inklusive öppnad typväljare. `CI=1 pnpm check` 831 pass, 1 skip. Full §14-checklist, separat §14.16-dimensionsbedömning och aggregerade resultat finns i `docs/design/evidence/log-potty-icon-pattern-01/`. QA/Frozen hittade först evidensformat och ett för tidigt typväljarscreenshot; dessa har korrigerats. Erik utökade därefter v5 med grön Mat och tydligare droppsilhuetter för Kiss. V5 BRIEF/Architect-godkännande krävs före de nya kodändringarna; native accessibility är NOT TESTABLE i denna miljö.
+
+### 2026-10-28 — LOG-POTTY-ICON-PATTERN-01 v5 verifieringscheckpoint
+
+Mat är grön endast i Logg; Kiss visar tre upprätta fyllda droppar i snabbval, historik, layoutredigering, typväljare och Olycka. Vatten behåller en blå droppe. UI Critic BRIEF **PROCEED**, Architect **APPROVE**, UI Critic REVIEW **PASS**, oberoende QA **PASS** och Frozen Reviewer **PASS**. Kiss-kontrast 5,38:1; Logg Mat 5,59:1. Public/review RN Web verifiering **22/22** vardera utan browserfel; `CI=1 pnpm check` **PASS** (831 test, 1 skip). §14/§14.16, `RESULTS.json` och v5-jämförelsen är uppdaterade i `docs/design/evidence/log-potty-icon-pattern-01/`. Tasken är stängd på befintlig branch. Inga schema-, data-, dependency- eller innehållsändringar; native accessibility, Dynamic Type och enhetskontroll är **NOT TESTABLE**.
+### 2026-10-28 — UI-GESTURE-MOTION-01 lokal checkpoint
+
+Appägda modaler kan avfärdas med horisontellt svep från dedikerad yta via samma close-guards; befintligt nedåtdrag, scroll och osparat-formulärbeteende bevaras. Huvudfliksvep behåller riktning/gränser och får en tydligare tokeniserad slide/fade, medan stödvyer och reducerad rörelse behåller sina kontrakt. Architect, UI Critic, oberoende QA och Frozen Reviewer **PASS**. `CI=1 pnpm check` **PASS** (98/98 testfiler); public/review-verifiering **27/27** vardera. Native gestkonkurrens, tangentbord och assistive tech är **NOT TESTABLE** utan enhet. Lokalt avslutad på befintlig branch; push väntar på att övriga aktiva tasks verifieras. Se `docs/tasks/dev/UI-GESTURE-MOTION-01.md` och `docs/design/evidence/ui-gesture-motion-01/`.
+
+### 2026-10-28 — TRAINING-EXERCISE-MODAL-UX-01
+
+Övningsmodalen visar kort hundbild med synligt ansikte, separat steg-/delmålsprogress och kompakta status- och navigeringshandlingar; hela instruktionen finns kvar. Public/review **30/30**, `CI=1 pnpm check` **PASS** (98/98 testfiler), UI Critic/QA/Frozen Reviewer **PASS**. Native/live backend är **NOT TESTABLE**. Se taskplan och evidensmapp.
+
+### 2026-10-28 — CHECKLIST-POLYCHROME-ICONS-01
+
+Checklistans ikonväljare, valda trigger och sparade Hem-/Kunskapspunkter använder nu samma tvåtonsikonstil som Logg-panel 5, med en semantiskt färgad symbol på mjuk rundel. Alla 20 persisted ikonnycklar, touch targets, valmarkering och readback bevaras; neutral fallback har en generell grön yta.
+
+Architect **APPROVE**, UI Critic BRIEF/REVIEW **PASS**, oberoende QA **PASS**, Frozen Reviewer **PASS**. Public/review körningar visar 37 ikonval och 7 Kunskapflöden vardera utan browserfel; `CI=1 pnpm check` **PASS** (98/98 testfiler). Native accessibility och live Supabase/RLS är **NOT TESTABLE**. Tasken är lokal och stängd; commit/push samlas med de andra verifierade ändringarna på `knowledge/d3-catalog-delivery`.
+
+### 2026-10-28 — CHECKLIST-TOGGLE-AFFORDANCE-01
+
+Kunskapens faschecklistor använder nu en tydligare 28 pt rund färdigmarkör; Hem behåller sina fyrkantiga dagliga rutor. En fryst granskning hittade felmärkt 140 %-evidens, vilket rättades innan closeout: verifieraren assertar nu RN Web CSS zoom 1.4 och mäter radens CSS-pixelmål före zoom. UI Critic, oberoende QA och Frozen Reviewer PASS. Full kontroll: 840 tester PASS, 1 skip; visuell kontroll 53/53. Native Dynamic Type och fysisk träffyta är fortsatt NOT TESTABLE. Se taskplanen och `docs/design/evidence/checklist-toggle-affordance-2026-10-25/`.
+
+
+### 2026-10-28 — KNOWLEDGE-FAQ-CATALOG-01 Frozen Reviewer PASS
+
+Frozen Reviewer gav PASS utan fynd för hela diffen på knowledge/d3-catalog-delivery mot 150d6bbbf1adf66677b343cfdd154eb568d07aeb. Granskaren verifierade alla 33 ändrade sökvägar mot de 36 deklarerade skrivvägarna, v5-kriterierna, public FAQ-adaptern, isoleringen från HomeContent/review-fixtures, import-/publicerings-SQL, tester och checkpoints. Den öppnade jämförelsebilden och samtliga sex FAQ-renderbilder och bekräftade de tre kontextetiketterna, 140 %-scrollen samt public/review/empty/error-lägena. Den noterade att den sparade PostgreSQL-loggen inte kördes om i slutreview; aktuell körning är endast dokumenterad syntetisk evidence. Full slutlig CI hade separat körts av koordinatorn och passerade TypeScript, Edge TypeScript, ESLint och 100/100 testfiler. FAQ-validator, Python-kompilering, kövalidering, diff-check och scope-audit passerade. Live Supabase/RLS/publicering, trusted-role SQL guards, native hjälpmedel och fysisk Dynamic Type är fortsatt NOT TESTABLE. Nästa steg är commit och push till samma branch; ingen liveimport/publicering.
+
+
+Supplemental slutreview efter att closeout-loggen och whitespace-fixen lagts till: Frozen Reviewer kontrollerade den slutliga staged diffen med 34 paths av 36 deklarerade. Enbart dokumentationslogg och trailing/EOF-whitespace ändrades sedan den första PASS-granskningen; inga produktändringar. Reviewer bekräftade att granskningen fortfarande är PASS utan fynd. git diff --cached --check PASS.
+
+
+### 2026-10-28 — KNOWLEDGE-FAQ-CATALOG-01 post-completion release history
+
+After v5 commit f75279f6b71fa2a224297a9ffc05150244d84c8c was pushed to origin/knowledge/d3-catalog-delivery, the required history entry was added to HISTORY-2026.md. Critic reviewed the v6 closeout-only path addition and returned PROCEED; the product scope, v5 acceptance and review statuses did not change. The added history record reports only the already verified local/database/native status.
+
+
+Supplemental closeout review: Frozen Reviewer PASS utan nya fynd efter att HISTORY-2026.md och v6-planvägen lagts till. Slutlig task-base audit omfattar 35 paths inom 37 deklarerade paths. Commit f75279f6b71fa2a224297a9ffc05150244d84c8c är bekräftad på origin/knowledge/d3-catalog-delivery; inga produkt- eller live-databasändringar efter den.

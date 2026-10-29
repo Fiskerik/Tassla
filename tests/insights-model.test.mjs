@@ -32,6 +32,16 @@ test('strict parser accepts a local week with only observed dates and exact JSON
   assert.deepEqual(model.insightVisibleTotals(parsed.days), { pee: 2, poop: 0, accident: 0, sleep: 0, awake: 0 });
 });
 
+test('today uses exactly the observed local date and its next-day exclusive bound', () => {
+  const response = weeklyResponse({ period: 'today', periodStartLocal: '2026-10-22', periodEndExclusiveLocal: '2026-10-23', days: [daily('2026-10-22', { peeCount: 2 })] });
+  const parsed = model.parseDogEventInsights(response, 'today', 'Europe/Stockholm');
+  assert.equal(model.insightsDateRange(parsed), '22 okt 2026');
+  assert.equal(parsed.days[0].peeCount, 2);
+  assert.throws(() => model.parseDogEventInsights({ ...response, periodStartLocal: '2026-10-21' }, 'today', 'Europe/Stockholm'));
+  assert.throws(() => model.parseDogEventInsights({ ...response, periodEndExclusiveLocal: '2026-10-24' }, 'today', 'Europe/Stockholm'));
+  assert.throws(() => model.parseDogEventInsights({ ...response, days: [] }, 'today', 'Europe/Stockholm'));
+});
+
 test('parser rejects extra fields, malformed dates, gaps, unordered buckets and unsafe counts', () => {
   assert.throws(() => model.parseDogEventInsights({ ...weeklyResponse(), rawEventIds: [] }, 'week', 'Europe/Stockholm'));
   assert.throws(() => model.parseDogEventInsights(weeklyResponse({ observedThroughLocal: '2026-02-30' }), 'week', 'Europe/Stockholm'));

@@ -22,7 +22,7 @@ test('removing labels does not remove FAQ content, publication gates or actual m
   assert.match(faq, /Inga frågor publicerade ännu/);
   const checklist = read('src/features/knowledge/PuppyChecklistScreen.tsx');
   assert.match(checklist, /EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true'/);
-  assert.match(checklist, /if \(!reviewEnabled \|\|/);
+  assert.match(checklist, /loadedCatalog = reviewEnabled\s*\?/);
   assert.doesNotMatch(checklist, /reviewInfoOpen|Visa information om checklistorna/);
   assert.match(checklist, /Det gick inte att kontrollera om ändringen sparades/);
   const training = read('src/features/training/PublishedTrainingScreen.tsx');

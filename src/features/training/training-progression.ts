@@ -43,6 +43,7 @@ export type TrainingProgressionAction =
   | { kind: 'start_or_resume'; programVersionId: string }
   | { kind: 'record_session'; programVersionId: string; stepId: string; feedback: TrainingSessionFeedback }
   | { kind: 'confirm_step'; programVersionId: string; stepId: string }
+  | { kind: 'undo_step'; programVersionId: string; stepId: string; expectedMilestoneId: string }
   | { kind: 'next' | 'back' | 'repeat' | 'pause' | 'maintenance'; programVersionId: string; stepId: string };
 
 export interface PendingTrainingProgression {
@@ -146,7 +147,9 @@ export function trainingProgressionPresentation(
   const canPractice = journey.state !== 'paused' && stepIndex >= 0;
   return {
     journey,
-    stateLabel: journey.state === 'paused' ? 'Pausad' : journey.state === 'maintenance' ? 'Underhåll' : 'Pågående',
+    // Older saved journeys may still carry the legacy maintenance state. Keep
+    // the user-facing status focused on whether the journey can be resumed.
+    stateLabel: journey.state === 'paused' ? 'Pausad' : 'Pågående',
     activeStepId: stepIndex >= 0 ? journey.active_step_id : null,
     activeStepTitle: stepIndex >= 0 ? steps[stepIndex].title : null,
     loggedSessions: selected.sessions.length,
@@ -200,6 +203,7 @@ export function sameTrainingProgressionAction(left: TrainingProgressionAction, r
   return left.kind === right.kind
     && left.programVersionId === right.programVersionId
     && ('stepId' in left ? left.stepId : null) === ('stepId' in right ? right.stepId : null)
+    && ('expectedMilestoneId' in left ? left.expectedMilestoneId : null) === ('expectedMilestoneId' in right ? right.expectedMilestoneId : null)
     && ('feedback' in left ? left.feedback : null) === ('feedback' in right ? right.feedback : null);
 }
 
@@ -207,7 +211,7 @@ export function isTrainingProgressionResult(value: unknown): value is TrainingPr
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   const validAction = row.action === 'start_or_resume' || row.action === 'record_session'
-    || row.action === 'confirm_step' || row.action === 'next' || row.action === 'back'
+    || row.action === 'confirm_step' || row.action === 'undo_step' || row.action === 'next' || row.action === 'back'
     || row.action === 'repeat' || row.action === 'pause' || row.action === 'maintenance';
   return typeof row.operation_id === 'string'
     && validAction
@@ -235,6 +239,8 @@ export function operationAppearsInReadback(
     return Boolean(result.milestone_id && workspace.milestones.some((row) => row.journey_id === journey.id
       && row.id === result.milestone_id));
   }
+  if (result.action === 'undo_step') return Boolean(result.milestone_id && journey.last_operation_id === result.operation_id
+    && journey.active_step_id === result.active_step_id && !workspace.milestones.some(row => row.journey_id === journey.id && row.step_id === result.active_step_id));
   if (result.action === 'start_or_resume') return true;
   return journey.last_operation_id === result.operation_id
       && journey.active_step_id === result.active_step_id
@@ -255,5 +261,7 @@ export function operationAppliedToWorkspace(
     && row.program_version_id === action.programVersionId && row.operation_id === operationId);
   if (action.kind === 'confirm_step') return workspace.milestones.some((row) => row.journey_id === journey.id
     && row.step_id === action.stepId && row.confirmation_operation_id === operationId);
+  if (action.kind === 'undo_step') return journey.last_operation_id === operationId && journey.active_step_id === action.stepId
+    && !workspace.milestones.some(row => row.journey_id === journey.id && row.step_id === action.stepId);
   return journey.last_operation_id === operationId;
 }

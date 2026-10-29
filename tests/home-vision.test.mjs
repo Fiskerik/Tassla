@@ -20,7 +20,8 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(home, /dailyHeading:[\s\S]*flexDirection: 'row'/);
   assert.match(home.slice(home.indexOf('<View style=\{styles\.dailyHeading\}'), home.indexOf('{dailyRefreshError')), /<ProgressControl coverage=\{checklistCoverage\} completed=\{checklistCompleted\} total=\{checklistTotal\} onPress=\{onOpenProgress\} \/>/);
   assert.match(home, /selectDailyProgress\(dailyActivities, dailyState === 'hidden' \? 'unknown' : dailyState\)/);
-  assert.match(home, /dailyProgress\.activities\.slice\(0, 5\)/);
+  assert.match(home, /const HOME_DAILY_PREVIEW_LIMIT = 3/);
+  assert.match(home, /dailyProgress\.activities\.slice\(0, HOME_DAILY_PREVIEW_LIMIT\)/);
   assert.match(home, /accessibilityLabel=\{`\$\{dailyProgress\.completedCount\} av \$\{dailyProgress\.totalCount\} dagsuppgifter klara`\}/);
   assert.match(home, /accessibilityLabel="Öppna Checklistor"/);
   const dailyHeading = home.slice(home.indexOf('<View style={styles.dailyHeading}'), home.indexOf('{dailyRefreshError'));
@@ -29,9 +30,9 @@ test('Home follows the rev02 content order without duplicate Today groups', () =
   assert.match(home, /DestinationTile destination="training" compact variant="home"/);
   assert.match(home, /DestinationTile destination="knowledge" compact variant="home"/);
   for (const removedHeading of ['Idag', 'Loggat idag', 'Nästa träningssteg', 'Planerat idag', 'Vad vill du göra nu?']) {
-    if (removedHeading === 'Vad vill du göra nu?') assert.match(home, /Vad vill du göra nu\?/);
-    else assert.doesNotMatch(home, new RegExp(`>${removedHeading}<`));
+    assert.doesNotMatch(home, new RegExp(`>${removedHeading}<`));
   }
+  assert.match(home, /accessibilityLabel="Vad vill du göra nu\?"/);
   assert.doesNotMatch(workspace, /dailyFixture|ReviewDailyFixture/);
   assert.match(gallery, /<DailyActivityItem/);
   assert.match(gallery, /<DestinationTile destination="knowledge"/);

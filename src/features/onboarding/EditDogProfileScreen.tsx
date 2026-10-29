@@ -412,7 +412,7 @@ export function EditDogProfileScreen({
       <Text style={styles.infoBody}>
         Hundens profil och sparade loggar, hälsouppgifter, rutiner, checklistor och träningsdata raderas. Det går inte att ångra.
         {' '}{ownedDogs.length > 1 ? 'Övriga hundprofiler och Tassla-kontot finns kvar.' : 'Tassla-kontot och din inloggning finns kvar. Du kan lägga till en ny hund efteråt.'}
-        {draftDiffers || kennelDraftDiffers ? ' Osparade ändringar i den här profilen kastas också.' : ''}
+        {draftDiffers || kennelDraftDiffers ? ' Osparade ändringar i den här profilen sparas inte.' : ''}
       </Text>
     </Dialog>
     <DogProfileSwitcherSheet visible={dogSwitcherVisible} dogs={ownedDogs} activeDogId={activeDogId}

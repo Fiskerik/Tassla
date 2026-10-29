@@ -299,7 +299,7 @@ function ActivitySourceIcon({ item }: { item: HomeDailyActivity }) {
   </View>;
   const icon = item.icon ?? 'list-outline';
   return <View accessibilityRole="image" accessibilityLabel="Rutin" style={styles.routineIcon}>
-    <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="small" testID={`checklist-icon-${item.id}`} />
+    <ThemedIcon name={icon} tone={dailyRoutineChecklistIconTone(icon)} size="medium" testID={`checklist-icon-${item.id}`} />
   </View>;
 }
 

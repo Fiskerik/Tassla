@@ -32,6 +32,8 @@ Avslutade paketnotiser har samlats här. Varje post bevarar ursprunglig status o
 | [HOME-ROUTINE-CHECKLIST-01](#home-routine-checklist-01) | 2026-10-15 | lokal UI-slice klar; QA/Reviewer PASS; live DB/native ej verifierat | `fix: clarify routine deletion cascade` på `codex/ux-rethink-2026-10-15` |
 | [P04-CONTENT](#p04-content) | okänt | `published` i bundlen, medan onboarding-only-versionen förblir `draft` för att inte läcka till den vanliga åldersbaserade feeden | ej angivet |
 | [UI-TRAINING-OVERVIEW-01](#ui-training-overview-01) | 2026-10-19 | implementerad, lokalt verifierad och pushad; QA/Reviewer PASS; native/live-data ej verifierat | `b59169c` |
+| [TRAINING-LOGGING-UX-01](#training-logging-ux-01) | 2026-10-27 | implementerad, lokalt verifierad och pushad till `knowledge/d3-catalog-delivery`; UI Critic/QA/Reviewer PASS | `9a5317484286e731d9d43734a7d0881e9c37bf4f` |
+| [DEVELOPMENT-PANEL-COMPOSITION-01](#development-panel-composition-01) | 2026-10-28 | avgränsad implementation/QA/Reviewer klar lokalt; commit/push återstår | ej skapat |
 
 ## APP-01-PHONE
 
@@ -676,3 +678,29 @@ Kodcommit `348530a332584d0dcec8f30296c88a05f3f9b0cf` på `codex/agent-workflow-s
 Lokal leveransgranskning: Architect APPROVE, Critic PROCEED, Dog Expert PASS, Compliance APPROVE, Security PASS, oberoende QA PASS, Reviewer PASS. pnpm check82/82, Python6/6, fem PostgreSQL16-prober efter hela migrationskedjan, render12scenarier och public iOS-export PASS. [Kontrakt/evidens och driftinstruktion](../content/artiklar/README.md#drive-articles-01--implementation-2026-10-24).
 
 Öppet: applicera migration003/004 i Supabase, verifiera live-åtkomst/readback, driftsätt endpoint och konfigurera skyddad Drive/GitHub-miljö; faktisk synk och signerad/TestFlight-build är inte genomförda. Inga live-migrationer eller Drive-skrivningar gjordes i uppgiften. Artikeldata följer inte automatiskt med enbart genom nytt bygge.
+
+
+## TRAINING-LOGGING-UX-01 — progression, passloggning och artikelkällor, 2026-10-27
+
+Commit `9a5317484286e731d9d43734a7d0881e9c37bf4f` (`Polish training progress and article references`) är pushad till `origin/knowledge/d3-catalog-delivery`. Träningskort visar ägarbekräftade delmål som progress och håller passräknaren separat. Pausa/Underhåll-knapparna togs bort; pausad resa erbjuder en tydlig fortsättning till sparat steg. Passloggningen förenklades och delmål kräver separat ägarbekräftelse. Artikelläsarens källor visas som kompakta numrerade länkar.
+
+UI Critic REVIEW PASS, oberoende QA PASS och Reviewer APPROVE. Pre-commit och pre-push körde `pnpm check`: TypeScript, edge TypeScript, ESLint och 824 tester PASS, 1 skip; `git diff --check` PASS. Träningens RN Web-verifiering 28/28 och artikelläsaren 15/15 PASS. [Taskplan och evidens](../tasks/dev/TRAINING-LOGGING-UX-01.md).
+
+Ingen migration, dependency, API/persistence-kontrakt eller träningsråd ändrades. RN Web-fixtures använder syntetiska data; live Supabase/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight är inte verifierade här. Migrationerna är enligt användarens rapport avklarade.
+
+## DEVELOPMENT-PANEL-COMPOSITION-01
+
+Implementationen på `knowledge/d3-catalog-delivery` från `ce610cb` använder ett större responsivt hundporträtt, en grön kronologisk åldersbåge som slutar vid markören, en kort kalenderåldersförklaring och en grupperad milstolpsyta med polykroma ämnesikoner och kompakta källnummer. Architect plan v2/v3 APPROVE, UI Critic REVIEW PASS och oberoende QA PASS, inklusive supplemental dokument-/path-audit. `CI=1 pnpm check` **PASS** (99/99 testfiler); public/review **52/52** och **60/60**; fokustester 3/3. Initial QA scope-audit var 78 ändrade/nya paths; efter slutdokumentationen bekräftade supplemental QA **81 paths**, alla inom 17 godkända.
+
+Efter de tre slutdokumenten bekräftade supplemental QA 81 ändrade/nya paths inom de 17 godkända. Första Frozen Reviewer-granskningen blockerade endast på stale count/slutposter; synkroniserad slutlig re-review gav därefter **APPROVE/PASS**. Commit `1aa0768` (`Polish development panel composition`) är pushad till `origin/knowledge/d3-catalog-delivery`; pre-commit och pre-push `pnpm check` passerade (842 PASS, 1 skip). Detta är inte full panel 2-, sakgransknings-, native-, RLS- eller TestFlight-acceptans.
+
+
+## KNOWLEDGE-FAQ-CATALOG-01 — public FAQ-katalog v1, 2026-10-28
+
+Commit f75279f6b71fa2a224297a9ffc05150244d84c8c (Add reviewed public knowledge FAQ catalog) är pushad till origin/knowledge/d3-catalog-delivery. Kunskapens fyra generella, källspårade FAQ-svar går via separat PublishedFaq-adapter; review-fixtures förblir avskilda och FAQ-data når inte HomeContent. Import-SQL skapar reviewed/opublicerat innehåll och publicerings-SQL är en separat, digest-skyddad åtgärd. Ingen liveimport eller publicering gjordes.
+
+Plan v5 Critic/Architect APPROVE, Dog Expert PASS WITH CONDITIONS utan kvarvarande copyändringar, statisk Security utan blockerare, UI Critic REVIEW PASS, oberoende QA PASS och Frozen Reviewer PASS utan fynd. Frozen Reviewer bekräftade slutdiffen och 375/430/140 %-scrollbilderna efter att fliken Efter ålder fått plats. Public/review RN Web 152/152 respektive 62/62 utan browserfel. CI passerade på pre-commit och pre-push: TypeScript, Edge TypeScript, ESLint och 100 testfiler; push-hookens 850 tester gav 849 PASS och 1 skip. FAQ-validator, kövalidering, Python-kompilering och diffkontroll passerade.
+
+PostgreSQL-provet använde en disposable lokal PostgreSQL med syntetiska tabeller/roller och rollback; körloggen saknar exakta kommandon, tampermetod och minorversion. Inget live Supabase/RLS, faktisk FAQ-import/publicering, trusted-role guard, native VoiceOver/TalkBack, Dynamic Type på enhet eller TestFlight verifierades. Veterinärsignoff görs inte anspråk på. Se [tasken](../tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md) och [verifieringen](../design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md).
+
+Administrativt closeout v6: Critic PROCEED för denna historikrad som post-completion-tillägg; v5:s produktacceptans är oförändrad.

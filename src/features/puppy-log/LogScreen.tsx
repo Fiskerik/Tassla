@@ -13,13 +13,14 @@ import { LogDateCalendar } from './LogDateCalendar';
 import { localMonthKey } from './log-calendar-model';
 import { InsightsScreen, type InsightsLoadState } from './InsightsScreen';
 import type { InsightsPeriod } from './insights-model';
+import type { DogEventCursor } from '../../data/workspace-data';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 export type LogEventEditorDraft = { type: LogEventType; accidentKinds: AccidentKind[]; preserveLegacyUnknownAccident: boolean; date: string; time: string; note: string };
 export type LogEditorRecovery = { eventId: string; draft: LogEventEditorDraft };
 type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, refreshing = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, onActiveEditorChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, loadedThrough = null, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -29,18 +30,21 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   persistLayout?: boolean;
   busy?: boolean;
   loading?: boolean;
+  refreshing?: boolean;
   loadError?: boolean;
   refreshError?: boolean;
   onReload?: () => void;
   mutation?: QuickLogMutationView | null;
   editorRecovery?: LogEditorRecovery | null;
   onEditorRecoveryChange?: (recovery: LogEditorRecovery | null) => void;
+  onActiveEditorChange?: (id: string | null) => void;
   loadMoreError?: boolean;
   onRetry?: () => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
   onUndo?: (id: string) => void;
   hasMore?: boolean;
   loadingMore?: boolean;
+  loadedThrough?: DogEventCursor | null;
   onLoadMore?: () => void;
   calendarMarkerMonth?: string;
   calendarMarkers?: readonly string[];
@@ -48,7 +52,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   onLoadCalendarMonth?: (month: string) => void;
   onCancelCalendarRead?: () => void;
   view?: 'today' | 'overview';
-  onViewChange?: (view: 'today' | 'overview') => void;
+  onViewChange?: (view: 'today' | 'overview', options?: { preserveEventId?: string }) => void;
   profileOrigin?: boolean;
   onReturnToProfile?: () => void;
   insightsPeriod?: InsightsPeriod;
@@ -95,8 +99,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const selectedDateEvents = useMemo(() => displayedEvents
     .filter((event) => localDateTimeParts(event.occurredAt).date === selectedDate)
     .sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt) || a.id.localeCompare(b.id)), [displayedEvents, selectedDate]);
-  const oldestLoadedEvent = useMemo(() => displayedEvents.reduce<LogEvent | null>((current, event) => !current || Date.parse(event.occurredAt) < Date.parse(current.occurredAt) ? event : current, null), [displayedEvents]);
-  const oldestLoadedDate = oldestLoadedEvent ? localDateTimeParts(oldestLoadedEvent.occurredAt).date : null;
+  const oldestLoadedDate = loadedThrough && Number.isFinite(Date.parse(loadedThrough.occurredAt)) ? localDateTimeParts(loadedThrough.occurredAt).date : null;
   const hasOlderDateBoundary = oldestLoadedDate !== null && oldestLoadedDate < selectedDate;
   const dayReadComplete = !hasMore || hasOlderDateBoundary;
   const pendingAdd = mutation?.kind === 'add' && mutation.status === 'pending'
@@ -111,6 +114,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const needsDatePage = hasMore && !hasOlderDateBoundary && !loadMoreError && !loadError && !loading;
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
+  useEffect(() => {
+    onActiveEditorChange?.(editingId);
+    return () => onActiveEditorChange?.(null);
+  }, [editingId, onActiveEditorChange]);
   const editLocked = busy || Boolean(editingEvent && mutation?.id === editingEvent.id && mutation.status !== 'saved');
   const recoveryForEditor = editorRecovery?.eventId === editingId ? editorRecovery : null;
   const unresolvedEditorMutation = Boolean(recoveryForEditor && mutation?.id === recoveryForEditor.eventId && (mutation.status === 'pending' || mutation.status === 'unsure'));
@@ -179,15 +186,15 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   }, [layoutOwnerId, persistLayout]);
 
   useEffect(() => {
-    if (!needsDatePage || loadingMore || !onLoadMore) {
+    if (view !== 'today' || !needsDatePage || loadingMore || !onLoadMore) {
       if (!loadingMore) autoLoadAnchor.current = '';
       return;
     }
-    const anchor = `${selectedDate}:${displayedEvents.length}:${oldestLoadedEvent?.id ?? 'empty'}`;
+    const anchor = `${selectedDate}:${loadedThrough?.occurredAt ?? 'empty'}:${loadedThrough?.id ?? 'empty'}`;
     if (autoLoadAnchor.current === anchor) return;
     autoLoadAnchor.current = anchor;
     onLoadMore();
-  }, [displayedEvents, loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, oldestLoadedEvent, selectedDate]);
+  }, [loadingMore, loadError, loadMoreError, needsDatePage, onLoadMore, loadedThrough, selectedDate, view]);
 
   function selectType(type: LogEventType, timestamp: number, force = false) {
     setAddEventVisible(false);
@@ -367,6 +374,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       <InsightsScreen period={insightsPeriod} onPeriodChange={(period) => onInsightsPeriodChange?.(period)}
         state={insightsState} onRefresh={() => onRefreshInsights?.()}
         onOpenLog={() => { setSelectedDate(localDate()); onViewChange?.('today'); }}
+        events={events} eventsAvailable={!loading && !refreshing && !loadError && !refreshError && !busy && mutation?.status !== 'unsure'}
+        hasMore={hasMore} loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={onLoadMore}
+        loadedThrough={loadedThrough?.occurredAt ?? null}
+        onOpenEvent={(event) => { setSelectedDate(localDateTimeParts(event.occurredAt).date); setEditingId(event.id); setEditorMinimized(false); onViewChange?.('today', { preserveEventId: event.id }); }}
         onBack={profileOrigin ? () => onReturnToProfile?.() : () => onViewChange?.('today')}
         backLabel={profileOrigin ? 'Tillbaka till Hundprofil' : 'Tillbaka till Logga'} dogName={dogName} />
     </View>;
@@ -451,7 +462,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         {deleteTarget ? <Dialog visible title="Radera loggpost?" compactActions onRequestClose={() => setDeleteTarget(null)} onConfirm={confirmDelete}>
           <MessageCard>{deleteTarget ? `${LOG_EVENT_LABELS[deleteTarget.type]} · ${localDateTimeParts(deleteTarget.occurredAt).date} tas bort.` : ''}</MessageCard>
         </Dialog> : null}
-        {discardEditorVisible ? <Dialog visible title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
+        {discardEditorVisible ? <Dialog visible title="Lämna utan att spara?" confirmLabel="Lämna utan att spara" compactActions onRequestClose={() => setDiscardEditorVisible(false)} onConfirm={discardEditor}>
           <MessageCard>Ändringen är inte sparad. Dina tidigare loggposter påverkas inte.</MessageCard>
         </Dialog> : null}
       </BottomSheet> : null}
@@ -492,8 +503,18 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       </BottomSheet>
       {patterns.length > 0 ? <>
         <SectionHeader title="Dina senaste mönster" />
-        <Card accessibilityLabel="Dina senaste mönster för Kiss och Bajs">
-          {patterns.map((item) => <Text key={item.type} style={styles.patternText}>{LOG_EVENT_LABELS[item.type]}: {item.count} gånger{item.medianIntervalMinutes === null ? '' : ` · ungefär ${formatInterval(item.medianIntervalMinutes)}`}</Text>)}
+        <Card accessibilityLabel={`Dina senaste mönster: ${patterns.map((item) => `${LOG_EVENT_LABELS[item.type]}, ${item.count} gånger${item.medianIntervalMinutes === null ? '' : `, ungefär ${formatInterval(item.medianIntervalMinutes)}`}`).join('. ')}`}>
+          <View style={styles.patternList}>
+            {patterns.map((item, index) => <View key={item.type} style={styles.patternRow}>
+              <View style={styles.patternMain}>
+                <IconChip category={item.type} variant="rev02-log" />
+                <Text style={styles.patternCategory}>{LOG_EVENT_LABELS[item.type]}</Text>
+                <Text style={styles.patternCount}>{item.count} gånger</Text>
+              </View>
+              {item.medianIntervalMinutes === null ? null : <Text style={styles.patternInterval}>Ungefär {formatInterval(item.medianIntervalMinutes)}</Text>}
+              {index < patterns.length - 1 ? <View style={styles.patternDivider} /> : null}
+            </View>)}
+          </View>
         </Card>
       </> : null}
 
@@ -743,7 +764,13 @@ const styles = StyleSheet.create({
   grid: { gap: tokens.spacing.sm }, gridRow: { flexDirection: 'row', gap: tokens.spacing.sm }, moreRow: { marginTop: tokens.spacing.sm }, moreIcon: { width: tokens.size.chipLg, minHeight: tokens.size.chipLg, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.selectedSurface },
   addEventButton: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm, paddingHorizontal: tokens.spacing.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.primary, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.primary }, addEventPressed: { backgroundColor: tokens.colors.primaryPressed, borderColor: tokens.colors.primaryPressed }, addEventDisabled: { opacity: 0.55 }, addEventLabel: { ...tokens.typography.label, color: tokens.colors.onPrimary }, addEventHelp: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   loadingOlder: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.sm }, loadingOlderText: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
-  patternText: { ...tokens.typography.body, color: tokens.colors.textPrimary, paddingVertical: tokens.spacing.xs },
+  patternList: { gap: tokens.spacing.xs },
+  patternRow: { gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
+  patternMain: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: tokens.spacing.sm },
+  patternCategory: { ...tokens.typography.label, color: tokens.colors.textPrimary },
+  patternCount: { ...tokens.typography.caption, color: tokens.colors.textPrimary, marginLeft: 'auto' },
+  patternInterval: { ...tokens.typography.caption, color: tokens.colors.textSecondary, paddingLeft: tokens.size.chipMd + tokens.spacing.sm },
+  patternDivider: { height: tokens.size.stroke, backgroundColor: tokens.colors.border, marginTop: tokens.spacing.xs },
   empty: { padding: tokens.spacing.lg, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, gap: tokens.spacing.xs },
   emptyTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary }, emptyBody: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   refreshErrorState: { gap: tokens.spacing.xs },
@@ -775,9 +802,9 @@ function LayoutEditor({ layout, onMove, onDone, error }: { layout: QuickLogLayou
     <Text style={styles.layoutTitle} accessibilityRole="header">Ändra snabbval</Text>
     <Text style={styles.layoutBody}>Tryck på en ruta för att flytta den mellan snabbval och Mer.</Text>
     <Text style={styles.layoutGroupTitle}>Visas först</Text>
-    {layout.primary.map((type) => <ListRow key={`primary-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Flytta till Mer" onPress={() => onMove(type, 'more')} />)}
+    {layout.primary.map((type) => <ListRow key={`primary-${type}`} category={type} iconVariant="rev02-log" title={LOG_EVENT_LABELS[type]} meta="Flytta till Mer" onPress={() => onMove(type, 'more')} />)}
     <Text style={styles.layoutGroupTitle}>Under Mer</Text>
-    {layout.more.map((type) => <ListRow key={`more-${type}`} category={type} title={LOG_EVENT_LABELS[type]} meta="Visa bland snabbval" onPress={() => onMove(type, 'primary')} />)}
+    {layout.more.map((type) => <ListRow key={`more-${type}`} category={type} iconVariant="rev02-log" title={LOG_EVENT_LABELS[type]} meta="Visa bland snabbval" onPress={() => onMove(type, 'primary')} />)}
     {error ? <MessageCard tone="error">Snabbvalen kunde inte sparas på enheten.</MessageCard> : null}
     <Button variant="tertiary" label="Klar" accessibilityLabel="Klar med snabbval" onPress={onDone} />
   </View>;

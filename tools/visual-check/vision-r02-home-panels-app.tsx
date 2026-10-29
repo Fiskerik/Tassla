@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { View, Text } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { AppScreen } from '../../src/components/AppPrimitives';
 import { BottomNav } from '../../src/components/ui';
 import { HomeScreen } from '../../src/features/home/HomeScreen';
@@ -11,6 +11,9 @@ import { DailyChecklistScreen } from '../../src/features/home/DailyChecklistScre
 import { DailyProgressScreen } from '../../src/features/home/DailyProgressScreen';
 import { DevelopmentScreen } from '../../src/features/home/DevelopmentScreen';
 import { KnowledgeScreen } from '../../src/features/knowledge/KnowledgeScreen';
+import { KnowledgeImage } from '../../src/features/knowledge/KnowledgeImage';
+import { editorialImageForGuide, knowledgeImageForGuide, knowledgeImageFocusForGuide } from '../../src/features/knowledge/editorial-image-assignment';
+import knowledgeImageFocusInventory from '../../docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json';
 import { PlannedHealthScreen } from '../../src/features/health/PlannedHealthScreen';
 import { PublishedTrainingScreen } from '../../src/features/training/PublishedTrainingScreen';
 import { activeMainTabDestination, logViewScrollKeys, productRouteScrollKeys } from '../../src/features/home/main-navigation';
@@ -49,7 +52,8 @@ const dog: OwnedDog = {
   name: 'Luna',
   breed_id: 'golden',
   birth_date: ageScenario === 'missing' ? null : ageScenario === 'invalid' ? '2026-02-30'
-    : ageScenario === 'future' ? dateOffset(today, 30) : dateOffset(today, -77),
+    : ageScenario === 'future' ? dateOffset(today, 30) : ageScenario === 'early' ? dateOffset(today, -30)
+      : ageScenario === 'midpoint' ? dateOffset(today, -365) : ageScenario === 'adult' ? dateOffset(today, -900) : dateOffset(today, -77),
   age_display_unit: 'weeks',
 };
 const profileDog: OwnedDog = profileBreedScenario === 'legacy' ? { ...dog, breed_id: 'retired-test-breed' } : dog;
@@ -93,7 +97,7 @@ const knowledgeReviewGuides: HomeContent[] = [
 ];
 const articleReaderReviewContent: HomeContent[] = [
   { id: 'review-article:first-day:v1', contentId: 'review-article:first-day', version: 1, slug: 'forsta-dygnet-hemma', title: 'Första dygnet hemma', body: 'När ni precis har kommit hem är allt nytt för valpen. De första dygnen behöver ni inte fokusera på självständighet, rumsrenhet eller koppelträning. Nu handlar det om att låta valpen landa och känna sig trygg i sitt nya hem.\n\n## Låt valpen landa\n\nPlanera en stillsam första dag. Låt valpen undersöka ett begränsat, valpsäkrat område i egen takt. Sitt gärna nära och låt den själv söka kontakt.\n\n## Börja med en rastningsplats\n\nGå till en lugn plats där valpen får möjlighet att kissa direkt när ni kommer hem. Beröm stillsamt när det händer ute.\n\n## Mat och vatten\n\nHa alltid färskt vatten tillgängligt. Fråga uppfödaren om valpens foder, mängd och mattider.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
-  { id: 'review-article:house-training:v1', contentId: 'review-article:house-training', version: 1, slug: 'rumsrenhet', title: 'Rumsrenhet – så hjälper du valpen att lyckas', body: 'En liten valp kan ännu inte hålla sig som en vuxen hund. Därför behöver du hjälpa den att komma ut i rätt tid.\n\n## När ska ni gå ut?\n\nBörja med att gå ut när valpen vaknar, efter mat eller dryck och efter lek.\n\n## Om det händer inne\n\nSäg inte till eller straffa. Städa och erbjud nästa rastning tidigare.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
+  { id: 'review-article:house-training:v1', contentId: 'review-article:house-training', version: 1, slug: 'rumsrenhet', title: 'Rumsrenhet – så hjälper du valpen att lyckas', body: 'En liten valp kan ännu inte hålla sig som en vuxen hund. Därför behöver du hjälpa den att komma ut i rätt tid.\n\n## När ska ni gå ut?\n\nBörja med att gå ut när valpen vaknar, efter mat eller dryck och efter lek.\n\n## Om det händer inne\n\nSäg inte till eller straffa. Städa och erbjud nästa rastning tidigare.', contentType: 'article', sources: ['https://www.rspca.org.uk/adviceandwelfare/pets/dogs/puppycare', 'https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf', 'https://avsab.org/resources/position-statements/'], isAiGenerated: false, recommended: true },
   { id: 'review-article:sleep:v1', contentId: 'review-article:sleep', version: 1, slug: 'valpens-somn', title: 'Hur mycket ska en valp sova?', body: 'En valp sover och vilar stora delar av dygnet. Behovet varierar med ålder, individ, aktivitet och nya intryck.\n\n## Sömn kommer i omgångar\n\nEfter lek, träning eller en ny miljö kan valpen behöva återhämta sig.\n\n## Hjälp valpen att komma till ro\n\nOrdna en trygg, lugn sovplats och låt valpen sova ostört.', contentType: 'article', sources: [], isAiGenerated: false, recommended: true },
   { id: 'review-article:other:v1', contentId: 'review-article:other', version: 1, slug: 'ej-rekommenderad', title: 'En artikel utan hundmatchning', body: 'Det här innehållet finns i biblioteket men saknar matchning för den aktiva hunden.', contentType: 'article', sources: [], isAiGenerated: false, recommended: false },
   { id: 'review-article:unknown:v1', contentId: 'review-article:unknown', version: 1, slug: 'okand-rekommendation', title: 'En artikel med okänd matchning', body: 'Det här innehållet finns i biblioteket men har ingen bekräftad rekommendation.', contentType: 'article', sources: [], isAiGenerated: false },
@@ -305,6 +309,44 @@ const initialProgressCount = requestedProgressCount !== null && /^\d+$/.test(req
 const initialCompletion = initialProgressCount === null ? {}
   : Object.fromEntries(rows.map((activity, index) => [activity.id, index < initialProgressCount]));
 
+const knowledgeImageFocusAuditItems = knowledgeImageFocusInventory.mappings.map(({ key, label, contentId, version, slug, asset }) => ({
+  key,
+  label,
+  expectedSource: asset,
+  item: { contentId, version, ...(slug ? { slug } : {}) },
+}));
+
+function KnowledgeImageFocusAudit() {
+  const requestedItem = params.get('focusItem');
+  const contactSheet = params.get('focusContactSheet') === 'true';
+  const visibleItems = requestedItem ? knowledgeImageFocusAuditItems.filter((row) => row.key === requestedItem) : knowledgeImageFocusAuditItems;
+  return <ScrollView testID="knowledge-image-focus-audit" style={{ flex: 1, backgroundColor: '#f5f0e5' }} contentContainerStyle={{ padding: 16, gap: 12,
+    flexDirection: contactSheet ? 'row' : 'column', flexWrap: contactSheet ? 'wrap' : 'nowrap' }}>
+    <Text style={{ width: contactSheet ? '100%' : undefined, fontSize: 18, fontWeight: '700', color: '#183c30' }}>Artikelbilder · fokusgranskning</Text>
+    {visibleItems.map(({ key, label, item, expectedSource }) => {
+      const source = knowledgeImageForGuide(item) ?? editorialImageForGuide(item);
+      const focus = knowledgeImageFocusForGuide(item, source);
+      const frames = [
+        { key: 'featured', name: 'Featured 16:9', ratio: 16 / 9 },
+        { key: 'related', name: 'Relaterad 4:3', ratio: 4 / 3 },
+        { key: 'reader', name: 'Läsare 16:9', ratio: 16 / 9 },
+      ];
+      return <View key={key} testID={`knowledge-image-focus-row-${key}`} style={{ width: contactSheet ? '48%' : '100%', padding: 10, borderRadius: 12, backgroundColor: '#fffdf8', gap: 8 }}>
+        <Text style={{ fontSize: 12, fontWeight: '700', color: '#183c30' }}>{label}</Text>
+        <Text testID={`knowledge-image-focus-meta-${key}`} style={{ fontSize: 10, color: '#58645e' }}>{item.contentId} · v{item.version} · {item.slug ?? 'no slug'} · {expectedSource} · x {focus.x.toFixed(2)} · y {focus.y.toFixed(2)} · zoom {focus.zoom.toFixed(2)}</Text>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {frames.map(({ key: frameKey, name, ratio }) => <View key={frameKey} style={{ width: '32%', gap: 4 }}>
+            <View testID={`knowledge-image-focus-${key}-${frameKey}`} style={{ width: '100%', aspectRatio: ratio, overflow: 'hidden', borderRadius: 8, backgroundColor: '#e8e2d6' }}>
+              <KnowledgeImage source={source} focus={focus} />
+            </View>
+            <Text style={{ fontSize: 9, color: '#58645e' }}>{name}</Text>
+          </View>)}
+        </View>
+      </View>;
+    })}
+  </ScrollView>;
+}
+
 function VisualCheckApp() {
   const [scrollScopeRevision, setScrollScopeRevision] = useState('base');
   const [completion, setCompletion] = useState<Record<string, boolean>>(initialCompletion);
@@ -356,6 +398,8 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
   const insightsLoadState: InsightsLoadState = insightsScenario === 'loading' ? { status: 'loading' }
     : insightsScenario === 'error' ? { status: 'error' }
       : { status: 'ready', data: insightsFixture(insightsPeriod) };
+
+  if (imageFixture === 'image-focus-audit') return <KnowledgeImageFocusAudit />;
 
   if (profileCreateFixture) {
     return <View style={{ flex: 1, minHeight: 0 }}>
@@ -472,7 +516,7 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
               if (activity) setCompletion((current) => ({ ...current, [activity.id]: completed }));
             }}
           /> : navigation === 'development' ? <DevelopmentScreen
-            dogName={dog.name}
+            dogName={params.get('developmentDogName') ?? dog.name}
             birthDate={dog.birth_date}
             today={today}
             guides={reviewMode ? developmentGuides : []}

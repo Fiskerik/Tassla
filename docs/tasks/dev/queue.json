@@ -11881,7 +11881,7 @@
       "id": "KNOWLEDGE-IMAGE-FOCUS-01",
       "title": "Kunskap: granska fokus för varje artikelbild och fallback",
       "mvp_requirement": "Owner iPhone screenshots 2026-10-25; docs/design-rules.md §9; article-image focus review",
-      "plan": "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md v1",
+      "plan": "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md v2",
       "write_paths": [
         "docs/tasks/dev/KNOWLEDGE-IMAGE-FOCUS-01.md",
         "docs/tasks/dev/queue.json",
@@ -11904,7 +11904,7 @@
         "Missing production catalog/build evidence is labeled NOT TESTABLE; no native/TestFlight PASS is claimed without a post-change capture."
       ],
       "checks": [
-        "Sanitized catalog-to-image inventory, including each KNOWLEDGE_IMAGE_BY_GUIDE_VERSION identity, slug override, and shared editorial fallback identity.",
+        "Sanitized catalog-to-image inventory reconciled against KNOWLEDGE_IMAGE_BY_GUIDE_VERSION, GUIDE_IMAGE_FOCUS_BY_VERSION, REVIEW_IMAGE_BY_GUIDE_VERSION, every source asset, slug override, and shared editorial fallback identity.",
         "Per-mapping RN Web renders at 375×844, 430×844, and 375×667 across featured, related-card and detail crops.",
         "Focused source/focal-layout test and visual review by UI Critic and independent QA.",
         "CI=1 pnpm check",
@@ -11914,42 +11914,87 @@
       "depends_on": [
         "ARTICLE-READING-EXPERIENCE-01"
       ],
-      "status": "planned",
-      "next_step": "Audit all current sanitized article-image identities and focal mappings; correct only evidenced crops, and request a new TestFlight capture for native verification when available.",
+      "status": "done",
+      "next_step": "Proceed to the separate user-requested Training modal copy/layout checkpoint after DEVELOPMENT-PROGRESS-AFFORDANCE-01 closes.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Critic reviewed current local RN Web evidence: subjects are centered in the sampled fixture, but 10/10 covers only a small synthetic set. All live mappings need explicit review. TestFlight images supplied by owner predate current source; after-change native result remains unverified.",
-      "test_evidence": "Read-only review of editorial-image-assignment.ts, image assets, and current article/knowledge captures. No code changed."
+      "checkpoint": "Frozen Reviewer PASS. Commit dd38a3d is present on knowledge/d3-catalog-delivery and pushed to origin on 2026-10-28. Local source-map audit complete; live catalog and native/TestFlight remain NOT TESTABLE.",
+      "test_evidence": "docs/design/evidence/knowledge-image-focus-2026-10-25/review/RESULTS.json: 54/54 render checks across 375/430 px, all 24 mappings, three crop ratios; 375x667 scroll probe passes. Focused geometry/source-map test, CI=1 pnpm check PASS (TypeScript, Edge TypeScript, ESLint, 828 passed, 1 skipped), py_compile, dev_flow validate and diff-check pass.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE KNOWLEDGE-IMAGE-FOCUS-01 plan v2. Inventory completeness is checked directly against the three source maps and all image asset references; deployed catalog/native remain NOT TESTABLE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v2 approved. Local audit tooling, source-map completeness guard, evidence and review are in progress; no product image or copy changes without concrete visual defect."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "54/54 local image renders pass across all 24 inventory mappings and 375/430 px; focused geometry and source-map completeness test PASS; full direct TypeScript, Edge TypeScript, ESLint and 97-test suite passed before the final focused-test-only guard refinement; focused test and ESLint pass after it. Queue validation, py_compile and diff-check pass. pnpm check preflight is unavailable because registry requests return EPERM; no product files changed."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for source-map coverage, 54/54 render captures, short viewport, scope and NOT TESTABLE limits. Initial queue-plan/path metadata findings were corrected; QA recheck confirmed plan v2/status alignment, real RESULTS.json path and dev_flow validation exit 0. Frozen Reviewer pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: all changed paths in v2 write_paths; no product code/assets changed; source-map tests cover all maps/assets; 54/54 visual audit results, contact sheet subjects visible; UI Critic and QA evidence saved; pnpm check 828 PASS, 1 skip; live catalog/native remain NOT TESTABLE. Local task checkpoint complete; proceed to Erik’s newly reported training modal copy/layout feedback."
+        },
+        {
+          "from": "done",
+          "to": "done",
+          "actor": "coordinator",
+          "evidence": "Push status reconciled: origin/knowledge/d3-catalog-delivery points to dd38a3d (2026-10-28). Previous “commit/push pending” wording corrected; no product change."
+        }
+      ]
     },
     {
       "id": "CHECKLIST-TOGGLE-AFFORDANCE-01",
       "title": "Checklistor: granska bockarnas form, storlek och kontrast",
       "mvp_requirement": "Owner iPhone checklist screenshot 2026-10-25; docs/design-rules.md §2–4",
-      "plan": "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md v1",
+      "plan": "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md v3",
       "write_paths": [
         "docs/tasks/dev/CHECKLIST-TOGGLE-AFFORDANCE-01.md",
         "docs/tasks/dev/queue.json",
         "docs/tasks/dev/rapport.md",
         "docs/decisions/MASTER-LOG.md",
+        "src/components/ui/ChecklistItem.tsx",
         "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/theme/tokens.ts",
+        "src/theme/README.md",
         "tests/checklist-toggle-affordance.test.mjs",
-        "tools/visual-check/vision-r02-home-panels-app.tsx",
-        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify-checklist-toggle-affordance.py",
         "docs/design/evidence/checklist-toggle-affordance-2026-10-25/"
       ],
       "acceptance": [
-        "A populated phase checklist is reviewed against the owner’s circled iPhone affordance; Critic records a clear decision on square/circle, size and contrast.",
-        "Checked and unchecked states remain distinct at 375/430 and 140% text without disrupting text wrapping.",
-        "Each control keeps at least a 44×44 pt touch target and accessible role, label and checked-state.",
-        "Only the checklist completion affordance changes; pill-row scrolling, content, and persistence behavior remain stable.",
-        "Native VoiceOver, physical touch target and TestFlight results are NOT TESTABLE unless separately captured."
+        "Endast faschecklistans completion-markör blir rund och 28 pt; Home behåller kvadratisk form",
+        "Markerad och omarkerad status är tydlig utan att förlita sig bara på färg",
+        "Punkttext utan overflow vid 375/430 px, kort vy och RN Web CSS-zoom/text-layoutproxy 1.4; native Dynamic Type ej verifierad",
+        "Checkbox-roll/state/label; RN Web-radmål minst 44×44 CSS px och progress/readback bevaras; native fysisk träffyta NOT TESTABLE",
+        "Oberoende QA och Reviewer godkänner fryst diff inom aktuell v3 write_paths"
       ],
       "checks": [
-        "Critic compares square and circular visual treatments on a filled checklist render at 375×844, 430×844, 375×667, and 140% text proxy.",
-        "Focused test for role/state/label and 44×44 pt hit area.",
+        "UI Critic jämför fyrkant 24 pt med cirkel 28 pt; 375×667-fallet sätter och kontrollerar RN Web documentElement CSS zoom 1.4.",
+        "Fokuserat automatiskt test för form, role/state/label och defaultbeteende",
+        "Visuell verifierare mäter >=44×44 CSS px RN Web-radmål och 140% CSS-zoom/text-layoutproxy",
         "CI=1 pnpm check",
         "python -X utf8 tools/dev_flow.py validate",
         "git diff --check"
@@ -11957,15 +12002,1615 @@
       "depends_on": [
         "CHECKLIST-UI-LUNA-DETAIL"
       ],
-      "status": "planned",
-      "next_step": "Capture the current populated phase checklist and obtain a focused UI Critic decision before changing the toggle affordance.",
+      "status": "done",
+      "next_step": "Frozen Reviewer v3 PASS: scope, Knowledge-only circle variant, Home defaults, CSS-zoom evidence, queue/docs, CI=1 pnpm check (840 pass/1 skip), visual 53/53, QA and native limits verified. Commit/push to existing branch.",
       "priority": "P2",
       "panels": [
         "7"
       ],
       "risk_class": "M",
-      "checkpoint": "Critic confirmed this is a separate open visual question: current Knowledge toggles are 24 pt square icons while the owner circled larger circles. Current evidence lacks a populated post-complaint phase checklist render; no product code changed.",
-      "test_evidence": "Read-only source and screenshot audit only. Current visual is not accepted/rejected pending Critic render review."
+      "checkpoint": "UI Critic PASS, independent QA PASS, plan/queue consistent. Ready for frozen review; only web evidence is verified; native device cases remain NOT TESTABLE.",
+      "test_evidence": "verify-checklist-toggle-affordance.py: 53 PASS, 0 FAIL, 0 page errors across 375x844, 430x844, 375x667, and 375x667 with computed zoom=1.4. Focused Node tests 2/2. CI=1 pnpm check: 840 pass, 1 skip, 0 fail. Native Dynamic Type, VoiceOver, physical target and TestFlight remain NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2: scoped completionShape opt-in and shared 28 pt iconLg token; Critic comparison saved in docs/design/evidence/checklist-toggle-affordance-2026-10-25/"
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement opt-in round 28 pt completion marker for Knowledge phase checklist only; preserve Home grouped square behavior and all existing persistence/progress semantics."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete; CI=1 pnpm check passes (840 tests, 1 skipped), focused and visual checks pass 52/52, git diff --check and queue validation pass. Independent QA evidence reviewed in toggle-results.json; native checks remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: opt-in circular Knowledge mark, square Home defaults, 44 pt target, accessibility state, restore-progress flow and four viewport renders verified; native VoiceOver, Dynamic Type and device behavior remain NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer BLOCK: the 375x667-text140 case never scales text or layout, so its screenshot and pass claims are unsupported; queue checkpoint/test_evidence are stale. Implementation scope itself passes. Correct verification evidence before review."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Replan the evidence correction only: use the repository CSS zoom proxy for the 140% case, assert it is applied, recapture the screenshot/results, update current queue checkpoint/test evidence, then rerun QA and Reviewer. Product code behavior stays unchanged."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE v3: RN Web CSS zoom 1.4 is verified as a text/layout proxy; visual verifier owns >=44x44 CSS-px target measurement; native Dynamic Type and physical target remain NOT TESTABLE."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement the approved v3 evidence correction in the visual verifier and evidence only; no checklist product behavior changes."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "v3 verifier correction complete: 53/53 visual assertions including computed CSS zoom 1.4, target measured before zoom in CSS px; focused tests 2/2; CI=1 pnpm check 840 pass/1 skip; UI Critic PASS. Native Dynamic Type/device remain NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA v3 PASS after reviewer-block fix: exact CSS zoom assertion, pre-zoom CSS-px target, 53/53 render checks, focused 2/2, queue/docs aligned; native limitations accurate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer v3 PASS: scope, Knowledge-only circle variant, Home defaults, CSS-zoom evidence, queue/docs, CI=1 pnpm check (840 pass/1 skip), visual 53/53, QA and native limits verified. Commit/push to existing branch."
+        }
+      ]
+    },
+    {
+      "id": "KNOWLEDGE-PHASE-CATALOG-01",
+      "title": "Kunskap: publicerad faschecklistekatalog v1",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2, package 2 / D3; preserve approved D3 schema and progress identity",
+      "plan": "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md v9 (full dog-face banners, compact adjacent numbered references, SQL payload parity preflight)",
+      "write_paths": [
+        "docs/tasks/dev/KNOWLEDGE-PHASE-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md",
+        "docs/content/README.md",
+        "assets/images/README.md",
+        "docs/content/knowledge-phase-checklists-v1.json",
+        "docs/content/knowledge-phase-checklists-review-v1.md",
+        "tools/validate_knowledge_catalog.py",
+        "supabase/content/knowledge-phase-checklists-v1.sql",
+        "supabase/content/publish-knowledge-phase-checklists-v1.sql",
+        "supabase/tests/knowledge-phase-catalog-content.sql",
+        "src/features/knowledge/checklist-model.ts",
+        "src/features/knowledge/checklist-data.ts",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/checklist-phase-visuals.ts",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-catalog-content.test.mjs",
+        "tests/checklist-data.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "docs/design/evidence/knowledge-d3-catalog-v1/results.json",
+        "docs/design/evidence/knowledge-d3-catalog-v1/browser-results.json",
+        "docs/design/evidence/knowledge-d3-catalog-v1/VERIFICATION.md",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-bottom-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-detail-bottom-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-empty-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-error-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-overview-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-overview-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-partial-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-3_6_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-3_6_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-6_12_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-6_12_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-8_12_weeks-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-8_12_weeks-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-3_6_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-3_6_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-6_12_months-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-6_12_months-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-8_12_weeks-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-8_12_weeks-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-first_days-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-first_days-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-over_1_year-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-bottom-over_1_year-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-first_days-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-first_days-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-over_1_year-375.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-public-phase-over_1_year-430.png",
+        "docs/design/evidence/knowledge-d3-catalog-v1/checklist-review-375.png",
+        "tests/ui-copy-cleanup.test.mjs"
+      ],
+      "acceptance": [
+        "Dog Expert reviews exact Swedish copy and sources for all 18 checklist items; any caveats are applied and no UNSUPPORTED/UNSAFE item becomes publishable.",
+        "Versioned JSON contains exactly six stable phase slugs/contexts and 18 existing template/key pairs, with source and review metadata; approved bundle v1 stays unchanged.",
+        "Draft-import SQL is transactional and refuses mismatches/duplicates; publication SQL is separate, requires all six complete reviewed versions and exact 18 child keys; neither mutates dog-owned rows.",
+        "Before either SQL script runs, the validator parses both embedded payloads and verifies exact imported-field/URL parity and reviewed SHA-256 reference parity with the reviewed JSON; it rejects SQL payload drift.",
+        "Authenticated public app uses the three-read mapping → published versions → child items adapter, validates all six roots and 18 stable keys, never renders review copy, and supports progress/context/custom-item interactions only after validated published load.",
+        "Existing progress, custom items/icons, preference, retry/unknown behavior and cache isolation pass regressions; no progress or preference rows are rewritten.",
+        "Public and review caches are isolated; public cache identity changes with sorted published content_version IDs. Existing progress, custom items/icons, preference, retry/unknown behavior and cache isolation pass regressions.",
+        "Each displayed source URL resolves to its reviewed title and publisher using bundle metadata; sources without a reviewed display entry do not become ambiguous publisher-only links.",
+        "Each phase detail has a low decorative image banner using an existing local asset, with the whole dog face visible and not clipped at the top or sides at 375/430px.",
+        "After checklist actions, only small numbered links such as 1) 2) are visible outside the card; no reference label, source title or URL is printed. Adjacent targets have zero extra gap but the marks remain distinct. Accessible names retain reviewed source identity, unknown URLs fail closed, 44×44 pt targets remain, and every phase’s last reference can scroll above the fixed footer at 375/430px.",
+        "Task docs/queue plan reflect actual checks and limitations; no live DB operation occurs; all changed paths match this frozen write set."
+      ],
+      "checks": [
+        "Dog Expert exact-copy/source review of all six intros and 18 labels; the review records that the coordinator opened the official pages",
+        "Architect static review of the public adapter, stable progress keys, and version-scoped cache",
+        "Security and Architect focused static re-review of both SQL scripts, duplicate/missing-row guards, trusted context and no ACL expansion",
+        "Critic plan review after corrections and UI Critic final review of the six public phase details",
+        "Source metadata lookup test resolves all seven reviewed source URLs to title and publisher; unknown URLs fail closed",
+        "Render all six phases at 375/430px; inspect faces, small numbered-only references, 44×44 targets and bottom-scroll access",
+        "Preflight validator parity test compares both SQL payloads with reviewed JSON and rejects a tampered SQL row",
+        "Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and directly affected checklist SQL probes",
+        "python -X utf8 tools/validate_knowledge_catalog.py; focused Knowledge/content tests; pnpm check",
+        "Review-channel pnpm bundle:ios after app-code changes; this is a JS/assets export, not device validation",
+        "python -X utf8 tools/dev_flow.py validate; JSON parse; git diff --check; changed-path audit",
+        "Independent QA and frozen Reviewer read-only review"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-D3-CATALOG-SCHEMA-01"
+      ],
+      "status": "done",
+      "next_step": "V9 is pushed to GitHub on knowledge/d3-catalog-delivery at e4d6d96. Next: plan the separate FAQ catalog task.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "checkpoint": "V9 removes the reference links' extra horizontal padding at the owner's request. Links meet edge-to-edge with separate 44x44pt targets; the verifier now preserves scroll position for bottom captures. All six face crops pass the 375/430 synthetic render. Independent QA and frozen Reviewer PASS on the updated 375px source row, footer clearance and current in-scope paths. Disposable PostgreSQL 16.15 import/publication/idempotency/refusal and published-only RLS/owner-data probes pass in an isolated synthetic container. Push to GitHub succeeded; `git ls-remote` confirmed knowledge/d3-catalog-delivery at e4d6d96. No live Supabase operation occurred.",
+      "test_evidence": "Latest public UI verifier: 128 passes, zero failures and zero page errors at 375/430; links have no added padding, accessible full source names, 44x44pt targets and bottom screenshots preserve scroll. Focused checklist UI test and `pnpm check` 85/85 pass; the active pre-push hook passed 776 tests and skipped one, then pushed e4d6d96. `python -X utf8 tools/validate_knowledge_catalog.py`, SQL-payload mutation test, Architect/Security static re-review, disposable PostgreSQL 16.15 sequence, review-channel iOS bundle export, queue validation, `git diff --check` and remote branch hash confirmation pass. Independent QA and frozen Reviewer PASS on v9; Reviewer confirmed all current paths remain in scope, links touch edge-to-edge and the scrolled capture is accurate. Prior UI Critic review covers the six image crops and v8's zero-gap treatment. Native/iPhone/VoiceOver/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v3 approved: Critic APPROVE, Architect APPROVE, Security PASS (2026-10-26). Dog Expert supplied preliminary source-based item copy and confirmed the visible Efter ålder intro; exact combined JSON/source review remains a content gate. No implementation/live DB evidence claimed."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Begin approved v3 slice on knowledge/d3-catalog-delivery from ff3af0b. First create the structured phase catalog/validator and submit exact combined JSON to Dog Expert before any import/publish script. UI edits remain gated on UI Critic BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "V8 implementation is frozen. Plan Critic PROCEED; UI Critic PASS; public UI verifier 128/128 at 375/430; catalog validator, disposable PostgreSQL 16.15 SQL checks, pnpm check 85/85, review-channel iOS bundle export, queue validation, diff and path audit pass. No live Supabase or native device validation. Independent QA recheck of the completed iOS export and final docs requested; Reviewer follows."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS on v8. QA verified the latest renders (all six dog faces; zero-gap reference marks remain distinct), 44x44pt targets/footer clearance, pnpm check 85/85, UI 128/128, disposable PostgreSQL 16.15, review-channel iOS JS/assets export, docs/queue consistency and 59/59 write paths. Live Supabase and native verification remain NOT TESTABLE. Request frozen Reviewer on final diff/docs; no code changes expected."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: 59/59 changed paths match write_paths; no blocking findings. Reviewer confirmed catalog, SQL guards, zero-gap 44x44pt links, six images, docs and recorded evidence. Live Supabase, production publication, native/device and veterinary limits remain as documented. Next: commit/push, then plan FAQ catalog separately."
+        },
+        {
+          "from": "done",
+          "to": "review",
+          "actor": "implementer",
+          "evidence": "Owner requested tighter numbered references after v8. V9 removes extra horizontal padding, updates the scrolled screenshot capture, passes 128/128 RN Web checks and pnpm check 85/85, and receives independent QA PASS. Frozen Reviewer is checking the focused v9 diff before commit/push."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Focused v9 Reviewer PASS: paths remain within D3 write_paths, 44x44pt numbered links meet edge-to-edge, the scrolled 375px evidence is accurate/readable and queue/plan agree. Independent QA also PASS. Next: commit and push the reviewed v9 changes, then plan FAQ catalog separately."
+        }
+      ]
+    },
+    {
+      "id": "REPO-PUSH-HOOK-CLEANUP-01",
+      "title": "Rensa whitespace som stoppar push av ny branch",
+      "mvp_requirement": "Required to deliver the explicitly authorized GitHub branch push; no product behavior change",
+      "plan": "docs/tasks/dev/REPO-PUSH-HOOK-CLEANUP-01.md v1",
+      "write_paths": [
+        "codemagic.yaml",
+        "docs/tasks/dev/REPO-PUSH-HOOK-CLEANUP-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Remove only the trailing whitespace at codemagic.yaml:23; no YAML value or build behavior changes.",
+        "The local outgoing diff and pnpm check pass. The active pre-push hook must run on the authorized push before a new remote branch exists; it is pending and must not be bypassed.",
+        "All changed paths match the frozen write_paths, and independent QA plus frozen Reviewer pass."
+      ],
+      "checks": [
+        "Critic PROCEED on this exact cleanup plan before editing codemagic.yaml.",
+        "Confirm the code diff contains only trailing whitespace removal and git diff --ignore-space-at-eol is empty for the config edit.",
+        "pnpm check; git diff --check origin/main..HEAD; queue JSON/dev_flow validation and path audit.",
+        "Independent QA and frozen Reviewer read-only review.",
+        "Authorized push on the existing branch, with .githooks/pre-push enabled."
+      ],
+      "depends_on": [
+        "KNOWLEDGE-PHASE-CATALOG-01"
+      ],
+      "status": "done",
+      "next_step": "Frozen Reviewer PASS: five changed paths match write_paths; YAML mappings are identical and only EOL spaces changed. QA PASS; pnpm check, whitespace/full-tree diff checks, queue and path audits pass. Commit the cleanup and retry push with hooks active.",
+      "priority": "P2",
+      "panels": [],
+      "risk_class": "L",
+      "checkpoint": "Local cleanup is complete: only the two EOL spaces after codemagic.yaml:23 were removed; Critic/Architect/QA/Reviewer PASS. Current local checks pass. Queue status done refers to this local cleanup checkpoint; the actual new-ref pre-push hook has not rerun and remains next before the authorized GitHub push.",
+      "test_evidence": "Initial pre-push pnpm check passed (776 pass, 1 skip). Architect parsed YAML before/after whitespace removal and confirmed identical mappings/value. After the edit, pnpm check passes 85/85; git diff --ignore-space-at-eol for codemagic.yaml is empty; git diff --check origin/main, queue JSON/dev_flow validation, and the 5/5 write-path audit pass. Independent QA and frozen Reviewer PASS; full new-ref push hook will run again before push.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v1: Critic PROCEED; Architect APPROVE. The planned edit removes only EOL whitespace after APP_STORE_APPLE_ID. Architect parsed before/after YAML and confirmed identical mappings/value. No file edit yet; implementation is ready."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v1 is Critic PROCEED/Architect APPROVE and the D3 dependency is done. Start the exact whitespace-only cleanup; no YAML values or pipeline behavior may change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Exact trailing-whitespace cleanup is implemented. The YAML diff is whitespace-only; Architect confirmed parsed values are unchanged. pnpm check 85/85, diff checks, queue validation and 5/5 path audit pass. Request independent QA, then frozen Reviewer; retry push only after both pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: only two trailing spaces removed from codemagic.yaml:23; YAML parse unchanged; pnpm check 85/85; diff, queue and 5/5 path audit pass. Frozen Reviewer is the final gate before cleanup commit and retrying the authorized push with hooks active."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: five changed paths match write_paths; YAML mappings are identical and only EOL spaces changed. QA PASS; pnpm check, whitespace/full-tree diff checks, queue and path audits pass. Commit the cleanup and retry push with hooks active."
+        }
+      ]
+    },
+    {
+      "id": "UI-MODAL-CENTER-01",
+      "title": "UI: centrera modal- och popupytor",
+      "mvp_requirement": "Delad app-UI: modaler/popuper visas centrerat i synlig skärmyta med intakta stängnings- och formulärflöden.",
+      "plan": "docs/tasks/dev/UI-MODAL-CENTER-01.md v1",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/README.md",
+        "src/features/training/README.md",
+        "src/features/puppy-log/README.md",
+        "tests/sheet-dismiss.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-modals.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/dev/UI-MODAL-CENTER-01.md",
+        "docs/tasks/dev/TRAINING-TIMELINE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/ui-modal-center-01",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/checklists/README.md",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-activity-ui.test.mjs"
+      ],
+      "acceptance": [
+        "BottomSheet, TimePicker och ActionMenu är centrerade som fullt rundade kort vid 320/375/430/768 pt och kort viewport; bred vy verifierar maxbredd. 140%-textproxy är separat belagd för planerad-hälsa-sheeten och checklist-sheeten, inte varje modalkomponent.",
+        "Dialog, InfoModal och datumväljaren förblir centrerade.",
+        "Scroll, footer, keyboard-aware wiring, swipe-handle, reducerad rörelse, backdrop, X och caller guards bevaras. Kort viewport är en webproxy; native keyboard-, safe-area- och Android-back-geometri markeras NOT TESTABLE.",
+        "ActionMenu har verifierad fokusordning/stängning; dess testfixture bekräftar att Edit/Delete var för sig kör exakt en action callback och en close callback.",
+        "Kunskapens ikonval är in-flow i formuläret och inte längre en off-center overlay-popover; radiogrupp och val bevaras.",
+        "Representativa BottomSheet-anrop för logg, hälsa, profil/ras, Hem/checklista, Kunskap, pass och träning fungerar i RN Web.",
+        "Endast godkända write_paths ändras; inga data- eller dependenciesändringar."
+      ],
+      "checks": [
+        "Riktad ui-modal-centering policytest, checklistpicker-policytest och BottomSheet-gest/stängningstester",
+        "python -X utf8 tools/visual-check/verify-flow-modals.py",
+        "RN Web: loggredigering, Lägg till händelse, planerad hälsa med påminnelse aktiverad och nästlad tidsväljare, hälsohistorik, notisinställningar, profil/ras, Hem/checklista, Kunskap, pass och träning",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens uttryckliga modalcentreringsbeställning 2026-10-26. Delad BottomSheet-, tidsväljare- och popup-meny påverkar många vyer; separat task skapad före tränings-timeline. Väntar på UX Critic PROCEED och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Arkitektgranskning krävde explicit coverage för ChecklistIconPicker-popovern, safe-area/tangentbordsmätt yta och actionmenu-callbacks. Plan v1 kompletterad med inline ikonval, TimePicker-fade, 768px maxbredd och riktiga notification/health-history-flöden; inväntar förnyad UX Critic och Architect review."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UX Critic PROCEED och UI Critic BRIEF mottagna 2026-10-26. Critic lade till Logg/Lägg till händelse samt tidsväljaren nästlad i planerad hälsa med påminnelse aktiverad; detta lades till plan v1 och kökontrakt. Arkitekt bekräftar regressionstäckningen före ready."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UX Critic PROCEED och UI Critic BRIEF sparade i UI-MODAL-CENTER-01 v1; Architect APPROVE efter callsite, tangentbord, safe-area, ActionMenu och ikonpopover-ändringar. Plan och kö skrivvägar är identiska."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex tar enda skrivansvaret för godkända UI-MODAL-CENTER-01 v1 paths; ändringar endast i delade presentationsytor, checklistans ikonlayout, tester och visual evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete in approved v1 paths; pnpm check 86/86, RN Web modal verifier 14/14 and Knowledge icon verifier 7/7 pass. UI Critic final REVIEW PASS; requested callback-count coverage was added and rechecked. Ready for independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after plan/queue status and acceptance reconciliation. Exact write_paths 23/23 match, all current changed files remain in scope, modal evidence 14/14 and checklist evidence 7/7 confirmed; native keyboard/safe-area limits and 140% proxy scope are accurate."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS after final wording reconciliation. Plan/queue status and 23/23 paths match; all 38 changed paths are authorized. UI Critic PASS, independent QA PASS, modal RN Web verifier 14/14, checklist verifier 7/7, pnpm check 86/86, diff/path/queue validation pass. Native keyboard, safe-area, Android and device accessibility remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "UI-MODAL-CENTER-01 is done. Proceed to re-review TRAINING-TIMELINE-01 v2 plan; implementation starts after the Architect ready gate.",
+      "priority": "P1",
+      "panels": [
+        "shared-ui"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Implementation completed on approved v1 paths. UI Critic PASS, independent QA PASS and Frozen Reviewer PASS. 14 RN Web modal-flow checks, checklist 7/7, pnpm check 86/86, queue/path/diff validation pass. Native keyboard, safe-area, Android-back and device accessibility remain NOT TESTABLE.",
+      "test_evidence": [
+        "RN Web modal verifier 14/14: centered ActionMenu, Dialog, BottomSheet, InfoModal, date picker and TimePicker at 320/375/430/768; nested planned-health reminder; Log Add Event; health history; Notification Settings; 375x667 short viewport and planned-health 140% text proxy; zero page errors.",
+        "Dedicated ActionMenu dev fixture tests backdrop, Edit and Delete separately; counters verify exactly one close and only the intended one-shot action per activation.",
+        "Existing Knowledge custom-icon verifier 7/7 at 375x844, 430x844 and 375x667/140%; in-flow radio group, save/readback, dirty close and delete flow.",
+        "pnpm check passes: typecheck, edge typecheck, lint and 86/86 test files; focused modal and planned-health tests pass.",
+        "python -X utf8 tools/dev_flow.py validate, Python verifier compile, approved write-path audit and git diff --check pass.",
+        "RN Web does not verify native keyboard, physical safe-area insets, Android back, VoiceOver/TalkBack, Dynamic Type or TestFlight."
+      ],
+      "related_tasks": [
+        "TRAINING-TIMELINE-01"
+      ]
+    },
+    {
+      "id": "TRAINING-TIMELINE-01",
+      "title": "Träning: visa steg, historik och bekräftelsedatum som tidslinje",
+      "mvp_requirement": "Panel 6: hitta, öppna och förstå aktivt, tidigare och kommande träningssteg utan falsk completion.",
+      "plan": "docs/tasks/dev/TRAINING-TIMELINE-01.md v2",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-timeline-model.ts",
+        "src/features/training/README.md",
+        "assets/images/README.md",
+        "tests/training-timeline-model.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "tools/visual-check/README.md",
+        "docs/tasks/Training-progression-mvp.md",
+        "docs/tasks/dev/TRAINING-TIMELINE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/design/evidence/training-timeline-01"
+      ],
+      "acceptance": [
+        "Tidslinjen skiljer tidigare, aktivt och framtida steg; framtida steg går att öppna men saknar skrivhandlingar.",
+        "Aktiv övning visas en gång med en tydlig primär handling; den dubblerade sammanfattningen är borta.",
+        "Delmålsdatum kommer från confirmed_at; gammal aktivitetsmarkering använder separat completed_at-copy; passdatum ger aldrig färdigstatus.",
+        "Historik är endast läsbar och aktiv progression behåller spar-, retry- och okändbeteende.",
+        "Låg bildyta visar hundansiktet; layouten fungerar vid 375x844, 430x844, 375x667 och 140 procent text.",
+        "Träningsresans översikt undviker upprepade sammanfattningar och har meningsfull bild/statusikon med tillgänglig text; full instruktion och pausråd bevaras."
+      ],
+      "checks": [
+        "Fokuserade modell- och träningsprogressionstester",
+        "python -X utf8 tools/visual-check/verify-flow-training.py",
+        "pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UI-MODAL-CENTER-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 skapad på knowledge/d3-catalog-delivery@0723cd3 efter ägarens tidslinje- och färdigdatumstyrning. Ingen kod före UX Critic PROCEED och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 efter ägarens tillägg om mindre repetitiv text och meningsfull bild-/ikonhjälp. Global modalcentrering delas upp i UI-MODAL-CENTER-01 som beroende; UX Critic granskar v2 före kod."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UX Critic PROCEED och Architect APPROVE för plan v2 mottagna 2026-10-26. 14 write_paths matchar; UI-MODAL-CENTER-01 är done; timestamp-semantik och framtida read-only previews godkända."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex implementerar den uttryckligen begärda Träningsresan inom plan v2:s 14 godkända paths efter modalberoendet."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation complete in approved v2 paths; UI Critic PASS; pnpm check 87/87; original training progression verifier preserved and extended, 24/24 progression plus 7 timeline checks PASS; RN Web evidence saved. Independent QA is next."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: plan/queue status and checkpoint reconcile, 14/14 write_paths match, future/history remain read-only, the active confirmed step retains its date, 24+7 RN Web checks and pnpm check 87/87 pass. Frozen Reviewer is next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: plan/queue match at 14/14 paths, no out-of-scope changes, original progression verifier retained with 24 existing + 7 timeline checks, 0 failures/browser errors; active-confirmed back/date screenshot, read-only future/history and NOT TESTABLE limits verified."
+        }
+      ],
+      "next_step": "Lokalt slutförd; commit/push har inte gjorts.",
+      "priority": "P1",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Lokalt färdig efter UI Critic PASS, independent QA PASS och Frozen Reviewer PASS. pnpm check 87/87; RN Web progression/timeline 24+7 PASS; 14 plan paths matchar och inga utanför scope. Inte committad eller pushad.",
+      "test_evidence": [
+        "pnpm check PASS: TypeScript, edge TypeScript, ESLint och 87/87 testfiler.",
+        "TASSLA_UI_BASE_URL=http://127.0.0.1:4384/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-timeline-01 python -X utf8 tools/visual-check/verify-flow-training.py PASS: 24 befintliga progression-/Homekontroller och 7 timelinekontroller, 0 browserfel.",
+        "RN Web vid 375x844, 430x844, 375x667/140%; framtida preview har 0 write controls/0 progression operations; backad bekräftad aktiv övning visar fortsatt confirmed_at-datum.",
+        "UI Critic final REVIEW PASS: hundansiktet syns; aktiv rad, datum och handling tydliga i journey-back-to-confirmed-step-375x844.png.",
+        "Live Supabase/PostgREST/JWT/RLS, native iOS/Android, VoiceOver/TalkBack, fysisk Dynamic Type och TestFlight: NOT TESTABLE.",
+        "Independent QA PASS: 14/14 write_paths matchar; modalbaslinje, timeline/date semantics, back-beteende, screenshots, 24+7 render checks och pnpm check 87/87 verifierade.",
+        "Frozen Reviewer PASS: granskade 14 godkända paths, verifierare 24+7, 0 failures/browser errors, aktivt bekräftat datum efter backning, read-only framtid/historik och NOT TESTABLE-gränser."
+      ],
+      "related_tasks": [
+        "TRAINING-PROGRESSION-01",
+        "UI-MODAL-CENTER-01"
+      ]
+    },
+    {
+      "id": "TRAINING-LOGGING-UX-01",
+      "title": "Träning: visualisera delmålsprogress, förenkla passloggning och komprimera källor",
+      "mvp_requirement": "Owner request 2026-10-27; docs/design-rules.md §0–4, §8–9, §14; Panel 6 nearest training reference; existing article footnote rule",
+      "plan": "docs/tasks/dev/TRAINING-LOGGING-UX-01.md v2; Product Critic PROCEED and Architect APPROVE 2026-10-27",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "docs/design/evidence/training-logging-ux-01",
+        "docs/design/evidence/training-timeline-01",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/tasks/dev/TRAINING-LOGGING-UX-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/tasks/dev/TRACTION-IMPLEMENTATION-CHECKPOINT.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Training list cards visualize owner-confirmed milestones divided by published step count; logged sessions remain separate and no step counts as complete from a session alone.",
+        "Training log choices are short, clear, accessible and saved with one action. Failed writes remain unconfirmed and retryable; unknown writes retry the same operation ID. The milestone is offered only after a saved positive session and remains a distinct, owner-initiated confirmation; partial/early stops do not present completion.",
+        "Active journey overview has no Pause or Maintenance action; paused journeys expose one clear resume/continue action; active state retains an obvious path to the current exercise.",
+        "Knowledge article sources display numbered references instead of long URLs and repeated open buttons; links retain 44pt targets, HTTPS targets and accessible labels work, and opaque source values remain readable. Checklist and Training sources were audited and keep their existing numbered 44pt links.",
+        "Public synthetic renders and behavior checks at 375/430, 375x667 and 140% text have opened screenshot review; UI Critic REVIEW, QA and Reviewer outcomes are recorded separately.",
+        "All changed paths match the approved scope; no migration, dependency, content advice or backend contract changes."
+      ],
+      "checks": [
+        "Focused progression UI, screen-policy and knowledge source tests",
+        "pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-training.py",
+        "Public RN Web render at 375/430, 375x667 and 140% text; open screenshots and review against panel 6/style contract",
+        "UI Critic REVIEW, independent QA, independent Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "TRAINING-TIMELINE-01",
+        "ARTICLE-READING-EXPERIENCE-01"
+      ],
+      "status": "done",
+      "next_step": "Implementationen är pushad. Erik kan bygga och prova samma branch på iPhone vid behov; fortsätt därefter med nästa kvarvarande punkt i actionplanen. Live Supabase/RLS och native tillgänglighet är separata, overifierade kontroller.",
+      "priority": "P1",
+      "panels": [
+        "6",
+        "7"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI Critic final REVIEW PASS, independent QA PASS och Reviewer APPROVE. Implementation commit 9a5317484286e731d9d43734a7d0881e9c37bf4f är pushad till origin/knowledge/d3-catalog-delivery. Commit- och push-hookar körde pnpm check (824 pass, 1 skip), git diff --check PASS; träningsflöde 28/28 och artikelläsare 15/15. Implementationens 64 paths var inom scope; separat releasehistorik-closeout är tillagd inom utökad docs-scope.",
+      "test_evidence": "Pre-commit och pre-push pnpm check PASS: typecheck, edge typecheck, lint, 824 test pass och 1 skip. TASSLA_UI_BASE_URL=http://127.0.0.1:4394/ TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/public python -X utf8 tools/visual-check/verify-flow-training.py PASS 28/28. TASSLA_UI_PANEL=article-reader TASSLA_UI_REVIEW=true TASSLA_UI_BASE_URL=http://127.0.0.1:4395 TASSLA_UI_EVIDENCE=docs/design/evidence/training-logging-ux-01/article-reader python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py PASS 15/15. UI Critic final REVIEW PASS, independent QA PASS, Reviewer APPROVE. python -X utf8 tools/dev_flow.py validate PASS, git diff --check PASS, 64 implementation-paths inom godkända write_paths; separat releasehistorik-closeout också inom utökad docs-scope. Commit 9a5317484286e731d9d43734a7d0881e9c37bf4f pushad till origin/knowledge/d3-catalog-delivery. Live Supabase/RLS och native verifiering är NOT TESTABLE.",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 after source-inventory clarification; no schema/API/dependency changes. Product Critic PROCEED v1; UI Critic BRIEF recorded in task plan. Erik authorized scope in chat 2026-10-27."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implement v1: only PublishedTrainingScreen and KnowledgeScreen UI presentation plus existing targeted tests/verifier/docs; preserve passage and milestone RPC contracts, no migrations."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Owner-requested source-density correction extends v1 audit to tighten the existing Checklist and Training number-link rows; plan/queue v2 updated and renewed Critic/Architect review requested before final acceptance."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Plan v2 corrected the proposed touch target after independent review: retain 44×44 pt across all source links; compact only the new Knowledge source presentation. Checklist/Training already meet numbered-link pattern and remain unchanged."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "Plan v2 REVIEW: Product Critic PROCEED; Architect APPROVE. 44×44 pt source links retained, Checklist/Training unchanged, synthetic Knowledge source rendering added."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "UI Critic first REVIEW REVISE; addressed paused-step copy, stale toast, unrelated activity section and progress-card visual evidence. UI Critic final REVIEW PASS on panel composites and updated session states."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Independent QA REVISE found missing failed/unknown record_session verification. Added retryable failed state, unknown same-operation retry, exactly-one session and explicit milestone checks; 28/28 training renders pass. Independent Reviewer BLOCK found paths and result fields stale; added the test/fixture/evidence paths and reconciled validation results. Final QA/Reviewer re-review pending."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Final UI Critic PASS, QA PASS and Reviewer APPROVE; pnpm check 96/96, training UI 28/28, article UI 15/15, queue validation and diff check PASS, all 64 paths within write_paths. Implementation commit 9a5317484286e731d9d43734a7d0881e9c37bf4f pushed to origin/knowledge/d3-catalog-delivery; hooks passed 824 tests (1 skipped)."
+        }
+      ]
+    },
+    {
+      "id": "DEVELOPMENT-PROGRESS-AFFORDANCE-01",
+      "title": "Utveckling: grön åldersbåge, tydlig faslänk och korrekt hundnamn",
+      "mvp_requirement": "Panel 2 — förstå aktuell kronologisk ålder och öppna utvecklingsvyn från Hem.",
+      "plan": "docs/tasks/dev/DEVELOPMENT-PROGRESS-AFFORDANCE-01.md v3",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/development-title.ts",
+        "tests/development-screen-model.test.mjs",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "src/features/home/README.md",
+        "docs/tasks/dev/DEVELOPMENT-PROGRESS-AFFORDANCE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/development-progress-affordance-01/"
+      ],
+      "acceptance": [
+        "Den passerade delen av halvcirkeln är grön fram till markören och resten neutral.",
+        "Early, normal, midpoint age yield monotonically longer chronological progress toward 24 months; adult/missing/invalid/future show no age arc.",
+        "Fasraden på Hem är en tydlig outlineknapp, minst 44×44 pt, med bevarad label/hint/navigation; 375px UNGHUND-fixture ryms utan porträttöverlapp.",
+        "Rubriken är Doos utveckling för Doos och Lunas utveckling för Luna.",
+        "Riktad visuell och beteendemässig evidens finns för 375/430 pt; native/Dynamic Type-luckor är ärligt NOT TESTABLE.",
+        "Endast write_paths ändras; inga nya dependencies eller datakontrakt."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/development-screen-model.test.mjs",
+        "RN Web development verifier: early/normal/midpoint/adult/missing/invalid/future, 375/430 and short viewport; open images and compare with panel 2",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check; faktisk diff mot write_paths"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens uttryckliga besked 2026-10-28: gör passerad del av hundens halvcirkel grön, gör Hemmets ”Ungefärlig fas” synligt tryckbar och rätta Dooss till Doos. Separat, tidigare beställd träningsmodal-copy/layout hålls i nästa avgränsade task. Väntar på Architect planreview och UI Critic BRIEF."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect review of plan v1 returned CHANGES: existing harness could not verify arc growth or adult state. Plan v2 adds early, midpoint and adult fixtures and monotonic progress-length assertions; no UI scope or meaning changed. Re-review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DEVELOPMENT-PROGRESS-AFFORDANCE-01 v2. Early/normal/midpoint/adult/unknown fixtures suffice; verifier must compare rendered progress value and visibility. Existing SVG dependency and chronological-age meaning are confirmed. UI Critic BRIEF still pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic BRIEF granskade den öppnade panel 2-jämförelsen 798×1069 och Hem-baslinjen 375×844. Rekommenderade greenStrong 8pt-båge, kompakt home.card-outlineknapp med min 44pt, 8pt padding, greenStrong-label/chevron, och UNGHUND-kontroll vid 375px. Detta infördes i plan v3; Doos ska synas i slutrender."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect APPROVE DEVELOPMENT-PROGRESS-AFFORDANCE-01 v3 after UI Critic BRIEF. Existing SVG path and tokens preserve age semantics/navigation; 375pt UNGHUND wrap and portrait clearance are explicit; plan/queue write_paths match."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3; UI Critic BRIEF included; exact 12 write_paths match plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Codex is sole writer for approved v3 paths; only Home/Development presentation, focused test, harness and docs/evidence."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v3 complete; UI Critic REVIEW PASS; public/review development verifier 32/32 each; pnpm check 829 PASS, 1 skip; focused title/age test, py_compile, git diff --check and 12-path scope audit pass. Request independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende beteende/visuell QA PASS inom ändringens scope: båge, Hemknapp, Doos; public/review 32/32; 66 filer inom 12 deklarerade skrivvägar. Helpanelens komposition/bildspråk/täthet förblir öppen separat: jämförelsen visar nuvarande separat bildremsa, båge och block mot referensens integrerade porträtt/tätare layout. Körningarna, gränserna och evidensen är dokumenterade. Nästa steg: Frozen Reviewer; därefter commit/push på befintlig branch."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS after second review. Confirmed scoped green chronological-age arc, neutral remainder, Home phase-button affordance/route/accessibility, Doos title, public/review 32/32, exact 12 write paths, queue validation and diff check. Full-panel composition remains explicitly open in DEVELOPMENT-PANEL-COMPOSITION-01; native VoiceOver, Dynamic Type and physical hit targets NOT TESTABLE. Next: commit/push this branch."
+        }
+      ],
+      "next_step": "Commit and push on the existing knowledge/d3-catalog-delivery branch. Keep whole-panel composition as separate planned follow-up.",
+      "priority": "P1",
+      "panels": [
+        "1",
+        "2"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Frozen Reviewer PASS on scoped change after reviewing full §14 checklist. Architect APPROVE, UI Critic PASS, independent QA PASS. Public/review 32/32; pnpm check 829 pass/1 skip; 66 changed/new files within 12 declared write paths. Full-panel composition gap remains open in DEVELOPMENT-PANEL-COMPOSITION-01.",
+      "test_evidence": [
+        "Public RN Web DEVELOPMENT verifier: 32/32 PASS at 375/430; early/normal/midpoint monotonic green-arc length, adult/missing/invalid/future no-arc, Doos title, 44pt phase-button target, phase navigation and 140% text/portrait clearance. Evidence: docs/design/evidence/development-progress-affordance-01/public/RESULTS.json.",
+        "Review RN Web DEVELOPMENT verifier: 32/32 PASS at 375/430 with synthetic loading/error and same scoped interactions. Evidence: docs/design/evidence/development-progress-affordance-01/review/RESULTS.json.",
+        "UI Critic REVIEW PASS after opening five final captures; independent behavioral/visual QA PASS for scoped changes. Both record full panel composition as an open follow-up. Evidence: docs/design/evidence/development-progress-affordance-01/REVIEWS.md and panel 2 side-by-side composite.",
+        "CI=1 pnpm check PASS: TypeScript, Edge TypeScript, ESLint; 829 tests passed, 1 skipped. Focused development model/title test and Python py_compile PASS.",
+        "Independent scope audit: 66 changed/new files, all under the exact 12 declared write paths. git diff --check and python -X utf8 tools/dev_flow.py validate PASS after QA. Native iOS VoiceOver/Dynamic Type/physical target and TestFlight NOT TESTABLE.",
+        "Frozen Reviewer second pass PASS after adding full docs/design-rules.md §14 checklist and separate §14.16 matrix. Evidence: docs/design/evidence/development-progress-affordance-01/REVIEWS.md. Native VoiceOver, Dynamic Type and physical iPhone target NOT TESTABLE."
+      ]
+    },
+    {
+      "id": "DEVELOPMENT-PANEL-COMPOSITION-01",
+      "title": "Utveckling: stäm av helvyns komposition mot panel 2",
+      "mvp_requirement": "QA-fynd från DEVELOPMENT-PROGRESS-AFFORDANCE-01: helvyns stora hundporträtt, åldersbåge och milstolpslayout skiljer sig från målpanelens integrerade komposition.",
+      "plan": "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md v3",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/development-milestones.ts",
+        "src/components/ui/AppBar.tsx",
+        "src/theme/tokens.ts",
+        "src/components/README.md",
+        "src/theme/README.md",
+        "src/features/home/README.md",
+        "tests/development-milestones.test.mjs",
+        "tests/development-screen-model.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/design/evidence/development-panel-composition-01"
+      ],
+      "acceptance": [
+        "Panel 2:s porträtt dominerar; den gröna kronologiska åldersbågen ligger över bildens nederkant och hundens ansikte är helt synligt vid 375/430. Bågen går från födelsedatum till +24 kalendermånader och är 64–80 pt hög; progresssegmentet slutar exakt vid markören.",
+        "AppBar har en opt-in skärmtitel 24/30, vikt 700, och endast Development använder den; tillbaka-knapp minst 44 pt.",
+        "Kort fasförklaring behåller skillnaden mellan kalenderålder och färdighet utan överflödig text.",
+        "Nästa milstolpar visas i en gemensam grupperad yta med ämnesfärgade ikoner, diskreta separatorer och kompakta klickbara nummerkällor; befintliga länkmål bevaras.",
+        "Public/review render vid 375/430, kort viewport och 140% CSS-textproxy visar ingen klippning, överlapp eller navskymning; fulla skärmar granskas enligt designreglerna §14/§14.16.",
+        "Layoutgranskningen gör inget anspråk på sakgranskning/publicering av de tillfälliga generella milstolpskällorna; källmognad för panel 2 hålls separat och öppen.",
+        "Endast deklarerade sökvägar ändras; kronologisk ålder, navigering, innehållsmodell, lagring, källmål och vuxen/okända tillstånd är oförändrade."
+      ],
+      "checks": [
+        "Focused development milestone and screen model tests.",
+        "CI=1 pnpm check.",
+        "python -X utf8 tools/visual-check/verify-vision-r02-home-panels.py for public/review at 375/430, 375x667 and 140% text proxy.",
+        "Render/open compare_panel.py --panel 2 screenshot and complete design-rules §14/§14.16.",
+        "UI Critic BRIEF/REVIEW, independent behavior/visual QA, and Frozen Reviewer.",
+        "python -X utf8 tools/dev_flow.py validate; py_compile; git diff --check; exact write-path audit."
+      ],
+      "depends_on": [
+        "DEVELOPMENT-PROGRESS-AFFORDANCE-01"
+      ],
+      "status": "done",
+      "next_step": "Frozen Reviewer APPROVE/PASS on synchronized plan v3, implementation, 81-path scope, public/review evidence, §14/§14.16 and final logs. No findings; editorial source approval and native/runtime limits remain open. Next: commit and push on knowledge/d3-catalog-delivery.",
+      "priority": "P2",
+      "panels": [
+        "2"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Plan v2/v3 godkänd av Architect; implementationen är genomförd på ce610cb. Plan v3 lägger endast till HISTORY-2026.md. UI Critic PASS, första QA PASS på 78 paths, supplemental QA PASS på slutliga 81 paths inom 17 deklarerade och Frozen Reviewer slutlig PASS. Omfång och dokumentation är synkade; tasken är done som lokal UI-/rendercheckpoint. Commit/push till knowledge/d3-catalog-delivery återstår.",
+      "test_evidence": [
+        "QA-fynd/jämförelse: docs/design/evidence/development-progress-affordance-01/REVIEWS.md och public/compare-panel2-development-progress-midpoint-375.png.",
+        "Godkänd plan v3 och slutlig §14/§14.16-granskning: docs/tasks/dev/DEVELOPMENT-PANEL-COMPOSITION-01.md och docs/design/evidence/development-panel-composition-01/VERIFICATION.md.",
+        "Aktuell granskningslogg och public/review-resultat: docs/design/evidence/development-panel-composition-01/REVIEWS.md, public/RESULTS.json och review/RESULTS.json; sida-vid-sida-jämförelser under public/compare-panel2-development-375.png och review/compare-panel2-development-375.png."
+      ],
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Oberoende QA såg en kvarstående helpanelsskillnad: referensens stora porträtt/åldersbåge ingår i en tätare milstolpslayout, medan appen visar separat bildremsa, båge och efterföljande block. Skapad som separat visuell backlog."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "Öppnade compare-panel2-development-progress-midpoint-375.png. Rangordnade fyra skillnader: dominant porträtt med överlagrad båge; grupperad milstolpeyte/tätare lista; 24/30 skärmtitel; 12–16pt header-gap. Noterade att referensens Milo 12 veckor och renderns Luna 12 månader inte ger jämförbart copyunderlag."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v1 med exakta write_paths, kompakt länkreferenskontrakt och beviskrav skapad. Implementation väntar på Architect APPROVE."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "CHANGES v1: ange bågens spann 0→24 kalendermånader, 64–80pt elliptisk höjd och exakt markör/fyllnadskoordinering; redaktionell källmognad är separat från layoutacceptans. Opt-in AppBar är kompatibel och en milestone-rad med nummerkällan ska vara en enda länk. Förtydligat i plan v2."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 uppdaterad; invänta Architect APPROVE före kod."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "APPROVE plan v2. Defines 0 to +24 calendar-month age span, 64-80pt shallow ellipse with aligned marker/fill, separate source-review limit, opt-in AppBar title, and all 16 exact write paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE plan v2. Coordinator starts the exact 16 declared paths; age/data/routes remain unchanged and source-review maturity stays open."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan v3 adds only the mandatory docs/releases/HISTORY-2026.md write path for the final local checkpoint. Product scope, implementation, tests and acceptance are unchanged; Architect review required for the exact-path extension."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "architect",
+          "evidence": "APPROVE plan v3: adds only docs/releases/HISTORY-2026.md as a required closeout path. Product scope and acceptance are unchanged; release-code wording was clarified."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation, focus tests, 99/99 pnpm test files, public 52/52, review 60/60, py_compile, queue validation, diff-check, scope audit and UI Critic REVIEW PASS are recorded. Next: independent QA of final diff and §14 evidence."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: accepted plan v3, opened panel comparison and public/review captures, verified 52/52 and 60/60 visual runs, focused tests 3/3, py_compile, queue/diff checks and all 78 changed/new paths within 17 declared write paths. Next: Frozen Reviewer final diff review."
+        },
+        {
+          "from": "review",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Supplemental read-only QA PASS after closeout-document updates: current 81 changed/new paths all within 17 declared paths; docs, queue and evidence consistency verified; public/review results 52/52 and 60/60; dev_flow validation and diff-check PASS. Next: Frozen Reviewer re-review of synchronized diff."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer APPROVE/PASS on synchronized plan v3, implementation, 81-path scope, public/review evidence, §14/§14.16 and final logs. No findings; editorial source approval and native/runtime limits remain open. Next: commit and push on knowledge/d3-catalog-delivery."
+        }
+      ]
+    },
+    {
+      "id": "TRAINING-EXERCISE-MODAL-UX-01",
+      "title": "Träning: omforma övningsmodalen för tydligare progression och handlingar",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: modalens bekräftelsestatus och hela popup-UI:t har för mycket text och för långa val.",
+      "plan": "docs/tasks/dev/TRAINING-EXERCISE-MODAL-UX-01.md v6",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-training.py",
+        "docs/tasks/dev/TRAINING-EXERCISE-MODAL-UX-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/training-exercise-modal-ux-01"
+      ],
+      "acceptance": [
+        "The modal shows the existing generic decorative training banner with a visible dog face, correct step position and confirmed-milestone progress separately, and the full left-aligned instruction. A compact AI-origin disclosure remains on AI-generated opened content.",
+        "Confirmed milestone uses compact Klart status and compact Ångra icon/action with full accessibility label and 44pt target; Next/Previous labels remain short and truthful.",
+        "Nästa/Föregående har korta synliga etiketter och ikoner, minst 44pt träffyta; sista steget saknar falsk Next.",
+        "confirm_step, undo_step, next, back, confirmed_at, failed/unknown retry och sparsemantik är oförändrade och sanningsenliga.",
+        "Public/review render vid 375/430, 375x667 och 140% text; §§14 visuella dimensioner kontrolleras utan anspråk på full panel 6-paritet.",
+        "Endast declared write_paths ändras; ingen schema/RPC/content/dependency/navigation semantic change."
+      ],
+      "checks": [
+        "Focused training progression UI and screen policy tests",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-training.py for confirmed, failed/unknown, first/middle/last-step states",
+        "Public/review RN Web captures at 375/430, 375x667 and 140% text; open and compare",
+        "UI Critic BRIEF/REVIEW, independent QA and Frozen Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "TRAINING-LOGGING-UX-01",
+        "TRAINING-TIMELINE-01",
+        "UI-MODAL-CENTER-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens bild och uttryckliga återkoppling 2026-10-28: nuvarande knappplacering och ordval efter bekräftat delmål är svåra att förstå. Plan v1 avgränsar status-/knapphierarkin, bevarar befintliga progression operations och väntar på UI Critic BRIEF + Architect APPROVE före kod."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v2 efter öppnad baseline `confirmed-exercise-baseline-375x844.png`: den sparade delmålsstatusen visas både i rutan och som separat success-message. Planen kräver en enda beständig statusrad med polite announcement efter sparad confirm_step; fel/okänt behåller retry-copy. Scope och 11 write_paths oförändrade."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic BRIEF PROCEED on v2 after opening the 798x1069 panel-6 composite and 375x844 baseline. Recommended: `Nästa övning` as sole full-width primary; `Föregående övning` as separate low-emphasis row with left arrow; status `Delmål markerat som klart`; undo `Ångra färdigmarkering`; 16/8 pt rhythm; keep font size and hit areas. These were added to plan v3."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES on v2: add named writer/read inputs/dependencies; make failed confirm visible while preserving its action; concretely verify no next action on final step and preserve undo/back/confirmed_at. Corrections added to v3; re-review required before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3; UI Critic PROCEED v3; 11 plan/queue write_paths match. Plan covers sole primary/secondary labels, duplicate success suppression, visible failed-confirm feedback, same-operation unknown retry, explicit last-step no-next test, and preserves existing progression payloads. Begin implementation only in declared paths."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Single writer starts approved v3 in the exact 11 write_paths on knowledge/d3-catalog-delivery. No new branch/worktree, backend/schema/RPC/content/dependency or progression semantic changes. Add stacked labels/status, suppress duplicate confirmed toast, display existing failed-confirm error, extend synthetic fixtures/verifier/tests and save public/review renders."
+        },
+        {
+          "from": "implementing",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägaren utökade uppgiften till en fullständig, bild- och progressförsedd modal med kompakt status/ånger och korta knappetiketter. v3-koden finns kvar som utkast; nya v4 behöver UI Critic PROCEED och Architect APPROVE innan fortsatt implementation."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic CHANGES v4 incorporated: show `Steg 2/3` as selected position, reserve the green line for confirmed milestone count, keep visible `Ångra` beside `Klart`, and preserve a single primary Next action. Exact v5 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v5: active step position is separate from confirmed milestone progress; always-visible Ångra fits the status group and keeps a 44pt target. Architect v5 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v5: preserve required AI-origin disclosure from CONTENT-PUBLISH-LABEL-01; document generic decorative banner (no per-program image field); synchronize UI-MODAL-CENTER-01 dependency; record model defaults. Incorporated in v6."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v6: exact 11 plan/queue paths, base SHA, model defaults and dependency match; mandatory AI-origin disclosure and generic decorative banner are explicit. UI Critic BRIEF PROCEED v5 remains valid. Existing v3 code is a draft; proceed with approved v6 scope on this branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved plan v6 on knowledge/d3-catalog-delivery. UI Critic BRIEF PROCEED v5, Architect APPROVE v6, and exact 11-path parity are recorded. Continue the existing draft only within declared paths; preserve progression semantics, confirmed_at, retry/unknown handling and mandatory AI-origin disclosure."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v6 is complete in the exact declared 11 paths. Public/review RN Web training verifier rerun with task-scoped timeline evidence: 30/30 each, zero errors; CI=1 pnpm check passed (839 tests, 838 pass, 1 skipped); previous timeline evidence restored after a verifier path issue. UI Critic REVIEW PASS; independent QA requested before frozen review. Native remains NOT TESTABLE."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v6: focused training progression/screen policy tests and CI=1 pnpm check pass; opened public/review evidence confirms visible face, separate step/completion progress, compact Klart/Ångra and large-text scroll with no horizontal overflow. Existing visual verifier results are 30/30 per mode. Native behavior NOT TESTABLE; saved evidence reviewed after sandbox Chromium rerun SIGTRAP."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v6: exact declared scope, queue/checks, public/review 30/30 evidence and restored timeline evidence validated. UI Critic REVIEW and independent QA PASS; native remains NOT TESTABLE. Review details in task evidence REVIEWS.md."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS v6: exact declared scope, queue/checks, public/review 30/30 evidence and restored timeline evidence validated. UI Critic REVIEW and independent QA PASS; native remains NOT TESTABLE. Review details in task evidence REVIEWS.md.",
+      "priority": "P1",
+      "panels": [
+        "6"
+      ],
+      "risk_class": "M",
+      "checkpoint": "Plan v6 väntar på slutlig Architect-bekräftelse; v3-produktkod ligger kvar som arbetsutkast.",
+      "test_evidence": [],
+      "related_tasks": [
+        "TRAINING-LOGGING-UX-01",
+        "TRAINING-TIMELINE-01",
+        "UI-MODAL-CENTER-01",
+        "UI-GESTURE-MOTION-01"
+      ]
+    },
+    {
+      "id": "UI-GESTURE-MOTION-01",
+      "title": "UI: svepstängning för appmodaler och tydligare flikövergång",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: modaler ska kunna svepas bort sidledes och fungerande huvudflikssvep behöver en synligare övergång.",
+      "plan": "docs/tasks/dev/UI-GESTURE-MOTION-01.md v4",
+      "write_paths": [
+        "src/components/ui/modal-swipe-dismiss.ts",
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/ui/ActionMenu.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/components/ui/Motion.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/theme/tokens.ts",
+        "src/components/README.md",
+        "tests/modal-swipe-dismiss.test.mjs",
+        "tests/sheet-dismiss.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tests/planned-health-time.test.mjs",
+        "tests/main-swipe-navigation-policy.test.mjs",
+        "tests/motion-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-modals.py",
+        "docs/tasks/dev/UI-GESTURE-MOTION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/ui-gesture-motion-01"
+      ],
+      "acceptance": [
+        "Main-tab swipe preserves existing direction/bounds/no-wrap and receives its own tokenized 280–320 ms slide/light fade; support routes keep existing 240ms/8pt; no blank frame; reduced motion is respected.",
+        "BottomSheet, Dialog, InfoModal, TimePicker, DatePicker och ActionMenu kan avfärdas med tydligt horisontellt svep via samma guarded onRequestClose.",
+        "Gesten skiljer avsiktlig horisontell rörelse från vertikal/diagonal scroll, tap och text-/formulärinteraktion.",
+        "Dirty draft, busy/pending, destructive confirmation, X, backdrop, Android-back och BottomSheet drag ned behåller sina befintliga guards och semantik.",
+        "UI Critic/QA testar RN Web; native gesture arbitration redovisas NOT TESTABLE utan enhet."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/modal-swipe-dismiss.test.mjs tests/sheet-dismiss.test.mjs tests/ui-modal-centering.test.mjs tests/main-swipe-navigation-policy.test.mjs tests/motion-policy.test.mjs",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-modals.py",
+        "Public/review builds and opened modal/tab transition evidence",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "UI-MODAL-CENTER-01",
+        "UI-MAIN-SWIPE-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens rättelse: huvudflikssvep fungerar; den saknade delen är sidövergångens animation. Utökad beställning om horisontell dismiss för samtliga appägda modaler; plan v1 väntar på UI Critic och Architect före kod."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic CHANGES v1 incorporated: dismiss only from a dedicated top handle with equivalent surfaces for modal types lacking one; never capture close buttons or content controls. Animation issue is distinct from swipe logic. Exact v2 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v2: dedicated top handle keeps form controls and scrolling usable; no new persistent hint text. Native gesture arbitration remains NOT TESTABLE without device. Architect v2 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v2: full base SHA/model defaults, mark VISION-R02-GESTURES as related nonblocking context, and isolate longer transition duration to main-tab caller/token rather than shared motion. Added ProductWorkspace path in v3."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3: 21 plan/queue write paths match; guarded close semantics and downward sheet drag are preserved; longer transition is scoped to main tabs. Native gesture arbitration remains NOT TESTABLE without a device. Next: implement on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved plan v3 on the existing knowledge/d3-catalog-delivery branch. Implement shared horizontal modal-dismiss from dedicated handle strips and a clearer tokenized main-tab slide/fade, preserving caller guards, scroll/keyboard behavior, reduced motion, route bounds and sheet downward drag."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "coordinator",
+          "evidence": "Plan v4 adds tests/planned-health-time.test.mjs, whose DatePicker structure assertion now accounts for the Animated.View and dedicated swipe handle. Architect APPROVE v4 confirms exact 22-path parity and appropriate scope. The RN Web verification exercises left/right modal dismiss and samples main-tab transition frames."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "ui_critic",
+          "evidence": "UI Critic review found no design defects, but requested 430px forward/reverse/reduced-motion transition samples. Added start/middle/end and reverse-middle frames with measurements for 375/430 in both public and review; final UI Critic PASS v4."
+        },
+        {
+          "from": "implementing",
+          "to": "implementing",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v4 on exact 22-path scope, guard-preserving gesture behavior, scrolling, reduced motion and public/review evidence. Final recheck confirms both browser results at 27/27 with zero errors and all 375/430 transition frames."
+        },
+        {
+          "from": "implementing",
+          "to": "done",
+          "actor": "frozen_reviewer",
+          "evidence": "Frozen Reviewer PASS v4: exact 22 paths, 98/98 CI test files, public/review 27/27, guard-preserving gestures, reduced motion, §14/§14.16, and attribution of shared hunks to the three declared task scopes all verified."
+        }
+      ],
+      "next_step": "Lokal checkpoint är stängd. Nästa avgränsade UI-slice är CHECKLIST-POLYCHROME-ICONS-01; planreview krävs före implementation.",
+      "priority": "P1",
+      "panels": [
+        "shared-ui"
+      ],
+      "risk_class": "M",
+      "checkpoint": "UI-GESTURE-MOTION-01 v4 lokalt klar på befintlig branch. Architect APPROVE, UI Critic REVIEW PASS, oberoende QA PASS, Frozen Reviewer PASS; `CI=1 pnpm check` 98/98 och public/review verifiering 27/27. Push väntar på att övriga ändringar på samma branch får sina egna godkända checkpoints.",
+      "related_tasks": [
+        "TRAINING-EXERCISE-MODAL-UX-01",
+        "UI-MODAL-CENTER-01",
+        "UI-MAIN-SWIPE-01",
+        "VISION-R02-GESTURES"
+      ]
+    },
+    {
+      "id": "CHECKLIST-POLYCHROME-ICONS-01",
+      "title": "Checklistor: enhetliga tvåtonsikoner i väljare och punkter",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: använd trevligare polykroma ikoner liknande panel 5 och samma ikonstil vid ikonval i exempelvis checklistor.",
+      "plan": "docs/tasks/dev/CHECKLIST-POLYCHROME-ICONS-01.md v2",
+      "write_paths": [
+        "src/components/ui/ThemedIcon.tsx",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/checklists/ChecklistIconPicker.tsx",
+        "src/features/checklists/checklist-icons.ts",
+        "src/components/README.md",
+        "src/features/checklists/README.md",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/verify-checklist-icons.py",
+        "tools/visual-check/verify-checklist-custom-icons.py",
+        "docs/tasks/dev/CHECKLIST-POLYCHROME-ICONS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/checklist-polychrome-icons-01"
+      ],
+      "acceptance": [
+        "Checklistens öppnare, ikonval, radiogrupp och sparade punkt återanvänder samma tvåtonsikon/renderare och semantiska fg/bg-ton; panel 5 Loggs befintliga kategorier är referensen.",
+        "Samtliga 20 tillåtna ikonval behåller sina persisted Ionicons keys, svenska etiketter, radiogrupp/selected state och minst 44 pt tryckyta; fallback list-outline lagras inte och SQL allowlist är oförändrad.",
+        "Vald ikon skrivs/läses tillbaka och visas identiskt i både Hemmets rutinflöde och Kunskapens egna checklistpunkt; Loggas befintliga färger och symbolutseende förblir oförändrade.",
+        "Public/review verifiering vid 375x844, 430x844 och 375x667 med 140% textproxy: alla val synliga, Save nåbar, ingen overflow; visuellt underlag jämförs med panel 5.",
+        "Semantiska tonpar har minst 3:1 glyph/surface kontrast och normal text minst 4.5:1; vald/fokuserad radio kan urskiljas även med färgade ytor.",
+        "Endast deklarerade sökvägar ändras; ingen schema-, dependency-, navigations- eller native-verifieringsclaim."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/checklist-ui.test.mjs tests/daily-activity-ui.test.mjs tests/daily-routine-checklist-icons.test.mjs tests/ui-library-policy.test.mjs",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-checklist-icons.py against public and review RN Web builds",
+        "python -X utf8 tools/visual-check/verify-checklist-custom-icons.py against public and review RN Web builds",
+        "UI Critic BRIEF before code and REVIEW after opened public/review screenshots; independent QA and Frozen Reviewer",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [
+        "LOG-POTTY-ICON-PATTERN-01",
+        "KNOWLEDGE-PHASE-CATALOG-01"
+      ],
+      "status": "done",
+      "next_step": "Frozen Reviewer PASS v2 on re-review: synchronized plan/queue/test evidence; exact scoped diff with zero unclaimed icon paths; public/review evidence and reviews align. Native accessibility/live RLS remain NOT TESTABLE. Commit/push remains batched with other closed tasks on the same branch.",
+      "priority": "P1",
+      "panels": [
+        "5",
+        "7"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Plan v2 Architect APPROVE after TRAINING-EXERCISE-MODAL-UX-01 closed. Owner-requested icon draft existed before formal approval; acceptance was held until sequencing and neutral-token concerns were resolved. Code is within declared icon paths. UI Critic REVIEW and independent QA PASS. Public/review each report 37 icon-picker checks and 7 Knowledge custom-icon checks, zero browser errors; CI=1 pnpm check passed 98/98 test files. First Frozen Reviewer attempt BLOCKED only stale task/queue records; code scope passed with zero unclaimed files. Plan status/checkpoint/next_step/evidence are now synchronized. Frozen Reviewer re-review pending. Native accessibility and live RLS NOT TESTABLE.",
+      "related_tasks": [
+        "LOG-POTTY-ICON-PATTERN-01",
+        "TRAINING-EXERCISE-MODAL-UX-01",
+        "UI-GESTURE-MOTION-01"
+      ],
+      "history": [
+        {
+          "from": "",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Owner asks for friendly polychrome icons like panel 5 and consistent treatment in checklist icon selection. Plan v1 created; no product changes."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "BRIEF v1 CHANGES: map all 20 choices; use 32pt roundel and 20pt glyph; define a neutral fallback and 3:1 icon contrast; inspect both Home routine and Knowledge checklist flows, including selection/readback. Incorporated into v2."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Review v1 CHANGES: explicit fg/bg surfaces required in picker and saved rows; 12/20 current tones are neutral; Home manager and Knowledge flows need visual coverage; serialize implementation until ready Training task closes due shared queue/report/Master Log write paths. Incorporated into v2."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2: training task is now done; neutral list-outline uses generic textPrimary/selectedSurface tokens, and this task leaves tokens.ts outside its write paths. UI Critic BRIEF PROCEED v2 remains valid. Review is recorded in evidence/REVIEWS.md."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume owner-requested icon task in formal sequence after training closed and Architect APPROVE v2. Implementation draft already existed locally before this final approval; acceptance had been held. No task commit/push yet; continue only within declared paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation scope frozen: public/review icon picker and Knowledge custom-item verifiers rerun after neutral-token correction (37/37 and 7/7 per mode, no browser errors), CI=1 pnpm check passed (98/98 test files), diff/path review prepared. UI Critic REVIEW PASS; independent QA and Frozen Reviewer now required."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS v2: four focused tests, public/review visual results 37 icon + 7 Knowledge checks each with zero browser errors, target/Save reachability, screenshot review, exact path attribution, Python compilation, diff-check and queue validation. Native accessibility and live Supabase/RLS NOT TESTABLE."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v2 on re-review: synchronized plan/queue/test evidence; exact scoped diff with zero unclaimed icon paths; public/review evidence and reviews align. Native accessibility/live RLS remain NOT TESTABLE. Commit/push remains batched with other closed tasks on the same branch."
+        }
+      ],
+      "test_evidence": [
+        "Baseline opened: vision_rev02.jpg 1214x1295, Logg panel-5 RN Web 375x844, checklist picker 375x844. UI Critic and Architect v1 findings recorded in the plan; no new render or code changes.",
+        "UI Critic opened the panel 5 reference (1214x1295), current Knowledge picker (375x844) and Logg public/history renders. BRIEF v2 PROCEED; no code/render changed.",
+        "Architect APPROVE v2 after training task closed; neutral list-outline fallback uses generic textPrimary/selectedSurface; icon task does not modify tokens.ts.",
+        "UI Critic REVIEW PASS on updated public/review 375/430 and short 375 with 140% text: 20-choice picker, selected trigger/radio, saved Home routine, Knowledge custom row and neutral fallback match Logg panel 5 two-tone treatment.",
+        "verify-checklist-icons.py public/review: 37 checks each, zero browser errors; verify-checklist-custom-icons.py public/review: 7 checks each, zero browser errors; all 20 targets and Save reachable at 375/430, 375x667 with 140% text.",
+        "CI=1 pnpm check PASS: TypeScript, edge typecheck, ESLint and 98/98 test files; four focused icon tests pass; Python compilation, dev_flow validate and git diff --check pass.",
+        "Independent QA PASS; native VoiceOver/TalkBack/Dynamic Type and live Supabase/RLS remain NOT TESTABLE.",
+        "Frozen Reviewer first attempt BLOCKED only on stale queue/plan records; code scope had zero unclaimed files. Synchronization was completed; re-review pending.",
+        "Frozen Reviewer PASS on re-review after plan/queue synchronization: status, checkpoint, next step and test evidence current; code scope has zero unclaimed files; tokens.ts correctly belongs to Log/Gesture; public/review results and other reviews align. First docs-only block and its correction are recorded."
+      ]
+    },
+    {
+      "id": "LOG-POTTY-ICON-PATTERN-01",
+      "title": "Logga: skilj Kiss från Vatten, gör Mat grön och förbättra mönsterkortet",
+      "mvp_requirement": "Ägarens återkoppling 2026-10-28: Kiss ska ha gul yta och en tydlig tre-droppssymbol (inte streck), konsekvent i Logga. Mat ska ha grön kategoriaccent. Senaste mönstren ska ha en trevligare sammanfattning.",
+      "plan": "docs/tasks/dev/LOG-POTTY-ICON-PATTERN-01.md v5",
+      "write_paths": [
+        "src/components/ui/IconChip.tsx",
+        "src/components/ui/ListRow.tsx",
+        "src/theme/tokens.ts",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/README.md",
+        "tests/log-screen-policy.test.mjs",
+        "tests/log-calendar-policy.test.mjs",
+        "tests/ui-library-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-flow-log.py",
+        "docs/tasks/dev/LOG-POTTY-ICON-PATTERN-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/design/evidence/log-potty-icon-pattern-01"
+      ],
+      "acceptance": [
+        "Kiss använder gul/amber yta och tre tydliga fyllda droppsilhuetter som inte ser ut som streck; Vatten behåller en blå droppe.",
+        "Mat använder Logg-lokala green700/green100 i snabbval, historik, typväljare och layoutredigering; inga globala färger eller andra vyer ändras.",
+        "Samma Kiss-symbol och Logg-kategorifärg visas i snabbval, historik, typval och långtrycksedigering via opt-in ListRow.iconVariant.",
+        "Patternkortet visar per kategori en tydlig ikon/etikett, antal och ungefärligt medianintervall.",
+        "count >= 2 filter, lokal datakälla, summarizePottyPatterns, interval math and ordering are unchanged.",
+        "375/430/short viewport/140% renders remain accessible with no clipping or horizontal overflow.",
+        "The pattern section stays hidden when no category meets count >= 2."
+      ],
+      "checks": [
+        "Focused log model, LogScreen, calendar and UI library policy tests including Kiss glyph shape and Mat category token",
+        "CI=1 pnpm check",
+        "python -X utf8 tools/visual-check/verify-flow-log.py",
+        "Public/review RN Web captures at 375/430, 375x667 and 140% text; open and inspect icon silhouettes/colors",
+        "§14 checklist and separate §14.16 visual-dimension assessment",
+        "python -X utf8 tools/dev_flow.py validate",
+        "git diff --check and exact write-path audit"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Ägarens återkoppling 2026-10-28: Kiss ska vara gul med separat tre-dropparsymbol, konsekvent i vanlig vy och långtrycksedigering; mönsteruträkningen får ett läsbart visuellt kort. Plan v1 väntar på UI Critic och Architect."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "UI Critic PROCEED v1 recommendations incorporated: two-line rows, dark amber with measured symbol contrast, and the same three-drop glyph at small sizes. Exact v2 Architect/Critic approval pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "ui_critic",
+          "evidence": "UI Critic PROCEED v2: consistent three-drop glyph, dark amber contrast, and two-tier pattern rows are clear. Runtime visuals still require review after implementation. Architect v2 remains pending."
+        },
+        {
+          "from": "planned",
+          "to": "planned",
+          "actor": "architect",
+          "evidence": "Architect CHANGES v2: full base SHA/model defaults; UI-MODAL-CENTER-01 and blocked LOGGA-QUICK are nonblocking related tasks; define opt-in ListRow.iconVariant wiring and hidden empty/sparse state. Incorporated in v3."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v3: 14 plan/queue write paths match; Logg-only iconVariant, sparse hidden state, and nonblocking related tasks are explicit. Next: implement on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved Logg icon/pattern task v3 on knowledge/d3-catalog-delivery. Implement only declared 14 paths; preserve event data and pattern calculation semantics. First checkpoint: inspect existing icon/color mappings, long-press ListRow flow, summary component, test/visual fixture."
+        },
+        {
+          "from": "implementing",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Full CI found a stale assertion for the old pee ground glyph in tests/log-calendar-policy.test.mjs; this file is outside v3 write_paths. Pause code edits; add the required test fix to v4 and obtain Architect re-approval before touching it."
+        },
+        {
+          "from": "blocked",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Plan v4 adds tests/log-calendar-policy.test.mjs because full CI found its old peeGround assertion no longer matches the approved three-drop icon. No write to that file until Architect APPROVE v4. UI Critic visual/accessibility review is recorded; refreshed evidence unchanged."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Architect APPROVE v4: all 15 plan/queue paths match; the stale calendar assertion update is narrowly scoped. UI Critic REVIEW v4 PASS after accessibility fix. Return to plan lifecycle to re-open implementation gate."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v4 confirms all 15 declared paths match. UI Critic REVIEW v4 PASS; icon accessibility names remain on parent controls and Olycka retains type labels. Resume the approved Logg implementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Resume approved v4 after replacing the obsolete peeGround assertion with tests for the three-drop Kiss placement, Water single-drop path, default token colors and contrast. The only new path is tests/log-calendar-policy.test.mjs; then rerun focused tests, full CI, visual QA, path audit and independent reviews."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation v4 complete. Focused tests and full CI pass (831 pass, 1 skip); updated public/review visual checks each 22/22 with 0 page errors, including the event-type selector; UI Critic REVIEW PASS. RESULTS.json and full §14/§14.16 evidence were added after QA/Frozen findings. Re-review requested; native checks remain NOT TESTABLE. Other active branch changes are separately attributed to their approved task plans and will not be included in a Log-only commit."
+        },
+        {
+          "from": "qa",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Owner expanded the UI brief: make Mat green and replace the current stroke-like Kiss mark with three recognizable droplets. v4 review is paused; create plan v5 and obtain fresh UI Critic BRIEF and Architect APPROVE before product-code edits."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v5 drafted for owner-requested green Mat category styling and visibly droplet-shaped three-drop Kiss icon. v4 approvals do not cover these additions; request fresh UI Critic BRIEF and Architect approval before implementation."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE plan v5: exact 15 queue/write paths match; react-native-svg 15.15.4 is already installed; Logg-only green Mat and upright filled Kiss droplet paths preserve global colors and all existing log calculations/state semantics. UI Critic BRIEF v5 PROCEED incorporated. Begin implementation on the existing branch."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Start approved v5 implementation on knowledge/d3-catalog-delivery. Replace the Logg-only Kiss mark with three upright filled teardrop paths and change only Logg Mat to green700/green100. Preserve the approved v4 pattern card and existing events, counts, order and persistence; use only the 15 declared paths."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v5 implemented after UI Critic PROCEED and Architect APPROVE: Logg Mat uses green700/green100 and Kiss uses three upright filled droplets across quick/history/layout/type selector and Olycka. CI passes (831 tests, 1 skipped); public and review verifier each pass 22/22 with zero page errors; v5 comparison and §14/§14.16 evidence updated. UI Critic REVIEW PASS. Next: independent behavior/visual QA and Frozen Reviewer."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent behavior/visual QA v5 PASS: 15 paths, consistent visuals, unchanged pattern logic, evidence, queue and diff check verified. Frozen Reviewer v5 PASS: path/queue scope, stable captures, allowed §14 statuses and attribution verified. UI Critic PASS; CI 831 pass/1 skip; browser public/review 22/22 each. Next: final closeout review."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer v5 PASS after final independent QA PASS: all declared Log paths, queue state, stable captures and checklist statuses verified; no findings. UI Critic REVIEW PASS; full CI and public/review visual runs pass. See docs/design/evidence/log-potty-icon-pattern-01/REVIEWS.md and VERIFICATION.md. Native device/accessibility checks remain NOT TESTABLE."
+        }
+      ],
+      "next_step": "Frozen Reviewer v5 PASS after final independent QA PASS: all declared Log paths, queue state, stable captures and checklist statuses verified; no findings. UI Critic REVIEW PASS; full CI and public/review visual runs pass. See docs/design/evidence/log-potty-icon-pattern-01/REVIEWS.md and VERIFICATION.md. Native device/accessibility checks remain NOT TESTABLE.",
+      "priority": "P1",
+      "panels": [
+        "5"
+      ],
+      "risk_class": "L",
+      "checkpoint": "Plan v5 includes Erik’s green Mat and clearer Kiss droplet requests. UI Critic BRIEF v5 PROCEED: upright filled teardrops and Logg-only green700/green100. Architect approval is pending before implementation. V4 baseline evidence is recorded; final v5 CI, browser renders, QA and Frozen review remain outstanding.",
+      "related_tasks": [
+        "LOGGA-QUICK",
+        "UI-MODAL-CENTER-01"
+      ],
+      "test_evidence": [
+        "V4 baseline CI=1 pnpm check: PASS; TypeScript, Edge TypeScript, ESLint, 831 tests pass, 1 skip.",
+        "V4 baseline public verify-flow-log.py: 22/22, 0 page errors; includes settled event-type selector; evidence docs/design/evidence/log-potty-icon-pattern-01/public/.",
+        "V4 baseline review verify-flow-log.py: 22/22, 0 page errors; includes settled event-type selector; evidence docs/design/evidence/log-potty-icon-pattern-01/review/.",
+        "V4 baseline aggregate RESULTS.json, full §14 checklist and separate §14.16 visual dimensions: docs/design/evidence/log-potty-icon-pattern-01/.",
+        "V4 UI Critic focused event-type selector re-review: PASS. V5 UI Critic BRIEF: PROCEED; recommends upright filled teardrops and green Mat; contrast 5.59:1.",
+        "V5 Architect review: PENDING before implementation.",
+        "V4 baseline amber Kiss foreground/surface contrast: 5.38:1; native checks and final v5 visual outcomes are not yet verified.",
+        "python -X utf8 tools/dev_flow.py validate, Python compilation and git diff --check: PASS for current plan/evidence state."
+      ]
+    },
+    {
+      "id": "KNOWLEDGE-FAQ-CATALOG-01",
+      "title": "Kunskap: public FAQ-katalog och källänkade svar",
+      "mvp_requirement": "docs/plans/UI-UX-ANVANDARPLAN-2026-10-24.md §2 — D3 publicerad FAQ; approved D3 v5 contract",
+      "plan": "docs/tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md v6 (closeout extension; implementation v5)",
+      "write_paths": [
+        "docs/tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/content/README.md",
+        "docs/content/knowledge-faq-v1.json",
+        "docs/content/knowledge-faq-review-v1.md",
+        "tools/validate_knowledge_faq.py",
+        "supabase/content/knowledge-faq-v1.sql",
+        "supabase/content/publish-knowledge-faq-v1.sql",
+        "supabase/tests/knowledge-faq-catalog.sql",
+        "src/data/workspace-data.ts",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "tests/knowledge-faq-content.test.mjs",
+        "tests/workspace-data.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tools/visual-check/know02-app.tsx",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/README.md",
+        "docs/design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md",
+        "docs/design/evidence/knowledge-faq-catalog-v1/results.json",
+        "docs/design/evidence/knowledge-faq-catalog-v1/panel7-faq-comparison.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/postgres-probe.log",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public/browser-results.json",
+        "docs/design/evidence/knowledge-faq-catalog-v1/review/browser-results.json",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-375.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-430.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-short-375x667-140.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/review-faq-375.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-empty-375.png",
+        "docs/design/evidence/knowledge-faq-catalog-v1/public-faq-error-375.png",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Exakt fyra FAQ-poster använder nuvarande teman/D3-context, kort neutral copy och full claim→source-map; Dog Expert PASS eller PASS WITH CONDITIONS accepteras bara när inga copy-/säkerhetsändringar återstår och exakt digest, underlag och begränsningar sparas; ingen veterinärsignoff eller oberoende URL-fetch påstås.",
+        "Importen landar exakt som reviewed/opublicerad med Dog Expert-reviewreferens och granskningsdatum; separat publicering kräver exakt match mellan granskad JSON och SQL-payloads; inga hundägda rader ändras.",
+        "Separat PublishedFaq-adapter validerar FAQ-typ, published-status och context; review-fixtures stannar bakom reviewflaggan; FAQ kommer inte in i HomeContent.",
+        "Expanderat svar visar full text och kompakta fungerande 1)-källänkar; alla tre sammanhangsflikar är hela vid 375/430 px och scroll når sista fliken med 140 %-text. Tillbakaflöde och 44×44 pt-träffytor fungerar.",
+        "Befintliga guider, faslistor, Hem-innehåll och checklistors egna punkter/progress är oförändrade; public/review RN Web-bevis, UI Critic, oberoende QA och Frozen Reviewer är sparade.",
+        "Status skiljer lokal/disposable kontroll från live Supabase/RLS, faktisk publicering och native/VoiceOver; alla implementationspaths ryms i v5; HISTORY-raden är endast administrativ v6-closeout."
+      ],
+      "checks": [
+        "Critic/Architect re-review av plan v5; exact-copy Dog Expert PASS WITH CONDITIONS och begränsningar registrerade",
+        "UI Critic brief och review mot KNOW-02-checklists-faq-ux-spec.md; separat behavior/visual QA och Frozen Reviewer",
+        "tools/validate_knowledge_faq.py och SQL payload parity/mutation check",
+        "Disposable PostgreSQL import retry, mismatch refusal, separate publish and published-only RLS probe",
+        "Focused Knowledge/workspace tests and CI=1 pnpm check",
+        "RN Web public/review/empty/error renders at 375/430, 375x667 with 140% text; accessibility/source link targets",
+        "python -X utf8 tools/dev_flow.py validate and git diff --check; changed-path audit",
+        "Critic review of v6 closeout-only write-path extension; history entry cross-checked against origin branch commit"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-D3-CATALOG-SCHEMA-01",
+        "KNOWLEDGE-PHASE-CATALOG-01"
+      ],
+      "status": "done",
+      "next_step": "V5-produkttasken är done och pushad. V6-historikposten är registrerad och granskad; inga produkt- eller live DB-åtgärder återstår i denna task.",
+      "priority": "P1",
+      "panels": [
+        "7"
+      ],
+      "risk_class": "H",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v3 APPROVE från Architect och Critic; exact slug/context mapping, separate PublishedFaq path, reviewed/unpublished import status, existing UX contract and v3 queue paths verified. No implementation or DB action yet."
+        },
+        {
+          "from": "ready",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Dog Expert exact-copy review found two required FAQ corrections, including an adult-supervision claim needing verified source metadata. Plan v3 approval is invalid for new source/path; pause implementation and revise/re-review plan v4 before proceeding."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Plan v4 corrections reconciled: Critic and Architect both APPROVE; queue review check now names v4, source-links.ts edit deferred, paths match. Dog Expert re-review of revised payload remains a pre-implementation gate."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic APPROVE for corrected plan v4, with exact queue/plan path and review-gate parity. Implementation is ready after revised FAQ payload Dog Expert re-review; no live database operation is authorized."
+        },
+        {
+          "from": "ready",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Final exact-copy Dog Expert review returned PASS WITH CONDITIONS, not bare PASS. No copy changes remain; plan acceptance wording must explicitly accept only documented non-blocking review limitations and preserve no-vet-signoff status. Replan v5 before implementation."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Corrected queue's stale plan v4 acceptance reference to v5; Critic and Architect re-reviewed plan v5 and both APPROVE. Dog Expert PASS WITH CONDITIONS and limitations are explicitly recorded; no copy changes remain."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Plan v5 APPROVE confirmed by Architect; Critic v5 APPROVE, with queue acceptance, paths, and bounded PASS WITH CONDITIONS review gate matching plan."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Local implementation complete on knowledge/d3-catalog-delivery; validator, CI, disposable PostgreSQL and public/review RN Web checks passed. No live import or publication."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation handoff: 100/100 test files pass; validator and SQL bundle checks pass; disposable PostgreSQL probes pass; public RN Web 146/146 and review 55/55 with no browser errors; UI Critic REVIEW and static Security review complete. Independent QA and Frozen Reviewer remain."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS after selected-tab visibility fix; final CI=1 pnpm check passed (100/100 tests), public/review RN Web 152/152 and 62/62 with all context labels visible at 375/430 and horizontal scroll to the last tab at 140% text; path audit, FAQ validator, Python compilation and git diff --check passed. Frozen Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS without findings on final diff; reviewed 33/36 paths, acceptance, SQL/adapter/tests and opened comparison plus six final FAQ screenshots. CI=1 pnpm check, validator, QA public/review runs, queue/path/diff checks passed; live/native limits are recorded."
+        }
+      ],
+      "checkpoint": "Lokal FAQ-slice på knowledge/d3-catalog-delivery från 150d6bbbf1adf66677b343cfdd154eb568d07aeb. Fyra neutrala FAQ-versioner; digest 170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288; Dog Expert PASS WITH CONDITIONS utan kvarvarande copyändringar, men utan oberoende URL-fetch/veterinärsignoff. Separat PublishedFaq-adapter och separata reviewed import/publicerings-SQL. CI=1 pnpm check PASS på slutlig kod: TypeScript, edge TypeScript, ESLint och 100/100 testfiler. Disposable PostgreSQL 16 syntetisk import/retry/drift refusal/separate publish/published-only rollback probe PASS; postgres-probe.log saknar exakta kommandon, tamperingmetod och minorversion. Public RN Web 152/152 och review 62/62, noll browserfel. Reviewer identifierade att Efter ålder kapades; flikarna har nu kortare etiketter, scrollar horisontellt och sista fliken kan nås vid 140 % text. UI Critic REVIEW PASS och oberoende QA PASS efter fix. Scope audit: 35 changed paths within 37 declared write paths. FAQ validator, Python compilation, queue validation and git diff --check PASS. Native/live-gränser kvarstår. Frozen Reviewer PASS utan fynd efter att ha granskat full diff, 33/36 paths och jämförelsebild plus sex slutbilder. v5 commit f75279f6b71fa2a224297a9ffc05150244d84c8c finns på origin/knowledge/d3-catalog-delivery. v6 administrativ historikrad är inskriven efter Critic PROCEED och Frozen Reviewer supplemental PASS; den refererar till den verifierade, pushade v5-commiten. Slutlig scope audit: 35 ändrade paths inom 37 deklarerade. Ingen liveimport/publicering.",
+      "test_evidence": [
+        "Dog Expert PASS WITH CONDITIONS on exact content SHA 170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288; conditions and source-summary limitation saved; no veterinary signoff or independent URL fetch claimed.",
+        "python tools/validate_knowledge_faq.py PASS: 4 reviewed FAQ versions, 6 source entries, exact digest and SQL payload parity.",
+        "CI=1 pnpm check PASS: typecheck, edge typecheck, ESLint and 100/100 Node test files.",
+        "Disposable PostgreSQL 16.15 with synthetic schema/roles: migrations, FAQ draft import twice, tampered payload refused, separate publish twice, published-only/RLS/owner-data rollback probe PASS; no live Supabase accessed.",
+        "Public RN Web verify-know02.py PASS 152/152, 0 browser errors; review RN Web PASS 62/62, 0 browser errors. All context labels fully visible at public 375/430 and review 375; at 140% CSS text the tab bar scrolls to reveal the final context. Covers public/review/empty/error/retry, source/back navigation and 44px targets.",
+        "UI Critic REVIEW PASS after the tab visibility correction, on panel7-faq-comparison.png and the 375/430/review/short-viewport renders; scoped FAQ only, no full panel-7 approval.",
+        "Static Security review: no blocking findings; public adapter requires FAQ parent type, published version and supported context, and FAQ does not enter HomeContent. Before any live publication, inspect for unrelated existing published FAQ roots; the script guards the four scoped slugs rather than globally.",
+        "Independent QA PASS after tab visibility correction for the local FAQ slice, screenshots, 44px targets, tab labels and horizontal scroll at 140% text, plus the documented synthetic PostgreSQL run. PostgreSQL transcript is accepted as evidence of the logged run but omits exact commands, tampering method and minor version; §14.8 measured contrast and §14.15 native behavior remain NOT TESTABLE.",
+        "V6 closeout Critic PROCEED and Frozen Reviewer supplemental PASS; history commit cross-checked against origin. Final task-base audit: 35 paths within 37 declared."
+      ]
     }
   ]
 }

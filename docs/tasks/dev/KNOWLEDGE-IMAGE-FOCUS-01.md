@@ -1,6 +1,6 @@
 # KNOWLEDGE-IMAGE-FOCUS-01 — granska fokus för alla artikelbilder
 
-**Status:** planned · **Planversion:** v1 · **Risk:** M
+**Status:** done · **Planversion:** v2 · **Risk:** M
 
 ## Mål
 
@@ -48,6 +48,18 @@ Verifiera och vid behov korrigera beskärningen för varje artikel-/guidebild so
 - `CI=1 pnpm check`
 - `python -X utf8 tools/dev_flow.py validate`
 - `git diff --check`
+
+UI Critic- och QA-verdict samt öppnade bildbevis sparas i `docs/design/evidence/knowledge-image-focus-2026-10-25/review/REVIEWS.md`.
 - UI Critic och oberoende QA av hela mappinglistan och skärmbilderna.
 
 Katalogsnapshot eller TestFlight-innehåll som inte finns lokalt får inte gissas; de fallen stannar **NOT TESTABLE** tills sanerad evidens finns.
+
+## Plan v2 — komplett lokal mappingaudit
+
+Den lokala koden innehåller inget separat live-katalogexport. V2 använder därför en sanerad auditinventering med sex publicerade bundle-versioner, tre återställda artikel-slugs, reviewartiklar/-guider, befintliga fixtureidentiteter och explicita probes för alla tre delade fallbackbilderna. Den inventerar 24 identiteter mot sju bildassets. Okända live-ID:n för återställda Drive-artiklar och hela den driftsatta katalogen förblir uttryckligen **NOT TESTABLE**; inga produktionsposter eller hundnamn gissas.
+
+Auditvyn ligger enbart i `tools/visual-check/vision-r02-home-panels-app.tsx`. Den renderar produktionskomponenten `KnowledgeImage` med befintlig mapping/fokuslogik för Featured 16:9, relaterad 4:3 och läsarbild 16:9. En JSON-inventering laddas som syntetiskt testunderlag. Ingen route läggs till i appen och ingen publicerad artikel, asset, rekommendation, status eller fokuspunkt ändras om den visuella evidensen inte visar ett konkret fel.
+
+`tests/knowledge-image-focus.test.mjs` ska säkerställa att alla lokalt publicerade artikelversioner och återställda slugs finns med, varje nyckel i `KNOWLEDGE_IMAGE_BY_GUIDE_VERSION`, `GUIDE_IMAGE_FOCUS_BY_VERSION` och `REVIEW_IMAGE_BY_GUIDE_VERSION` täcks, samtliga källassets finns och varje inventerad ansiktsruta ryms inom båda beskärningarna enligt produktionslayoutfunktionen. Playwright-verifieraren ska rendera samtliga mappingar vid 375×844 och 430×844, kort viewport 375×667 samt spara en kontaktkarta och per-mapping resultat/skärmbilder. UI Critic och oberoende QA granskar faktiskt öppnade captures; Reviewer granskar därefter slutlig diff, testbevis och begränsningar.
+
+Tekniska begränsningar: ingen ny dependency eller produktionskod krävs. TestFlight/native-beskärning och saknad live-katalog kan inte godkännas av denna RN Web-audit. De markeras **NOT TESTABLE** även om samtliga lokala kontroller passerar.

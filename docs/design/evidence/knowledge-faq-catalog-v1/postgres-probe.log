@@ -1,0 +1,280 @@
+Disposable PostgreSQL 16 probe. No network, host ports, production data or live Supabase. The temporary data directory was tmpfs and the container was removed.
+The bootstrap uses synthetic roles and auth.users.
+
+## Start disposable PostgreSQL 16 (no network, no host ports, tmpfs data, read-only SQL mounts)
+exit_code=0
+stdout:
+cd2bc1d1be828c12039e89deb5744a2e799cb2f8b097ac609d6e7acfa562a3fa
+
+stderr:
+
+
+## Wait for disposable PostgreSQL readiness
+exit_code=0
+stdout:
+/var/run/postgresql:5432 - accepting connections
+
+stderr:
+
+
+## Create minimal synthetic Supabase auth schema/roles
+exit_code=0
+stdout:
+CREATE ROLE
+CREATE ROLE
+CREATE ROLE
+CREATE SCHEMA
+CREATE TABLE
+CREATE FUNCTION
+GRANT
+GRANT
+
+stderr:
+
+
+## Apply migration 202610040001_foundation.sql
+exit_code=0
+stdout:
+BEGIN
+CREATE SCHEMA
+REVOKE
+GRANT
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE FUNCTION
+REVOKE
+GRANT
+CREATE FUNCTION
+REVOKE
+GRANT
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE TRIGGER
+REVOKE
+DO
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+INSERT 0 2
+COMMIT
+
+stderr:
+
+
+## Apply migration 202610110002_puppy_checklists.sql
+exit_code=0
+stdout:
+CREATE TABLE
+INSERT 0 6
+CREATE TABLE
+INSERT 0 18
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+CREATE POLICY
+CREATE POLICY
+CREATE POLICY
+REVOKE
+REVOKE
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+GRANT
+
+stderr:
+
+
+## Apply migration 202610180002_content_ai_origin.sql
+exit_code=0
+stdout:
+ALTER TABLE
+
+stderr:
+
+
+## Apply migration 202610240002_knowledge_catalog.sql
+exit_code=0
+stdout:
+BEGIN
+DO
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+INSERT 0 6
+CREATE FUNCTION
+CREATE TRIGGER
+UPDATE 6
+DO
+ALTER TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE INDEX
+ALTER TABLE
+CREATE POLICY
+CREATE POLICY
+REVOKE
+GRANT
+REVOKE
+COMMIT
+
+stderr:
+
+
+## Import reviewed FAQ bundle (attempt 1)
+exit_code=0
+stdout:
+BEGIN
+DO
+SELECT 4
+DO
+INSERT 0 4
+INSERT 0 4
+DO
+COMMIT
+
+stderr:
+
+
+## Import reviewed FAQ bundle (idempotent retry)
+exit_code=0
+stdout:
+BEGIN
+DO
+SELECT 4
+DO
+INSERT 0 0
+INSERT 0 0
+DO
+COMMIT
+
+stderr:
+
+
+## Expected refusal of altered reviewed FAQ title
+exit_code=3
+stdout:
+BEGIN
+DO
+SELECT 4
+DO
+INSERT 0 0
+INSERT 0 0
+
+stderr:
+ERROR:  Knowledge FAQ stopped: rows differ from the reviewed unpublished bundle
+CONTEXT:  PL/pgSQL function inline_code_block line 9 at RAISE
+
+
+## Publish reviewed FAQ bundle
+exit_code=0
+stdout:
+BEGIN
+DO
+SELECT 4
+DO
+UPDATE 4
+DO
+COMMIT
+
+stderr:
+
+
+## Publish idempotent retry
+exit_code=0
+stdout:
+BEGIN
+DO
+SELECT 4
+DO
+UPDATE 0
+DO
+COMMIT
+
+stderr:
+
+
+## Published-only, draft-hidden and owner-row-preservation rollback probe
+exit_code=0
+stdout:
+BEGIN
+SELECT 1
+DO
+INSERT 0 1
+SET
+                              set_config
+-----------------------------------------------------------------------
+ {"sub":"11000000-0000-4000-8000-000000000001","role":"authenticated"}
+(1 row)
+
+DO
+RESET
+DO
+ROLLBACK
+
+stderr:
+
+
+## Stop and remove disposable container
+exit_code=0
+stdout:
+tassla-faq-pg-qa-rerun-20261028
+
+stderr:

@@ -50,6 +50,8 @@ ImageMagick-kommandot för den spårade nedskalningen var `magick <original> -re
 
 `training-hero-shiba-park.jpg` skapades med `image_gen` 2026-10-21 för Träning. Den visar en rödvit Shiba Inu i en lugn sittövning i en svensk stadspark. Originalet är 1024×1536 px, 2,487,380 byte och finns kvar i `/workspace/generated_images/exec-4d10ad03-a255-4dfa-87bd-274dc2498514.png`. Spårad JPEG är 1024×1536 px och 266,336 byte (kvalitet 86, metadata borttagna). Generisk dekorativ standardbild, inte användarens hund eller bevis på genomförd träning; reserverad tills panelens bildyta är godkänd.
 
+`training-recommendation-puppy-black-tan-park.jpg` (1448×1086 px, 270,862 byte) används också som dekorativ banner på cirka 112 pt hög i träningsresans programvy. Den är en generisk hundbild, inte ägarens hund eller ett träningsresultat. Den låga `cover`-ytan justerar den vertikala bildplaceringen så att valpens ansikte och öron syns; kontrollera den faktiska renderingen vid 375, 430 pt och kortare viewport innan ändringar av crop eller höjd.
+
 ## VISION-R02 panel 8: Insikter
 
 `insights-hero-senior-schnauzer.jpg` skapades med `image_gen` 2026-10-21 för Insikter. Den visar en äldre grå schnauzer i ett varmt hemmaljus. Originalet är 1024×1536 px, 2,401,566 byte och finns kvar i `/workspace/generated_images/exec-639ebfb6-63b7-4f4d-850a-a327d746cb1f.png`. Spårad JPEG är 1024×1536 px och 266,278 byte (kvalitet 86, metadata borttagna). Generisk dekorativ standardbild, inte en användares hund, hälsodata eller bevis på ett mönster; reserverad tills panelens bildyta är godkänd.
@@ -102,3 +104,7 @@ Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller
 - Exakt genereringsprompt:
 
 > Photorealistic natural editorial photograph for a calm puppy-care app. A generic young dog having a calm, positive first contact with a veterinarian in a clean, warm-toned clinic room: the veterinarian is at the dog's eye level and offers a gentle hand near the shoulder while the dog stands relaxed beside its caregiver. Friendly, unhurried body language, soft daylight, muted cream and sage palette, believable anatomy, simple background. Landscape 3:2 composition with the dog's face and the gentle interaction clear for a mobile card crop. Decorative image only; it does not claim an examination, diagnosis, or medical result and is not a user's dog. No procedure, needles, medical treatment, text, logos, or watermark.
+
+## Kunskapens faschecklistor
+
+`PuppyChecklistScreen` återanvänder befintliga lokala redaktionsbilder som smala, dekorativa banners i fasdetaljen. Den fasvisa bild- och fokalmappningen finns i `src/features/knowledge/checklist-phase-visuals.ts`: `dog-welcome.png` före hemkomst, `knowledge-featured-puppy-lagotto-forest.jpg` för första dagarna, `knowledge-card-puppy-sheltie-window.jpg` för 8–12 veckor, `knowledge-guide-handling.jpg` för 3–6 månader, `puppy-training.png` för 6–12 månader och `knowledge-card-puppy-cocker-coast.jpg` för över ett år. Varje banner ska visa hela hundens ansikte tydligt utan att skära av det; fokuspunkter verifieras i render vid 375/430 pt. Banners är dekorativa och dolda för VoiceOver/TalkBack; fasrubrik och checklistinnehåll bär betydelsen. Inga nya bildfiler eller personliga hundfoton har lagts till.

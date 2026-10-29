@@ -87,6 +87,21 @@ test('unknown start and milestone reads require the same operation receipt evide
   assert.equal(model.operationAppliedToWorkspace(milestoneWorkspace, dogId, confirm, 'confirm-op'), true);
 });
 
+test('undo requires its exact operation and cannot hide a newer confirmation', () => {
+  const action = { kind: 'undo_step', programVersionId: versionA, stepId: 'step-a2', expectedMilestoneId: 'old-milestone' };
+  assert.equal(model.sameTrainingProgressionAction(action, { ...action, expectedMilestoneId: 'new-milestone' }), false);
+  const undone = { journeys: [{ ...journeyA, last_operation_id: 'undo-op' }], sessions: [], milestones: [] };
+  assert.equal(model.operationAppliedToWorkspace(undone, dogId, action, 'undo-op'), true);
+  assert.equal(model.operationAppliedToWorkspace(undone, dogId, action, 'other-op'), false);
+  const newer = { ...undone, milestones: [{ id: 'new-milestone', journey_id: journeyA.id, step_id: 'step-a2' }] };
+  assert.equal(model.operationAppliedToWorkspace(newer, dogId, action, 'undo-op'), false);
+  const receipt = { operation_id: 'undo-op', action: 'undo_step', journey_id: journeyA.id, dog_id: dogId,
+    program_version_id: versionA, active_step_id: 'step-a2', state: 'active', session_id: null, milestone_id: 'old-milestone' };
+  assert.equal(model.isTrainingProgressionResult(receipt), true);
+  assert.equal(model.operationAppearsInReadback(undone, receipt), true);
+  assert.equal(model.operationAppearsInReadback(newer, receipt), false);
+});
+
 test('a saved session never advances skill; confirmation stays separate and navigation is explicit', () => {
   const steps = [{ id: 'step-1', title: 'Första' }, { id: 'step-2', title: 'Andra' }];
   const session = { id: 'session', journey_id: journeyA.id, dog_id: dogId, program_version_id: versionA,
@@ -109,6 +124,10 @@ test('a saved session never advances skill; confirmation stays separate and navi
   assert.equal(paused.canStartOrResume, true);
   assert.equal(paused.canLogSession, false);
   assert.equal(paused.canGoNext, false);
+
+  const legacyMaintenance = model.trainingProgressionPresentation({ journeys: [{ ...journeyA, state: 'maintenance', active_step_id: 'step-1' }], sessions: [], milestones: [] }, versionA, steps);
+  assert.equal(legacyMaintenance.stateLabel, 'Pågående');
+  assert.equal(legacyMaintenance.canLogSession, true);
 });
 
 test('operation result parser rejects unknown server actions and malformed saved results', () => {

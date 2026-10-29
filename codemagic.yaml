@@ -20,7 +20,7 @@ workflows:
         CI: "1"
         EXPO_PUBLIC_TASSLA_REVIEW_CONTENT: "true"
         TASSLA_BUILD_CHANNEL: "review"
-        APP_STORE_APPLE_ID: "6819067309"  
+        APP_STORE_APPLE_ID: "6819067309"
     scripts:
       - name: Install locked dependencies
         script: |

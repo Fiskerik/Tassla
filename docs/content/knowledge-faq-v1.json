@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "bundle_id": "knowledge-faq-v1",
+  "status": "reviewed",
+  "sources": [
+    {
+      "id": "rspca-puppy-care",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare",
+      "title": "Caring For Your Puppy - 6 weeks to 12 months",
+      "accessed_on": "2026-10-26",
+      "scope": "Allmän valpvård, lugn och ostörd vila, positiva upplevelser, gradvis hantering, valpkurser och kontakt med veterinär. Brittisk källa; inga brittiska ålders- eller vaccinationsintervall används."
+    },
+    {
+      "id": "rspca-environment",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/environment",
+      "title": "Creating a Good Home For Your Dog",
+      "accessed_on": "2026-10-26",
+      "scope": "Ostörd viloplats, trygg plats att dra sig undan till och säker hemmiljö."
+    },
+    {
+      "id": "rspca-left-alone",
+      "url": "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/leftalone",
+      "title": "How to Train Your Dog to Stay Home Alone",
+      "accessed_on": "2026-10-26",
+      "scope": "Individuell och gradvis ensamhetsträning, att undvika oro och gå tillbaka till ett enklare steg. Ingen fast tidsplan eller varaktighet anges."
+    },
+    {
+      "id": "dogstrust-children",
+      "url": "https://www.dogstrust.org.uk/dog-advice/getting-dog/dog-ready/when-you-have-children",
+      "title": "Getting a dog when you have children",
+      "accessed_on": "2026-10-28",
+      "scope": "Vuxen ska aktivt övervaka hund och barn. Första möten hålls korta, lugna och positiva; hunden får gå undan och vila ostört."
+    },
+    {
+      "id": "avsab-humane-2021",
+      "url": "https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf",
+      "title": "Position Statement on Humane Dog Training",
+      "accessed_on": "2026-10-26",
+      "scope": "Professionellt ställningstagande för belöningsbaserad träning och mot aversiva metoder; inte en individuell behandlingsplan."
+    },
+    {
+      "id": "avsab-socialization",
+      "url": "https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf",
+      "title": "AVSAB Puppy Socialization Position Statement",
+      "accessed_on": "2026-10-26",
+      "scope": "Säkra, positiva och gradvisa upplevelser utan överstimulering. Amerikanska vaccin- eller kursintervall används inte som svensk rekommendation."
+    }
+  ],
+  "review": {
+    "dog_expert_status": "passed_with_conditions",
+    "review_reference": "docs/content/knowledge-faq-review-v1.md#payload-sha256=170d70410e1a7bf121fc7ef16c338d4eb79e7f023fd3ba4c3f96cc5661cd3288",
+    "reviewed_on": "2026-10-28"
+  },
+  "faqs": [
+    {
+      "fixture_id": "review-v1:faq:first-night",
+      "id": "66000000-0000-4000-8000-000000000001",
+      "slug": "faq-first-night",
+      "content_type": "faq",
+      "versions": [
+        {
+          "id": "67000000-0000-4000-8000-000000000001",
+          "version": 1,
+          "context": "first_days",
+          "title": "Hur kan första natten bli lugnare?",
+          "body": "Förbered natten med en lugn sovplats där hunden kan vila ostört och dra sig undan. Håll miljön enkel och trygg. Kontakta veterinär om något oroar dig kring hälsan.",
+          "min_age_weeks": 0,
+          "max_age_weeks": null,
+          "status": "draft",
+          "is_ai_generated": true,
+          "sources": [
+            "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare",
+            "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/environment"
+          ],
+          "claim_trace": [
+            {
+              "claim_id": "faq-night-safe-rest",
+              "text": "Förbered natten med en lugn sovplats där hunden kan vila ostört och dra sig undan. Håll miljön enkel och trygg.",
+              "source_refs": ["rspca-puppy-care", "rspca-environment"]
+            },
+            {
+              "claim_id": "faq-night-vet",
+              "text": "Kontakta veterinär om något oroar dig kring hälsan.",
+              "source_refs": ["rspca-puppy-care"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture_id": "review-v1:faq:alone-time",
+      "id": "66000000-0000-4000-8000-000000000002",
+      "slug": "faq-alone-time",
+      "content_type": "faq",
+      "versions": [
+        {
+          "id": "67000000-0000-4000-8000-000000000002",
+          "version": 1,
+          "context": "first_days",
+          "title": "Hur börjar träningen på att vara ensam?",
+          "body": "Börja med mycket korta stunder och öka gradvis utifrån hundens reaktion. Om hunden verkar orolig, gör nästa försök lättare. Det finns ingen tidsplan som passar alla.",
+          "min_age_weeks": 0,
+          "max_age_weeks": null,
+          "status": "draft",
+          "is_ai_generated": true,
+          "sources": ["https://www.rspca.org.uk/adviceandwelfare/pets/dogs/training/leftalone"],
+          "claim_trace": [
+            {
+              "claim_id": "faq-alone-gradual",
+              "text": "Börja med mycket korta stunder och öka gradvis utifrån hundens reaktion.",
+              "source_refs": ["rspca-left-alone"]
+            },
+            {
+              "claim_id": "faq-alone-back-off",
+              "text": "Om hunden verkar orolig, gör nästa försök lättare. Det finns ingen tidsplan som passar alla.",
+              "source_refs": ["rspca-left-alone"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture_id": "review-v1:faq:child-contact",
+      "id": "66000000-0000-4000-8000-000000000003",
+      "slug": "faq-child-contact",
+      "content_type": "faq",
+      "versions": [
+        {
+          "id": "67000000-0000-4000-8000-000000000003",
+          "version": 1,
+          "context": "before_homecoming",
+          "title": "Hur möter barn hunden på ett tryggt sätt?",
+          "body": "Låt en vuxen aktivt hålla uppsikt under hela mötet. Håll kontakten lugn och positiv, och ge hunden möjlighet att gå undan och vila ostört.",
+          "min_age_weeks": 0,
+          "max_age_weeks": null,
+          "status": "draft",
+          "is_ai_generated": true,
+          "sources": [
+            "https://www.dogstrust.org.uk/dog-advice/getting-dog/dog-ready/when-you-have-children",
+            "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/environment",
+            "https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf"
+          ],
+          "claim_trace": [
+            {
+              "claim_id": "faq-child-supervision",
+              "text": "Låt en vuxen aktivt hålla uppsikt under hela mötet.",
+              "source_refs": ["dogstrust-children"]
+            },
+            {
+              "claim_id": "faq-child-safe-retreat",
+              "text": "Håll kontakten lugn och positiv, och ge hunden möjlighet att gå undan och vila ostört.",
+              "source_refs": ["dogstrust-children", "rspca-environment", "avsab-socialization"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fixture_id": "review-v1:faq:course",
+      "id": "66000000-0000-4000-8000-000000000004",
+      "slug": "faq-puppy-course",
+      "content_type": "faq",
+      "versions": [
+        {
+          "id": "67000000-0000-4000-8000-000000000004",
+          "version": 1,
+          "context": "by_age",
+          "title": "När passar en valpkurs?",
+          "body": "En valpkurs kan passa när hunden kan delta i lugn takt. Välj belöningsbaserade metoder. Fråga kursarrangören om upplägget och veterinär vid osäkerhet om ålder, vaccination eller smittskydd.",
+          "min_age_weeks": 0,
+          "max_age_weeks": null,
+          "status": "draft",
+          "is_ai_generated": true,
+          "sources": [
+            "https://avsab.org/wp-content/uploads/2021/08/AVSAB-Humane-Dog-Training-Position-Statement-2021.pdf",
+            "https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf",
+            "https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare"
+          ],
+          "claim_trace": [
+            {
+              "claim_id": "faq-course-reward-based",
+              "text": "En valpkurs kan passa när hunden kan delta i lugn takt. Välj belöningsbaserade metoder.",
+              "source_refs": ["avsab-humane-2021", "avsab-socialization", "rspca-puppy-care"]
+            },
+            {
+              "claim_id": "faq-course-local-guidance",
+              "text": "Fråga kursarrangören om upplägget och veterinär vid osäkerhet om ålder, vaccination eller smittskydd.",
+              "source_refs": ["rspca-puppy-care", "avsab-socialization"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

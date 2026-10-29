@@ -69,7 +69,7 @@ test('reminders keep draft, save and OS permission actions separate and show one
   const permission = reminders.match(/async function requestPermission\(\) \{[\s\S]*?\n  \}/)?.[0];
   assert.ok(save);
   assert.ok(permission);
-  assert.match(save, /onSave\(\{ version: 1, enabled, trainingEnabled, trainingMinutes: minutes \}\)/);
+  assert.match(save, /onSave\(\{ version: 1, enabled, trainingEnabled, trainingMinutes: minutes \?\? preferences\.trainingMinutes, routineEnabled, routineMinutes: routineMinutes \?\? preferences\.routineMinutes \?\? 540, phaseEnabled \}\)/);
   assert.doesNotMatch(save, /onRequestPermission/);
   assert.match(permission, /onRequestPermission\(\)/);
   assert.doesNotMatch(permission, /onSave/);
@@ -82,8 +82,9 @@ test('reminders keep draft, save and OS permission actions separate and show one
   assert.match(reminders, /onPress=\{\(\) => \{\s*if \(!enabled && !trainingEnabled\) setEnabled\(true\)/);
 });
 
-test('Insights uses the shared period tabs while retaining all three public period keys', async () => {
+test('Insights uses the shared period tabs and includes the local today period', async () => {
   const insights = await source('src/features/puppy-log/InsightsScreen.tsx');
+  assert.match(insights, /\{ key: 'today', label: 'Idag' \}/);
   assert.match(insights, /\{ key: 'week', label: 'Vecka' \}/);
   assert.match(insights, /\{ key: 'month', label: 'Månad' \}/);
   assert.match(insights, /\{ key: 'since_first_log', label: 'Sedan första loggen' \}/);

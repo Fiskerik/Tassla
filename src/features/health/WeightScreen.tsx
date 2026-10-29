@@ -195,7 +195,7 @@ export function WeightScreen({
           disabled={blocked || saving} onPress={() => selectedRecord && setDeleteTarget(selectedRecord)} /></View> : null}
       </View> : null}
     </BottomSheet>
-    <Dialog visible={discardVisible} title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions
+    <Dialog visible={discardVisible} title="Lämna utan att spara?" confirmLabel="Lämna utan att spara" compactActions
       onRequestClose={() => setDiscardVisible(false)} onConfirm={() => { setDiscardVisible(false); clearDraft(); }}>
       <MessageCard>Ändringen är inte sparad. Dina tidigare viktuppgifter påverkas inte.</MessageCard>
     </Dialog>

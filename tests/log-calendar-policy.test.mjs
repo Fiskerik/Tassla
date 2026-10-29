@@ -12,14 +12,18 @@ function contrast(first, second) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-test('pee uses only the Logga amber token and keeps required icon/text contrast', async () => {
+test('Logg uses the requested Kiss/Mat colors while default Kiss and Water tokens stay unchanged', async () => {
   const source = await readFile(new URL('../src/theme/tokens.ts', import.meta.url), 'utf8');
-  assert.match(source, /const logCategoryColors = \{\s*\.\.\.categoryColors,\s*pee: \{ fg: primitives\.amber700, bg: primitives\.amber100 \}/);
+  assert.match(source, /const logCategoryColors = \{\s*\.\.\.categoryColors,\s*pee: \{ fg: primitives\.amber700, bg: primitives\.amber100 \},\s*food: \{ fg: primitives\.green700, bg: primitives\.green100 \}/);
   assert.match(source, /export const categoryColors = \{\s*pee: \{ fg: primitives\.blue700, bg: primitives\.blue100 \}/);
+  assert.match(source, /food: \{ fg: primitives\.green700, bg: primitives\.food100 \}/);
   const pee = { fg: '#785716', bg: '#F5E7BF' };
   const water = { fg: '#246A98', bg: '#E4EEF4' };
-  assert.ok(contrast(pee.fg, pee.bg) >= 4.5);
+  const food = { fg: '#186A4D', bg: '#E8EFE8' };
+  assert.ok(contrast(pee.fg, pee.bg) >= 3);
+  assert.ok(contrast(water.fg, water.bg) >= 4.5);
   assert.ok(contrast(water.fg, water.bg) >= 3);
+  assert.ok(contrast(food.fg, food.bg) >= 4.5);
   assert.ok(contrast('#1C3027', pee.bg) >= 4.5);
   assert.ok(contrast('#1C3027', water.bg) >= 4.5);
 });
@@ -42,8 +46,15 @@ test('pee and water use different icon paths and pressed quick-log treatment doe
   const tile = await readFile(new URL('../src/components/ui/QuickLogTile.tsx', import.meta.url), 'utf8');
   const listRow = await readFile(new URL('../src/components/ui/ListRow.tsx', import.meta.url), 'utf8');
   assert.match(icon, /category === 'pee' && variant === 'rev02-log' \? <PeeIcon/);
+  const peeIcon = icon.slice(icon.indexOf('function PeeIcon'), icon.indexOf('export type IconCategory'));
+  const drops = [...icon.matchAll(/^\s*'(M[^']+ Z)',?$/gm)].map((match) => match[1]);
+  assert.equal(drops.length, 3, 'Kiss must render three explicit filled drop paths');
+  assert.ok(drops.every((drop) => drop.includes(' C') && drop.includes(' A') && drop.endsWith('Z')), 'each Kiss path needs a tapered tip and curved droplet body');
+  assert.match(peeIcon, /<Svg width=\{size\} height=\{size\} viewBox="0 0 24 24"/);
+  assert.match(peeIcon, /peeDropPaths\.map\(\(path, index\) => <Path key=.* d=\{path\} fill=\{color\} \/>/);
+  assert.doesNotMatch(peeIcon, /transform/);
+  assert.match(icon, /pee: 'water-outline'/);
   assert.match(icon, /water: 'water-outline'/);
-  assert.match(icon, /peeGround: \{ borderBottomWidth: tokens\.size\.stroke \* 2/);
   assert.match(tile, /logPressed: \{ borderWidth: 2, borderColor: tokens\.colors\.primary \}/);
   assert.doesNotMatch(tile, /logPressed: \{ opacity:/);
   assert.match(listRow, /logTimelinePressed: \{ backgroundColor: tokens\.colors\.selectedSurface \}/);

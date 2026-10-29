@@ -96,7 +96,7 @@ with sync_playwright() as p:
     save_button_visible(page, "Spara hälsohändelse")
     page.screenshot(path=str(output / "performed-history-editor-375x667.png"))
     page.get_by_role("button", name="Stäng", exact=True).last.click()
-    expect(page.get_by_role("heading", name="Kasta ändringen?", exact=True)).to_be_visible()
+    expect(page.get_by_role("heading", name="Lämna utan att spara?", exact=True)).to_be_visible()
     page.wait_for_timeout(450)
     page.screenshot(path=str(output / "performed-history-discard-375x667.png"))
     page.get_by_role("button", name="Avbryt", exact=True).click()

@@ -17,6 +17,65 @@ tsResolution.deregister();
 const baseUrl = 'https://local-test.supabase.invalid';
 const dogId = '11111111-1111-4111-8111-111111111111';
 
+test('published FAQ adapter selects only published faq versions with a supported context', async () => {
+  const faqRow = {
+    id: '67000000-0000-4000-8000-000000000004',
+    content_id: '66000000-0000-4000-8000-000000000004',
+    version: 1,
+    status: 'published',
+    title: 'När passar en valpkurs?',
+    body: 'En valpkurs kan passa när hunden kan delta i lugn takt.',
+    context: 'by_age',
+    sources: ['https://avsab.org/source.pdf'],
+    is_ai_generated: true,
+    content_items: { slug: 'faq-puppy-course', content_type: 'faq' },
+  };
+  const { client, requests } = localClient(({ method, url }) => {
+    assert.equal(method, 'GET');
+    assert.equal(url.pathname, '/rest/v1/content_versions');
+    assert.equal(url.searchParams.get('status'), 'eq.published');
+    assert.equal(url.searchParams.get('content_items.content_type'), 'eq.faq');
+    assert.match(url.searchParams.get('select'), /context/);
+    assert.match(url.searchParams.get('select'), /content_items!inner\(slug,content_type\)/);
+    return jsonResponse([faqRow]);
+  });
+  try {
+    assert.deepEqual(await workspaceData.fetchPublishedFaqs(client), [{
+      id: faqRow.id, contentId: faqRow.content_id, version: 1, slug: 'faq-puppy-course', context: 'by_age',
+      question: faqRow.title, answer: faqRow.body, sources: faqRow.sources, isAiGenerated: true,
+    }]);
+    assert.equal(requests.length, 1);
+  } finally {
+    await client.auth.dispose();
+  }
+});
+
+test('published FAQ adapter rejects malformed or non-FAQ joined rows', async () => {
+  const invalidRows = [
+    { id: '67000000-0000-4000-8000-000000000004', content_id: '66000000-0000-4000-8000-000000000004', version: 1, status: 'reviewed', title: 'draft', body: 'hidden', context: 'by_age', sources: [], is_ai_generated: true, content_items: { slug: 'faq-draft', content_type: 'faq' } },
+    { id: '67000000-0000-4000-8000-000000000004', content_id: '66000000-0000-4000-8000-000000000004', version: 1, status: 'published', title: 'wrong parent', body: 'must not enter FAQ', context: 'by_age', sources: [], is_ai_generated: true, content_items: { slug: 'article', content_type: 'article' } },
+    { id: '67000000-0000-4000-8000-000000000004', content_id: '66000000-0000-4000-8000-000000000004', version: 1, status: 'published', title: 'bad context', body: 'must be rejected', context: 'first_night', sources: [], is_ai_generated: true, content_items: { slug: 'faq-bad', content_type: 'faq' } },
+  ];
+  for (const row of invalidRows) {
+    const { client } = localClient(() => jsonResponse([row]));
+    try { await assert.rejects(workspaceData.fetchPublishedFaqs(client), /Could not load published FAQs/); }
+    finally { await client.auth.dispose(); }
+  }
+});
+
+test('generic Knowledge articles never receive FAQ versions through HomeContent', async () => {
+  const faqRow = {
+    id: '67000000-0000-4000-8000-000000000004', content_id: '66000000-0000-4000-8000-000000000004',
+    version: 1, status: 'published', title: 'Hidden FAQ', body: 'Not a guide or article.', min_age_weeks: 0,
+    max_age_weeks: null, sources: [], is_ai_generated: true,
+    content_items: { slug: 'faq-first-night', content_type: 'faq' }, content_breed_targets: [],
+  };
+  const { client } = localClient(() => jsonResponse([faqRow]));
+  try {
+    assert.deepEqual(await workspaceData.fetchKnowledgeContent(client, { id: dogId, breed_id: null, expected_homecoming_date: null }, 10), []);
+  } finally { await client.auth.dispose(); }
+});
+
 test('dog-event history filters the supported everyday types and has deterministic owner-scoped pagination order', async () => {
   const event = {
     id: '22222222-2222-4222-8222-222222222222',
@@ -37,13 +96,14 @@ test('dog-event history filters the supported everyday types and has determinist
     const order = url.searchParams.get('order')?.split(',') ?? [];
     assert.ok(order.includes('occurred_at.desc'));
     assert.ok(order.some((value) => /^id\.(asc|desc)$/.test(value)), 'stable event ID tie-breaker is required');
-    assert.equal(url.searchParams.get('offset'), '40');
+    assert.equal(url.searchParams.has('offset'), false);
+    assert.equal(url.searchParams.get('or'), '(occurred_at.lt."2026-10-04T10:00:00.123456Z",and(occurred_at.eq."2026-10-04T10:00:00.123456Z",id.lt.33333333-3333-4333-8333-333333333333))');
     assert.equal(url.searchParams.get('limit'), '20');
     return jsonResponse([event]);
   });
 
   try {
-    assert.deepEqual(await workspaceData.fetchDogEvents(client, dogId, 40, 20), [event]);
+    assert.deepEqual(await workspaceData.fetchDogEvents(client, dogId, { occurredAt: '2026-10-04T10:00:00.123456Z', id: '33333333-3333-4333-8333-333333333333' }, 20), [event]);
     assert.equal(requests.length, 1);
   } finally {
     await client.auth.dispose();

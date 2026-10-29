@@ -91,7 +91,7 @@ test('the screen presents the three target views with distinct, honest source se
   assert.doesNotMatch(screen, /steg klara|steg markerade/, 'steps are called exercises in the interface');
   assert.match(screen, /Alla övningar/);
   assert.match(screen, /Mina program/);
-  assert.match(screen, /label="Öva nu"/);
+  assert.match(screen, /label=\{journeyView\?\.journey && !journeyView\.canLogSession \? 'Visa övning' : 'Öva nu'\}/);
   assert.match(screen, /Nästa övning: \$\{step\.title\}/, 'the current action has an explicit accessible status');
   assert.match(screen, /Kommande övning: \$\{step\.title\}/, 'upcoming rows have an explicit accessible status');
   assert.match(screen, /Ni har gått igenom allt just nu/);

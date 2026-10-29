@@ -145,7 +145,7 @@ export function HealthScreen(props: Props) {
         onSave={async (...args) => await onSaveHistory?.(...args) ?? false}
         onDelete={async (id) => await props.onDeleteHistory?.(id) ?? false} />
     </BottomSheet>
-    <Dialog visible={discardVisible} title="Kasta ändringen?" confirmLabel="Kasta ändring" compactActions
+    <Dialog visible={discardVisible} title="Lämna utan att spara?" confirmLabel="Lämna utan att spara" compactActions
       onRequestClose={() => setDiscardVisible(false)} onConfirm={() => { setDiscardVisible(false); finishHistoryEditor(); }}>
       <Text style={styles.empty}>Ändringen är inte sparad. Din tidigare hälsahistorik påverkas inte.</Text>
     </Dialog>

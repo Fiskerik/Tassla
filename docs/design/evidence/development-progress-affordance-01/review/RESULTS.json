@@ -1,0 +1,268 @@
+{
+  "mode": "review",
+  "panel": "development",
+  "evidence_dir": "docs/design/evidence/development-progress-affordance-01/review",
+  "results": [
+    {
+      "check": "Development guide loading state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide retry invokes the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide error state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development missing birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development invalid birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development future birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "early age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "14.955872003409686 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "normal age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "38.38673814208486 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "Age label remains a 44pt control at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 67.5,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Age progress remains visible when the age label is hidden and restored at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "midpoint age renders a green progress arc over a neutral track at 375px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "182.212373908208 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "early age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "14.955872003409686 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "normal age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "38.38673814208486 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "Age label remains a 44pt control at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 95,
+        "y": 340,
+        "width": 128,
+        "height": 44
+      }
+    },
+    {
+      "check": "Age progress remains visible when the age label is hidden and restored at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "midpoint age renders a green progress arc over a neutral track at 430px",
+      "result": "PASS",
+      "progress": {
+        "stroke": "#217448",
+        "dasharray": "182.212373908208 364.424747816416",
+        "linecap": "round",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      },
+      "track": {
+        "stroke": "#E9E5DE",
+        "d": "M 4 120 A 116 116 0 0 1 236 120"
+      }
+    },
+    {
+      "check": "Age arc length increases monotonically from early puppy to normal puppy to midpoint",
+      "result": "PASS",
+      "lengths": {
+        "early": 14.955872003409686,
+        "normal": 38.38673814208486,
+        "midpoint": 182.212373908208
+      }
+    },
+    {
+      "check": "adult age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show an inapplicable age arc at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "adult age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show an inapplicable age arc at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 375px",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 207,
+        "height": 46
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "14px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action wraps without portrait overlap at the 140% text proxy",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 207,
+        "height": 62
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 430px",
+      "result": "PASS",
+      "button": {
+        "x": 24,
+        "y": 104,
+        "width": 211.46875,
+        "height": 44
+      },
+      "portrait": {
+        "x": 294,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "14px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 430px",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

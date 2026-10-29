@@ -74,6 +74,17 @@ with sync_playwright() as playwright:
             save.click()
             row = page.get_by_role('checkbox', name='Första veterinärbesöket', exact=True)
             expect(row).to_be_visible(timeout=3000)
+            saved_icon = page.get_by_test_id('checklist-item-icon-water-outline')
+            expect(saved_icon).to_be_visible()
+            icon_colors = saved_icon.evaluate("""element => {
+              const inherited = getComputedStyle(element).color;
+              return {
+                surface: getComputedStyle(element).backgroundColor,
+                glyph: [...element.querySelectorAll('*')].map(node => getComputedStyle(node).color).find(color => color !== inherited) ?? inherited,
+              };
+            }""")
+            assert icon_colors == {'surface': 'rgb(228, 238, 244)', 'glyph': 'rgb(36, 106, 152)'}, \
+                f'saved checklist icon should retain its two-tone water treatment: {icon_colors}'
             write = page.evaluate("(window.__know02Mutations ?? []).filter(m => m.table === 'dog_checklist_custom_items' && m.mode === 'insert').at(-1)")
             assert write and write['payload'].get('icon') == 'water-outline', f'insert did not save the chosen icon: {write}'
             passed('Chosen icon is written with the new custom point')
@@ -90,7 +101,7 @@ with sync_playwright() as playwright:
             title = page.get_by_role('textbox', name='Punkt', exact=True)
             title.fill('Osparad ändring')
             page.get_by_role('button', name='Stäng', exact=True).last.click()
-            discard = page.get_by_role('alert', name='Kasta ändringar?', exact=True)
+            discard = page.get_by_role('alert', name='Lämna utan att spara?', exact=True)
             expect(discard).to_be_visible()
             expect(discard.get_by_text('Dina ändringar på ”Osparad ändring” sparas inte.')).to_be_visible()
             page.wait_for_timeout(300)
@@ -98,7 +109,7 @@ with sync_playwright() as playwright:
             page.get_by_role('button', name='Fortsätt redigera', exact=True).click()
             expect(page.get_by_role('textbox', name='Punkt')).to_have_value('Osparad ändring')
             page.get_by_role('button', name='Stäng', exact=True).last.click()
-            page.get_by_role('button', name='Kasta', exact=True).click()
+            page.get_by_role('button', name='Lämna utan att spara', exact=True).click()
             expect(page.get_by_role('checkbox', name='Första veterinärbesöket')).to_be_visible()
             passed('Dirty close confirms discard and retains the form when the owner continues editing')
 
@@ -120,7 +131,7 @@ with sync_playwright() as playwright:
 
 if any(item.startswith('PAGE ERROR') for item in RESULTS):
     raise AssertionError('; '.join(item for item in RESULTS if item.startswith('PAGE ERROR')))
-(OUT / 'browser-results.json').write_text(json.dumps({
+(OUT / 'custom-checklist-results.json').write_text(json.dumps({
     'passes': RESULTS,
     'scope': 'Synthetic React Native Web review fixture. Does not verify native VoiceOver/Dynamic Type, live Supabase/RLS, migration application, or TestFlight.',
 }, ensure_ascii=False, indent=2) + '\n')

@@ -1,4 +1,4 @@
-export type InsightsPeriod = 'week' | 'month' | 'since_first_log';
+export type InsightsPeriod = 'today' | 'week' | 'month' | 'since_first_log';
 export type InsightsBucket = 'day' | 'month';
 
 export interface DogEventInsightDay {
@@ -39,7 +39,7 @@ const responseKeys = [
   'observedThroughLocal', 'firstLogDay', 'bucket', 'days',
 ] as const;
 const dayKeys = ['date', 'peeCount', 'poopCount', 'unclassifiedAccidentCount', 'sleepCount', 'awakeCount'] as const;
-const periods: readonly InsightsPeriod[] = ['week', 'month', 'since_first_log'];
+const periods: readonly InsightsPeriod[] = ['today', 'week', 'month', 'since_first_log'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -170,10 +170,10 @@ export function parseDogEventInsights(value: unknown, expectedPeriod: InsightsPe
     start = value.periodStartLocal;
     end = value.periodEndExclusiveLocal;
     const dateParts = value.observedThroughLocal.split('-').map(Number);
-    const expectedStart = expectedPeriod === 'week'
+    const expectedStart = expectedPeriod === 'today' ? value.observedThroughLocal : expectedPeriod === 'week'
       ? addDays(value.observedThroughLocal, -((new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2])).getUTCDay() + 6) % 7))
       : `${value.observedThroughLocal.slice(0, 7)}-01`;
-    const expectedEnd = expectedPeriod === 'week'
+    const expectedEnd = expectedPeriod === 'today' ? addDays(expectedStart, 1) : expectedPeriod === 'week'
       ? addDays(expectedStart, 7)
       : `${addMonths(value.observedThroughLocal.slice(0, 7), 1)}-01`;
     if (start !== expectedStart || end !== expectedEnd
@@ -239,6 +239,7 @@ export function insightsDateRange(data: DogEventInsights): string {
     return data.firstLogDay ? `Från första registreringen ${formatInsightsDate(data.firstLogDay, true)}` : '';
   }
   if (!data.periodStartLocal) return '';
+  if (data.period === 'today') return formatInsightsDate(data.periodStartLocal, true);
   return `${formatInsightsDate(data.periodStartLocal)}–${formatInsightsDate(data.observedThroughLocal, data.periodStartLocal.slice(0, 4) !== data.observedThroughLocal.slice(0, 4))}`;
 }
 

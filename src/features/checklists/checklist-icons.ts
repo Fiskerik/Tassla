@@ -17,11 +17,11 @@ export const CHECKLIST_ICON_LABELS: Record<ChecklistIcon, string> = {
 };
 
 export const CHECKLIST_ICON_TONES: Record<ChecklistDisplayIcon, ChecklistIconTone> = {
-  paw: 'neutral', 'water-outline': 'water', 'walk-outline': 'walk', 'bed-outline': 'sleep', 'sunny-outline': 'neutral',
-  'leaf-outline': 'neutral', 'heart-outline': 'neutral', 'flower-outline': 'neutral', 'brush-outline': 'neutral',
+  paw: 'training', 'water-outline': 'water', 'walk-outline': 'walk', 'bed-outline': 'sleep', 'sunny-outline': 'walk',
+  'leaf-outline': 'training', 'heart-outline': 'vaccination', 'flower-outline': 'sleep', 'brush-outline': 'veterinary',
   'bandage-outline': 'vaccination', 'medkit-outline': 'veterinary', 'restaurant-outline': 'food', 'moon-outline': 'sleep',
-  'football-outline': 'neutral', 'fitness-outline': 'training', 'sparkles-outline': 'neutral', 'home-outline': 'neutral',
-  'school-outline': 'training', 'rose-outline': 'neutral', 'star-outline': 'neutral', 'list-outline': 'neutral',
+  'football-outline': 'walk', 'fitness-outline': 'training', 'sparkles-outline': 'veterinary', 'home-outline': 'training',
+  'school-outline': 'training', 'rose-outline': 'sleep', 'star-outline': 'walk', 'list-outline': 'neutral',
 };
 
 const iconSet: ReadonlySet<string> = new Set(CHECKLIST_ICONS);

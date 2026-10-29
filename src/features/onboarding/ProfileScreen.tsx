@@ -12,6 +12,7 @@ import { tokens } from '../../theme/tokens';
 import { ageInWeeks, localDate } from './dog';
 import { BreedPickerField } from './BreedPickerField';
 import { profileRecoveryRequestMatches } from './profile-exit';
+import { OnboardingMetricsChoice } from './OnboardingMetricsChoice';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type DogCreationSaveState = 'idle' | 'error' | 'unknown' | 'invalidCode' | 'existingProfile' | 'sourceUnconfirmed' | 'recoveryUnavailable' | 'cleanupError' | 'retiredRequest';
@@ -52,6 +53,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [birthDate, setBirthDate] = useState(initialDraft.birthDate);
   const [expectedHomecomingDate, setExpectedHomecomingDate] = useState(initialDraft.expectedHomecomingDate ?? '');
   const [sex, setSex] = useState<DogSex | null>(initialDraft.sex ?? null);
+  const [optionalExpanded, setOptionalExpanded] = useState(Boolean(initialDraft.expectedHomecomingDate || initialDraft.sex));
   const [formBaseline, setFormBaseline] = useState(initialDraft);
   const [busy, setBusy] = useState(false);
   const [saveState, setSaveState] = useState<DogCreationSaveState>(validRecoverySnapshot?.saveState ?? 'idle');
@@ -62,6 +64,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const [kennelCode, setKennelCode] = useState(initialDraft.kennelCode);
   const [sourceSelected, setSourceSelected] = useState(initialDraft.sourceSelected);
   const [sourceExpanded, setSourceExpanded] = useState(Boolean(initialDraft.sourceSelected));
+  const [hasSecureReferral, setHasSecureReferral] = useState(false);
   const [recoveryChecking, setRecoveryChecking] = useState(true);
   const [recoveryMismatch, setRecoveryMismatch] = useState(false);
   const [retiredRequestResetFailed, setRetiredRequestResetFailed] = useState(false);
@@ -135,6 +138,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   useEffect(() => {
     let active = true;
     void readSecurePendingReferral().then((referral) => {
+      if (active) setHasSecureReferral(Boolean(referral));
       if (active && referral && !validRecoverySnapshot) {
         setKennelCode(referral.code);
         setFormBaseline((baseline) => ({ ...baseline, kennelCode: referral.code }));
@@ -370,6 +374,8 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   const sourceNeedsAttention = sourceSelected || saveState === 'invalidCode' || saveState === 'sourceUnconfirmed';
   const sourceSummary = sourceSelected ? 'Koppling vald' : kennelCode ? 'Kod inläst · inte kopplad' : 'Valfritt';
   const showRestartWarning = requestWasSent;
+  const invalidHomecoming = expectedHomecomingDate.trim() !== '' && !validCalendarDate(expectedHomecomingDate.trim());
+  const showOptionalFields = optionalExpanded;
 
   const canSubmit = name.trim().length > 0 && name.trim().length <= 80 && Boolean(breedId)
     && isValidBirthDate(birthDate) && (expectedHomecomingDate.trim() === '' || validCalendarDate(expectedHomecomingDate.trim())) && (!sourceSelected || Boolean(normalizeKennelCode(kennelCode)));
@@ -377,9 +383,10 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
   return (
     <AppScreen>
       <View style={styles.screenHeader}>
+        <View style={styles.welcomeIcon} accessible={false}><Ionicons name="paw" size={tokens.size.iconMd} color={tokens.colors.primary} /></View>
         <View style={styles.screenHeading}>
           <Text accessibilityRole="header" style={styles.screenTitle}>{mode === 'add' ? 'Lägg till hund' : 'Hundens profil'}</Text>
-          <Text style={styles.screenSubtitle}>{mode === 'add' ? 'Uppgifterna går att ändra senare.' : 'Berätta det viktigaste om din hund.'}</Text>
+          <Text style={styles.screenSubtitle}>{mode === 'add' ? 'Uppgifterna går att ändra senare.' : 'En personlig start för er tillsammans.'}</Text>
         </View>
         {mode === 'add' && onCancel && !requestRecoveryResume ? <Pressable accessibilityRole="button" accessibilityLabel="Avbryt och gå tillbaka"
           accessibilityState={{ disabled: busy || recoveryChecking }} disabled={busy || recoveryChecking} onPress={pressAddCancel} style={styles.headerAction}>
@@ -399,9 +406,15 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         onRetry={() => { setBreedsState('loading'); setBreedAttempt((count) => count + 1); }}
       />
       <DatePickerField label="Födelsedatum" disabled={busy} onChangeText={(value) => { setBirthDate(value); markEdited(); }} value={birthDate} />
-      <DogArticleProfileFields date={expectedHomecomingDate} sex={sex} disabled={busy}
+      <Pressable accessibilityRole="button" accessibilityLabel="Fler uppgifter, valfritt" accessibilityState={{ expanded: showOptionalFields }} aria-expanded={showOptionalFields}
+        onPress={() => setOptionalExpanded((expanded) => !expanded)} style={styles.optionalHeader}>
+        <Text style={styles.sourceTitle}>Fler uppgifter <Text style={styles.optionalLabel}>· valfritt</Text></Text>
+        <Ionicons name={showOptionalFields ? 'chevron-up' : 'chevron-down'} size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
+      </Pressable>
+      {invalidHomecoming && !showOptionalFields ? <Text style={styles.sourceInfo}>Kontrollera hemkomstdatumet under Fler uppgifter.</Text> : null}
+      {showOptionalFields ? <DogArticleProfileFields date={expectedHomecomingDate} sex={sex} disabled={busy}
         onDate={(value) => { setExpectedHomecomingDate(value); markEdited(); }}
-        onSex={(value) => { setSex(value); markEdited(); }} />
+        onSex={(value) => { setSex(value); markEdited(); }} /> : null}
       </View>
       <View style={styles.sourceCard}>
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: sourceExpanded }} onPress={() => setSourceExpanded((expanded) => !expanded)} style={styles.sourceHeader}>
@@ -420,9 +433,11 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
             <View style={[styles.checkbox, sourceSelected && styles.checkboxSelected]}>{sourceSelected && <Text style={styles.checkboxMark}>✓</Text>}</View>
             <Text style={styles.sourceChoiceText}>Koppla koden till min profil</Text>
           </Pressable>
-          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
+          {kennelCode ? <Button variant="icon" iconName="trash-outline" label="Ta bort kod" accessibilityLabel="Ta bort kennelkod" disabled={busy} onPress={() => { setKennelCode(''); setSourceSelected(false); setHasSecureReferral(false); markEdited(); void clearSecurePendingReferral().catch(() => undefined); }} /> : null}
         </View> : null}
       </View>
+      {mode === 'initial' ? <OnboardingMetricsChoice client={client} ownerId={ownerId} accountGeneration={accountGeneration}
+        isCurrentAccount={isCurrentAccount} hasReferral={hasSecureReferral} /> : null}
       {sourceSelected && !normalizeKennelCode(kennelCode) && <MessageCard tone="error">Skriv en giltig kennelkod eller ta bort kennelkälla.</MessageCard>}
       {recoveryChecking && <MessageCard>Kontrollerar om ett tidigare försök behöver återställas…</MessageCard>}
       {saveState === 'invalidCode' && <MessageCard tone="error">Koden känns inte igen eller är inte aktiv. Rätta den eller ta bort kennelkälla och fortsätt utan.</MessageCard>}
@@ -454,7 +469,7 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
         </>
         : saveState === 'unknown' ? <PrimaryButton title={busy ? 'Kontrollerar…' : 'Försök igen med samma begäran'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />
           : saveState === 'retiredRequest' ? <PrimaryButton title={busy ? 'Rensar säker begäran…' : 'Fortsätt med en ny begäran'} disabled={busy || recoveryChecking || !resolvedRequestId} onPress={() => { void clearRetiredCreationRequest(); }} />
-          : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Fortsätt'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
+          : <PrimaryButton title={busy ? 'Sparar…' : saveState === 'recoveryUnavailable' ? 'Försök igen' : mode === 'add' ? 'Lägg till hund' : 'Spara och gå till Hem'} disabled={!canSubmit || busy || recoveryChecking || breedsState !== 'ready'} onPress={() => { void createAndConfirm(); }} />}
       <Pressable accessibilityRole="button" accessibilityLabel="Om hundens uppgifter" onPress={() => setInfoVisible(true)} style={styles.infoEntry}>
         <Ionicons name="information-circle-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
         <Text style={styles.infoEntryText}>Om hundens uppgifter</Text>
@@ -465,13 +480,13 @@ export function ProfileScreen({ client, ownerId, accountGeneration, isCurrentAcc
       <InfoModal visible={infoVisible} title="Om hundens uppgifter" onClose={() => setInfoVisible(false)}>
         <Text style={styles.infoBody}>Namn, ras och födelsedatum hjälper Tassla att visa åldersanpassat innehåll. Uppgifterna kan ändras senare.</Text>
       </InfoModal>
-      <Dialog visible={exitDialog} title={mode === 'add' ? 'Kasta ändringarna?' : 'Lämna Tassla?'}
-        confirmLabel={mode === 'add' ? 'Kasta ändringar' : 'Lämna appen'} confirmVariant="destructive"
+      <Dialog visible={exitDialog} title={mode === 'add' ? 'Lämna utan att spara?' : 'Lämna Tassla?'}
+        confirmLabel={mode === 'add' ? 'Lämna utan att spara' : 'Lämna appen'} confirmVariant="destructive"
         cancelLabel={mode === 'add' ? 'Fortsätt redigera' : 'Stanna kvar'}
         onRequestClose={dismissExitDialog} onConfirm={confirmExitDialog}>
         <Text style={styles.dialogCopy}>
           {mode === 'add'
-            ? 'Det du har fyllt i här kastas. Hundprofilerna som redan sparats finns kvar.'
+            ? 'Uppgifterna du har fyllt i sparas inte. Hundprofilerna som redan sparats finns kvar.'
             : `Du har uppgifter som inte är klara. ${showRestartWarning ? 'Efter ett sparförsök finns en säker begäran kvar, men fälten kan behöva fyllas i igen när du öppnar appen.' : 'Inget sparas förrän du fortsätter.'}`}
         </Text>
       </Dialog>
@@ -491,12 +506,14 @@ function isValidBirthDate(value: string): boolean {
 
 const styles = StyleSheet.create({
   screenHeader: { minHeight: tokens.size.buttonHeight, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
+  welcomeIcon: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.selectedSurface },
   screenHeading: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary },
   screenSubtitle: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   headerAction: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.support.profile.bg },
   profileCard: { marginBottom: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   sectionTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
+  optionalHeader: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
   sourceCard: { borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.surface, paddingHorizontal: tokens.spacing.md, marginTop: tokens.spacing.md, marginBottom: tokens.spacing.md },
   sourceHeader: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.md },
   sourceHeading: { flex: 1, minWidth: 0, gap: tokens.spacing.xs },

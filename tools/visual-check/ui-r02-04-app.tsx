@@ -136,6 +136,7 @@ export default function UiR02Panel04App() {
             setPermissionState(next); return next;
           }} /> : null}
         {page === 'insights' ? <InsightsScreen period={period} onPeriodChange={setPeriod} state={{ status: 'ready', data: makeInsights(period) }}
+          events={[]} eventsAvailable onOpenEvent={() => undefined}
           onRefresh={() => undefined} onOpenLog={() => undefined} onBack={() => undefined} backLabel="Tillbaka till Logga" dogName="Luna" /> : null}
       </ScrollView>
     </View>

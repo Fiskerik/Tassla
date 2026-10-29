@@ -1,0 +1,370 @@
+{
+  "mode": "public synthetic published phase catalog; RN Web CSS zoom 1.4 layout/text proxy in marked case",
+  "passes": [
+    {
+      "check": "Three phase items render at 375x844",
+      "details": null
+    },
+    {
+      "check": "Checkbox row remains a >=44x44 CSS-px RN Web target at 375x844",
+      "details": {
+        "x": 41,
+        "y": 345,
+        "width": 293,
+        "height": 88
+      }
+    },
+    {
+      "check": "Initial first item is unchecked at 375x844",
+      "details": null
+    },
+    {
+      "check": "First item retains its accessible label at 375x844",
+      "details": null
+    },
+    {
+      "check": "Unchecked marker is Ionicons ellipse-outline at 375x844",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Unchecked Knowledge marker is 28 pt at 375x844",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Checked state reaches the checkbox accessibility property at 375x844",
+      "details": null
+    },
+    {
+      "check": "Checked marker is Ionicons checkmark-circle at 375x844",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked Knowledge marker is 28 pt at 375x844",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked and unchecked markers have distinct semantic colors at 375x844",
+      "details": {
+        "checked": "rgb(24, 106, 77)",
+        "unchecked": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Label and category icon stay separated at 375x844",
+      "details": {
+        "label": {
+          "x": 125,
+          "y": 353,
+          "width": 209,
+          "height": 72
+        },
+        "categoryIcon": {
+          "x": 81,
+          "y": 474,
+          "width": 32,
+          "height": 32
+        }
+      }
+    },
+    {
+      "check": "No horizontal overflow at 375x844",
+      "details": null
+    },
+    {
+      "check": "Uncheck restores the original confirmed progress at 375x844",
+      "details": null
+    },
+    {
+      "check": "Three phase items render at 430x844",
+      "details": null
+    },
+    {
+      "check": "Checkbox row remains a >=44x44 CSS-px RN Web target at 430x844",
+      "details": {
+        "x": 41,
+        "y": 345,
+        "width": 348,
+        "height": 64
+      }
+    },
+    {
+      "check": "Initial first item is unchecked at 430x844",
+      "details": null
+    },
+    {
+      "check": "First item retains its accessible label at 430x844",
+      "details": null
+    },
+    {
+      "check": "Unchecked marker is Ionicons ellipse-outline at 430x844",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Unchecked Knowledge marker is 28 pt at 430x844",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Checked state reaches the checkbox accessibility property at 430x844",
+      "details": null
+    },
+    {
+      "check": "Checked marker is Ionicons checkmark-circle at 430x844",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked Knowledge marker is 28 pt at 430x844",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked and unchecked markers have distinct semantic colors at 430x844",
+      "details": {
+        "checked": "rgb(24, 106, 77)",
+        "unchecked": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Label and category icon stay separated at 430x844",
+      "details": {
+        "label": {
+          "x": 125,
+          "y": 353,
+          "width": 264,
+          "height": 48
+        },
+        "categoryIcon": {
+          "x": 81,
+          "y": 438,
+          "width": 32,
+          "height": 32
+        }
+      }
+    },
+    {
+      "check": "No horizontal overflow at 430x844",
+      "details": null
+    },
+    {
+      "check": "Uncheck restores the original confirmed progress at 430x844",
+      "details": null
+    },
+    {
+      "check": "Three phase items render at 375x667",
+      "details": null
+    },
+    {
+      "check": "Checkbox row remains a >=44x44 CSS-px RN Web target at 375x667",
+      "details": {
+        "x": 41,
+        "y": 345,
+        "width": 293,
+        "height": 88
+      }
+    },
+    {
+      "check": "Initial first item is unchecked at 375x667",
+      "details": null
+    },
+    {
+      "check": "First item retains its accessible label at 375x667",
+      "details": null
+    },
+    {
+      "check": "Unchecked marker is Ionicons ellipse-outline at 375x667",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Unchecked Knowledge marker is 28 pt at 375x667",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Checked state reaches the checkbox accessibility property at 375x667",
+      "details": null
+    },
+    {
+      "check": "Checked marker is Ionicons checkmark-circle at 375x667",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked Knowledge marker is 28 pt at 375x667",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked and unchecked markers have distinct semantic colors at 375x667",
+      "details": {
+        "checked": "rgb(24, 106, 77)",
+        "unchecked": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Label and category icon stay separated at 375x667",
+      "details": {
+        "label": {
+          "x": 125,
+          "y": 353,
+          "width": 209,
+          "height": 72
+        },
+        "categoryIcon": {
+          "x": 81,
+          "y": 474,
+          "width": 32,
+          "height": 32
+        }
+      }
+    },
+    {
+      "check": "No horizontal overflow at 375x667",
+      "details": null
+    },
+    {
+      "check": "Uncheck restores the original confirmed progress at 375x667",
+      "details": null
+    },
+    {
+      "check": "Three phase items render at 375x667-css-zoom140",
+      "details": null
+    },
+    {
+      "check": "Checkbox row remains a >=44x44 CSS-px RN Web target at 375x667-css-zoom140",
+      "details": {
+        "x": 41,
+        "y": 345,
+        "width": 293,
+        "height": 88
+      }
+    },
+    {
+      "check": "RN Web CSS zoom/text-layout proxy is 1.4 at 375x667-css-zoom140",
+      "details": {
+        "computedZoom": "1.4"
+      }
+    },
+    {
+      "check": "Initial first item is unchecked at 375x667-css-zoom140",
+      "details": null
+    },
+    {
+      "check": "First item retains its accessible label at 375x667-css-zoom140",
+      "details": null
+    },
+    {
+      "check": "Unchecked marker is Ionicons ellipse-outline at 375x667-css-zoom140",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Unchecked Knowledge marker is 28 pt at 375x667-css-zoom140",
+      "details": {
+        "codepoint": 62156,
+        "fontSize": "28px",
+        "color": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Checked state reaches the checkbox accessibility property at 375x667-css-zoom140",
+      "details": null
+    },
+    {
+      "check": "Checked marker is Ionicons checkmark-circle at 375x667-css-zoom140",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked Knowledge marker is 28 pt at 375x667-css-zoom140",
+      "details": {
+        "codepoint": 61982,
+        "fontSize": "28px",
+        "color": "rgb(24, 106, 77)"
+      }
+    },
+    {
+      "check": "Checked and unchecked markers have distinct semantic colors at 375x667-css-zoom140",
+      "details": {
+        "checked": "rgb(24, 106, 77)",
+        "unchecked": "rgb(83, 98, 87)"
+      }
+    },
+    {
+      "check": "Label and category icon stay separated at 375x667-css-zoom140",
+      "details": {
+        "label": {
+          "x": 174.5625,
+          "y": 405.265625,
+          "width": 143.453125,
+          "height": 167.96875
+        },
+        "categoryIcon": {
+          "x": 112.96875,
+          "y": 725.375,
+          "width": 44.796875,
+          "height": 44.796875
+        }
+      }
+    },
+    {
+      "check": "No horizontal overflow at 375x667-css-zoom140",
+      "details": null
+    },
+    {
+      "check": "Uncheck restores the original confirmed progress at 375x667-css-zoom140",
+      "details": null
+    }
+  ],
+  "failures": [],
+  "pageErrors": [],
+  "scope": "Local React Native Web rendering. The 375x667-css-zoom140 case asserts computed documentElement zoom=1.4 and captures the scaled layout. The >=44x44 target is measured before zoom in CSS px. This is not native Dynamic Type, VoiceOver, live Supabase/RLS, or physical touch behavior."
+}

@@ -23,6 +23,37 @@ const journeyId = '66666666-6666-4666-8666-666666666666';
 const sessionId = '77777777-7777-4777-8777-777777777777';
 const progressionMigration = await readFile(new URL('../supabase/migrations/202610240001_training_progression.sql', import.meta.url), 'utf8');
 
+test('uncertain milestone undo retries the identical expected confirmation and preserves newer data', async () => {
+  const milestoneId = '88888888-8888-4888-8888-888888888888';
+  const state = {
+    journeys: [{ id: journeyId, dog_id: dogId, program_version_id: versionId, active_step_id: stepId,
+      state: 'active', last_operation_id: '99999999-9999-4999-8999-999999999999', created_at: '2026-10-24T10:00:00.000Z', updated_at: '2026-10-24T10:02:00.000Z' }],
+    sessions: [], milestones: [{ id: milestoneId, journey_id: journeyId, dog_id: dogId, program_version_id: versionId,
+      step_id: stepId, confirmation_operation_id: '99999999-9999-4999-8999-999999999999', confirmed_at: '2026-10-24T10:02:00.000Z' }],
+  };
+  const bodies = [];
+  const { client } = createTestClient(async (request) => {
+    if (request.url.pathname === '/rest/v1/rpc/undo_training_milestone') {
+      bodies.push(request.body);
+      if (bodies.length === 1) throw new TypeError('timeout before commit');
+      state.journeys[0].last_operation_id = operationId;
+      state.milestones = [];
+      throw new TypeError('lost response after commit');
+    }
+    const table = request.url.pathname.split('/').at(-1);
+    if (table.startsWith('training_')) return jsonResponse(state[table.replace('training_', '')]);
+    throw new Error(`Unexpected request ${request.url.pathname}`);
+  });
+  try {
+    const action = { kind: 'undo_step', programVersionId: versionId, stepId, expectedMilestoneId: milestoneId };
+    assert.equal((await workspaceData.applyTrainingProgressionOperation(client, dogId, operationId, action)).status, 'unknown');
+    assert.equal((await workspaceData.applyTrainingProgressionOperation(client, dogId, operationId, action)).status, 'saved');
+    assert.deepEqual(bodies[0], { p_dog_id: dogId, p_program_version_id: versionId, p_operation_id: operationId,
+      p_step_id: stepId, p_expected_milestone_id: milestoneId });
+    assert.deepEqual(bodies[1], bodies[0]);
+  } finally { await client.auth.dispose(); }
+});
+
 test('uncertain progression retries keep the same operation and confirm exact dog-scoped readback', async () => {
   const state = { journeys: [], sessions: [], milestones: [] };
   const requests = [];

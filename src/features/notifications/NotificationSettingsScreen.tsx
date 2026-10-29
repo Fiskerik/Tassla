@@ -7,9 +7,10 @@ import { Button } from '../../components/ui/Button';
 import { Toast } from '../../components/ui/Toast';
 import { tokens } from '../../theme/tokens';
 import type { NotificationPreferences } from '../../notifications/notification-model';
+import { nextPhaseFireTime } from '../../notifications/notification-model';
 
 export function NotificationSettingsScreen({
-  onBack, preferences, saved, busy, statusMessage, statusError, permissionState, onSave, onRequestPermission,
+  onBack, preferences, saved, busy, statusMessage, statusError, permissionState, onSave, onRequestPermission, birthDate,
 }: {
   onBack: () => void;
   preferences: NotificationPreferences;
@@ -20,10 +21,14 @@ export function NotificationSettingsScreen({
   permissionState: 'unknown' | 'granted' | 'denied';
   onSave: (preferences: NotificationPreferences) => Promise<boolean>;
   onRequestPermission: () => Promise<'granted' | 'denied' | 'unknown'>;
+  birthDate?: string | null;
 }) {
   const [enabled, setEnabled] = useState(preferences.enabled);
   const [trainingEnabled, setTrainingEnabled] = useState(preferences.trainingEnabled);
   const [trainingTime, setTrainingTime] = useState(formatTime(preferences.trainingMinutes));
+  const [routineEnabled, setRoutineEnabled] = useState(preferences.routineEnabled ?? false);
+  const [routineTime, setRoutineTime] = useState(formatTime(preferences.routineMinutes ?? 540));
+  const [phaseEnabled, setPhaseEnabled] = useState(preferences.phaseEnabled ?? false);
   const [showSavedToast, setShowSavedToast] = useState(saved);
   const [toastMessage, setToastMessage] = useState<string | null>(saved ? 'Valen är sparade för ditt konto på den här enheten.' : null);
   const [toastVisible, setToastVisible] = useState(saved);
@@ -33,7 +38,10 @@ export function NotificationSettingsScreen({
   const [infoVisible, setInfoVisible] = useState(false);
   const isDirty = enabled !== preferences.enabled
     || trainingEnabled !== preferences.trainingEnabled
-    || trainingTime !== formatTime(preferences.trainingMinutes);
+    || trainingTime !== formatTime(preferences.trainingMinutes)
+    || routineEnabled !== (preferences.routineEnabled ?? false)
+    || routineTime !== formatTime(preferences.routineMinutes ?? 540)
+    || phaseEnabled !== (preferences.phaseEnabled ?? false);
 
   useEffect(() => {
     // Reset the transient toast when the persisted save status changes.
@@ -47,11 +55,12 @@ export function NotificationSettingsScreen({
     setShowSavedToast(false);
     setToastVisible(false);
     const minutes = parseTime(trainingTime);
-    if (minutes === null) {
+    const routineMinutes = parseTime(routineTime);
+    if ((trainingEnabled && minutes === null) || (routineEnabled && routineMinutes === null)) {
       setFormError('Ange en tid mellan 00:00 och 23:59.');
       return;
     }
-    if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes })) {
+    if (await onSave({ version: 1, enabled, trainingEnabled, trainingMinutes: minutes ?? preferences.trainingMinutes, routineEnabled, routineMinutes: routineMinutes ?? preferences.routineMinutes ?? 540, phaseEnabled })) {
       setShowSavedToast(true);
       setToastMessage('Valen är sparade för ditt konto på den här enheten.');
       setToastVisible(true);
@@ -90,6 +99,7 @@ export function NotificationSettingsScreen({
     <InfoModal visible={infoVisible} title="Om lokala påminnelser" onClose={() => setInfoVisible(false)}>
       <Text style={styles.infoBody}>Tasslas påminnelser är av från början. Dina val här styr vilka lokala påminnelser appen schemalägger.</Text>
       <Text style={styles.infoBody}>Träningspåminnelsen använder tiden du väljer och uppdateras när Tassla öppnas.</Text>
+      <Text style={styles.infoBody}>Rutinpåminnelsen använder din valda tid. Faspåminnelsen använder ungefärlig kalenderålder och planeras kl. 09. Påminnelserna uppdateras när appen öppnas.</Text>
       <Text style={styles.infoBody}>Telefonens tillåtelse styr separat om notiser får visas. Låsskärmen visar bara en generell text.</Text>
     </InfoModal>
 
@@ -99,15 +109,27 @@ export function NotificationSettingsScreen({
       accessibilityHint={enabled ? 'Stänger av Tasslas lokala påminnelser på den här enheten. Dina planval sparas.' : 'Slår på Tasslas lokala påminnelser på den här enheten.'}
       onPress={() => setEnabled((value) => !value)} />
     <View style={styles.choiceDivider} />
-    <Choice selected={trainingEnabled} disabled={busy} label="Lägg till en frivillig träningspåminnelse"
+    <Choice selected={trainingEnabled} disabled={busy} label="Påminn om träning"
       accessibilityHint={!enabled && !trainingEnabled ? 'Slår på Tasslas påminnelser på den här enheten och väljer träningspåminnelse.' : trainingEnabled ? 'Tar bort träningspåminnelsen från dina val.' : 'Väljer en lokal träningspåminnelse.'}
       onPress={() => {
         if (!enabled && !trainingEnabled) setEnabled(true);
         setTrainingEnabled((value) => !value);
       }} />
 
-    <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy}
+    {trainingEnabled ? <TimePickerField label="Träningspåminnelse, lokal tid" disabled={busy}
       onChangeText={setTrainingTime} value={trainingTime} />
+      : null}
+    <View style={styles.choiceDivider} />
+    <Choice selected={routineEnabled} disabled={busy} label="Påminn om checklistan"
+      accessibilityHint="En samlad påminnelse öppnar checklistan, även när den är tom."
+      onPress={() => { if (!enabled && !routineEnabled) setEnabled(true); setRoutineEnabled((value) => !value); }} />
+    {routineEnabled ? <><TimePickerField label="Rutinpåminnelse, lokal tid" disabled={busy} onChangeText={setRoutineTime} value={routineTime} />
+      <Text style={styles.infoBody}>Nästa påminnelse uppdateras när appen öppnas.</Text></> : null}
+    <View style={styles.choiceDivider} />
+    <Choice selected={phaseEnabled} disabled={busy} label="Påminn vid ny åldersfas"
+      accessibilityHint="En påminnelse öppnar hundens utveckling vid nästa ungefärliga åldersfas."
+      onPress={() => { if (!enabled && !phaseEnabled) setEnabled(true); setPhaseEnabled((value) => !value); }} />
+    {phaseEnabled && nextPhaseFireTime(birthDate, new Date()).status !== 'scheduled' ? <Text style={styles.infoBody}>Ingen kommande åldersfas kan planeras med födelsedatumet just nu.</Text> : null}
 
     {formError ? <MessageCard tone="error">{formError}</MessageCard> : null}
     {statusMessage && statusError ? <MessageCard tone="error">{statusMessage}</MessageCard> : null}
@@ -133,7 +155,7 @@ function Choice({ selected, disabled, label, accessibilityHint, onPress }: {
   selected: boolean; disabled: boolean; label: string; accessibilityHint?: string; onPress: () => void;
 }) {
   return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityHint={accessibilityHint}
-    accessibilityState={{ checked: selected, disabled }} disabled={disabled}
+    accessibilityState={{ checked: selected, disabled }} aria-checked={selected} disabled={disabled}
     onPress={onPress} style={({ pressed }) => [styles.choice, selected && styles.choiceSelected, pressed && !disabled && styles.pressed]}>
     <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
       {selected && <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.onPrimary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />}

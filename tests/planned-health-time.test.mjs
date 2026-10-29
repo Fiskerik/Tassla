@@ -25,7 +25,9 @@ test('shared time modal commits only a valid temporary choice and leaves cancel 
   assert.match(picker, /disabled=\{!validDraft\}/);
   assert.match(picker, /onRequestClose=\{\(\) => setVisible\(false\)\}/);
   assert.match(picker, /onPress=\{\(\) => setVisible\(false\)\}/);
-  assert.match(picker, /animationType=\{reducedMotion \? 'none' : 'slide'\}/);
+  assert.match(picker, /animationType=\{reducedMotion \? 'none' : 'fade'\}/);
+  assert.match(picker, /testID="center-modal-time-picker"/);
+  assert.match(picker, /paddingTop: Math\.max\(insets\.top, tokens\.spacing\.md\), paddingBottom: Math\.max\(insets\.bottom, tokens\.spacing\.md\)/);
 });
 
 
@@ -48,7 +50,9 @@ test('calendar month controls are labeled icon buttons and date layout fits seve
   assert.match(source, /variant="icon" label="Nästa månad" accessibilityLabel={`Visa månaden efter \$\{monthLabel\}`}/);
   assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, -1\)\)/);
   assert.match(source, /setMonth\(\(currentMonth\) => shiftCalendarMonth\(currentMonth, 1\)\)/);
-  assert.match(source, /<View style=\{styles\.dateModalBackdrop\}><View style=\{styles\.dateModalCard\}>/);
+  assert.match(source, /<View style=\{styles\.dateModalBackdrop\}><Animated\.View testID="center-modal-date-picker" style=\{\[styles\.dateModalCard, \{ transform: \[\{ translateX: swipe\.translateX \}\] \}\]\}>/);
+  assert.match(source, /<ModalSwipeHandle panHandlers=\{swipe\.panHandlers\} \/>/);
+  assert.match(source, /dateModalBackdrop: \{[^}]*justifyContent: 'center'/);
   assert.match(source, /dateModalBackdrop: \{[^}]*paddingHorizontal: tokens\.spacing\.sm/s);
   assert.match(source, /dateModalCard: \{[^}]*padding: tokens\.spacing\.sm/s);
   assert.match(source, /calendarDay: \{ width: tokens\.size\.touchMin, height: tokens\.size\.touchMin/s);

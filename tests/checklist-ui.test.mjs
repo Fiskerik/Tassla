@@ -13,9 +13,22 @@ const checklistItem = await readFile(new URL('../src/components/ui/ChecklistItem
 const picker = await readFile(new URL('../src/features/checklists/ChecklistIconPicker.tsx', import.meta.url), 'utf8');
 const iconModel = await readFile(new URL('../src/features/checklists/checklist-icons.ts', import.meta.url), 'utf8');
 
-test('checklist review content is gated before any account read or write', () => {
-  assert.match(screen, /if \(reviewEnabled && active\) void load\(templateId\);\s*else setState\('ready'\)/);
-  assert.match(screen, /if \(!reviewEnabled \|\|/);
+test('public checklist actions require the complete published catalog while review fixtures stay explicit', () => {
+  assert.match(screen, /if \(active\) void load\(templateId\)/);
+  assert.match(screen, /fetchPublishedChecklistCatalog\(client, controller\.signal\)/);
+  assert.match(screen, /if \(!catalogReady \|\| pending\.current/);
+  assert.match(screen, /!reviewEnabled && state === 'ready' && !catalogReady/);
+  assert.doesNotMatch(screen, /if \(!reviewEnabled \|\|/);
+  assert.match(screen, /checklistCatalogReadCacheScope\(cacheScope, loadedCatalog\.versionIds\)/);
+  assert.match(screen, /sourceLinks\.map/);
+  assert.match(screen, /getContentSourceMetadata\(source\)/);
+  assert.match(screen, /accessibilityLabel=\{`Öppna referens \$\{referenceNumber\}: \$\{metadata\.title\} \(\$\{metadata\.publisher\}\)`\}/);
+  assert.match(screen, /<Text style=\{styles\.referenceNumber\}>\{referenceNumber\}\)<\/Text>/);
+  assert.doesNotMatch(screen, /<Text[^>]*>Referenser<\/Text>/);
+  assert.match(screen, /referenceNumber: \{ \.\.\.tokens\.typography\.smallCaption/);
+  assert.match(screen, /minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(screen, /referenceLink: \{ minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin, alignItems: 'center', justifyContent: 'center' \}/);
+  assert.match(screen, /checklistPhaseVisualFor\(activeTemplate\.phase\)/);
   assert.match(knowledge, /CHECKLIST_DESTINATION_ID/);
   assert.match(knowledge, /FAQ_DESTINATION_ID/);
   assert.match(knowledge, /onPress=\{\(\) => changeTab\('Checklistor'\)\}/);
@@ -40,9 +53,11 @@ test('every review template point has a verified Ionicons glyph and custom or un
   assert.match(screen, /leadingIcon=\{item\.icon \?\? 'list-outline'\}/);
   assert.match(screen, /leadingIconTone=\{checklistIconTone\(item\.icon \?\? 'list-outline'\)\}/);
   assert.match(picker, /accessibilityRole="radio" accessibilityLabel=\{CHECKLIST_ICON_LABELS\[icon\]\}/);
+  assert.match(picker, /<ThemedIcon name=\{displayIcon\} tone=\{checklistIconTone\(displayIcon\)\} size="medium" testID=/);
+  assert.match(picker, /<ThemedIcon name=\{icon\} tone=\{checklistIconTone\(icon\)\} size="medium" testID=/);
   assert.match(iconModel, /export const CHECKLIST_ICONS = \[/);
   assert.match(checklistItem, /leadingIcon\?: ChecklistIcon/);
-  assert.match(checklistItem, /\{leadingIcon \? leadingIconTone \? <ThemedIcon name=\{leadingIcon\}/);
+  assert.match(checklistItem, /\{leadingIcon \? <ThemedIcon name=\{leadingIcon\} tone=\{leadingIconTone \?\? 'neutral'\} size="medium" testID=\{`checklist-item-icon-/);
 });
 
 test('navigation invalidates and aborts the current read/write before changing checklist view', () => {

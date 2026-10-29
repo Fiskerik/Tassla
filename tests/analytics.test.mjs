@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { ANALYTICS_EVENT_TYPES } from '../src/analytics/analytics-model.ts';
 import { createAnalyticsService, createSyntheticAnalyticsAdapter } from '../src/analytics/analytics-service.ts';
 
@@ -67,6 +68,12 @@ test('production adapter requires server consent and sends only an allowlisted e
   assert.equal(await service.track('meaningful_return'), false);
 });
 
+test('workspace renews its cached analytics consent when account scope changes', async () => {
+  const source = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+  assert.match(source, /const analyticsService = useMemo\(\(\) => createAnalyticsService\([\s\S]*?isCurrentAccount\(analyticsOwnerId, accountGeneration\)[\s\S]*?\}\), \[client, analyticsOwnerId, accountGeneration, isCurrentAccount\]\)/);
+  assert.match(source, /completeRoutineAndMeasure[\s\S]*?isCurrentAccount\(ownerId, generation\)[\s\S]*?track\('routine_completed'\)/);
+});
+
 test('production adapter fails open when RPC rejects or returns an error', async () => {
   const service = createAnalyticsService(async (name) => {
     if (name === 'get_beta_metrics_consent') return { data: true, error: null };
@@ -78,4 +85,27 @@ test('production adapter fails open when RPC rejects or returns an error', async
   assert.equal(await service.track('home_viewed'), false);
   assert.equal(await service.setConsent(false), false);
   assert.equal(await service.track('not_allowed'), false);
+});
+
+test('an old consent read cannot overwrite a newer opt-in or withdrawal', async () => {
+  const reads = [];
+  const calls = [];
+  const service = createAnalyticsService(async (name, args) => {
+    calls.push({ name, args });
+    if (name === 'get_beta_metrics_consent') return new Promise((resolve) => reads.push(resolve));
+    if (name === 'set_beta_metrics_consent') return { data: true, error: null };
+    return { data: 'synthetic-event-id', error: null };
+  });
+  const staleOff = service.getConsent();
+  assert.equal(await service.setConsent(true), true);
+  reads.shift()({ data: false, error: null });
+  assert.equal(await staleOff, null);
+  assert.equal(await service.track('onboarding_opened'), true);
+  const staleOn = service.getConsent();
+  assert.equal(await service.setConsent(false), true);
+  reads.shift()({ data: true, error: null });
+  assert.equal(await staleOn, null);
+  const before = calls.length;
+  assert.equal(await service.track('onboarding_opened'), false);
+  assert.equal(calls.length, before);
 });

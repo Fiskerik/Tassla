@@ -1,11 +1,12 @@
 import type { ReactNode, RefObject } from 'react';
-import { AccessibilityInfo, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Animated, findNodeHandle, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
 import { shiftCalendarMonth } from './calendar-month';
 import { useReducedMotion } from './ui/Motion';
+import { ModalSwipeHandle, useModalSwipeDismiss } from './ui/modal-swipe-dismiss';
 import { theme, tokens } from '../theme/tokens';
 
 export function AppScreen({ children, footer, scrollKey, preserveScrollKey, scrollMemoryScope, refreshing = false, onRefresh, refreshAccessibilityLabel = 'Uppdatera sidan' }: { children: ReactNode; footer?: ReactNode; scrollKey?: string; preserveScrollKey?: string; scrollMemoryScope?: string; refreshing?: boolean; onRefresh?: () => void; refreshAccessibilityLabel?: string }) {
@@ -137,6 +138,7 @@ export function InfoModal({ visible, title, children, onClose, onDismiss }: {
   onDismiss?: () => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const swipe = useModalSwipeDismiss(visible, onClose, reduceMotion);
   const headingRef = useRef<Text>(null);
   return <Modal
     visible={visible}
@@ -148,11 +150,12 @@ export function InfoModal({ visible, title, children, onClose, onDismiss }: {
     accessibilityViewIsModal
   >
     <View style={styles.modalBackdrop}>
-      <View style={styles.modalCard}>
+      <Animated.View testID="center-modal-info" style={[styles.modalCard, { transform: [{ translateX: swipe.translateX }] }]}>
+        <ModalSwipeHandle panHandlers={swipe.panHandlers} />
         <Text ref={headingRef} accessible accessibilityRole="header" style={styles.modalTitle}>{title}</Text>
         <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>{children}</ScrollView>
         <QuietButton title="Stäng information" onPress={onClose} />
-      </View>
+      </Animated.View>
     </View>
   </Modal>;
 }
@@ -192,6 +195,8 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
   disabled?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
+  const reduced = useReducedMotion();
+  const swipe = useModalSwipeDismiss(visible, () => setVisible(false), reduced);
   const parsed = parseDateValue(value) ?? new Date();
   const [month, setMonth] = useState(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
   const days = calendarDays(month);
@@ -207,14 +212,15 @@ export function DatePickerField({ label, value, onChangeText, disabled = false }
         <Ionicons name="calendar-outline" size={tokens.size.iconMd} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
       </Pressable>
     </View>
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
-      <View style={styles.dateModalBackdrop}><View style={styles.dateModalCard}>
+    <Modal visible={visible} transparent animationType={reduced ? 'none' : 'fade'} onRequestClose={() => setVisible(false)}>
+      <View style={styles.dateModalBackdrop}><Animated.View testID="center-modal-date-picker" style={[styles.dateModalCard, { transform: [{ translateX: swipe.translateX }] }]}>
+        <ModalSwipeHandle panHandlers={swipe.panHandlers} />
         <Text style={styles.modalTitle}>{label}</Text>
         <View style={styles.calendarHeader}><Button variant="icon" label="Föregående månad" accessibilityLabel={`Visa månaden före ${monthLabel}`} iconName="chevron-back" onPress={() => setMonth((currentMonth) => shiftCalendarMonth(currentMonth, -1))} /><Text style={styles.calendarMonth}>{monthLabel}</Text><Button variant="icon" label="Nästa månad" accessibilityLabel={`Visa månaden efter ${monthLabel}`} iconName="chevron-forward" onPress={() => setMonth((currentMonth) => shiftCalendarMonth(currentMonth, 1))} /></View>
         <View style={styles.calendarGrid}>{days.map((day, index) => day ? <Pressable key={`${day}-${index}`} accessibilityRole="button" accessibilityLabel={formatDateValue(day)} onPress={() => { onChangeText(formatDateValue(day)); setVisible(false); }} style={styles.calendarDay}><Text style={styles.calendarDayText}>{day.getDate()}</Text></Pressable> : <View key={`empty-${index}`} style={styles.calendarDay} />)}</View>
         <TextInput accessibilityLabel="Manuellt datum, år-månad-dag" keyboardType="numbers-and-punctuation" onChangeText={onChangeText} placeholder="ÅÅÅÅ-MM-DD" placeholderTextColor={theme.colors.mutedText} style={styles.input} value={value} />
         <QuietButton title="Stäng kalender" onPress={() => setVisible(false)} />
-      </View></View>
+      </Animated.View></View>
     </Modal>
   </View>;
 }
@@ -228,19 +234,22 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
   const [visible, setVisible] = useState(false);
   const [draft, setDraft] = useState(value);
   const reducedMotion = useReducedMotion();
+  const swipe = useModalSwipeDismiss(visible, () => setVisible(false), reducedMotion);
+  const insets = useSafeAreaInsets();
   const validDraft = draft === '' || /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(draft);
   const times = Array.from({ length: 96 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, '0')}:${String((index % 4) * 15).padStart(2, '0')}`);
   return <View style={styles.datePickerField}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.datePickerRow}><TextInput accessibilityLabel={`${label}, timmar och minuter`} editable={!disabled} keyboardType="numbers-and-punctuation" maxLength={5}
-      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={styles.datePickerInput} value={value} />
+      onChangeText={onChangeText} placeholder="09:00" placeholderTextColor={theme.colors.mutedText} returnKeyType="done" style={[styles.datePickerInput, { minWidth: 0 }]} value={value} />
       <Pressable accessibilityRole="button" accessibilityLabel={`Öppna tidsväljare för ${label}`} disabled={disabled} onPress={() => { setDraft(value); setVisible(true); }} style={styles.pickerButton}><Ionicons name="time-outline" size={tokens.size.iconMd} color={theme.colors.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /></Pressable>
     </View>
-    <Modal visible={visible} transparent animationType={reducedMotion ? 'none' : 'slide'} onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
+    <Modal visible={visible} transparent animationType={reducedMotion ? 'none' : 'fade'} onRequestClose={() => setVisible(false)} accessibilityViewIsModal>
       <View style={styles.timeModalBackdrop}>
         <KeyboardAvoidingView style={styles.timeModalKeyboard} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={styles.timeModalCard}>
-            <View style={styles.timeModalHandle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+          <View style={[styles.timeModalFrame, { paddingTop: Math.max(insets.top, tokens.spacing.md), paddingBottom: Math.max(insets.bottom, tokens.spacing.md) }]}>
+          <Animated.View testID="center-modal-time-picker" style={[styles.timeModalCard, { transform: [{ translateX: swipe.translateX }] }]}>
+            <ModalSwipeHandle panHandlers={swipe.panHandlers} />
             <View style={styles.timeModalHeader}>
               <Text style={styles.timeModalTitle} accessibilityRole="header">{label}</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Avbryt tid" onPress={() => setVisible(false)} style={styles.timeModalClose}>
@@ -252,7 +261,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
               onChangeText={setDraft} placeholder="HH:MM" placeholderTextColor={tokens.colors.textSecondary}
               returnKeyType="done" style={styles.timeModalInput} value={draft} />
             <Text style={styles.timeModalCaption}>Eller välj en tid</Text>
-            <ScrollView style={styles.timeModalList} keyboardShouldPersistTaps="handled">
+            <ScrollView testID="time-picker-options" style={styles.timeModalList} keyboardShouldPersistTaps="handled">
               {times.map((time) => <Pressable key={time} accessibilityRole="button" accessibilityLabel={`Välj ${time}`}
                 accessibilityState={{ selected: draft === time }} onPress={() => setDraft(time)}
                 style={({ pressed }) => [styles.timeOption, draft === time && styles.timeOptionSelected, pressed && styles.pressed]}>
@@ -264,6 +273,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
               onChangeText(draft);
               setVisible(false);
             }} />
+          </Animated.View>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -321,10 +331,10 @@ const styles = StyleSheet.create({
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
   calendarDay: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   calendarDayText: { color: theme.colors.text, fontSize: 16, fontWeight: '700' },
-  timeModalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: tokens.colors.overlay },
-  timeModalKeyboard: { flex: 1, justifyContent: 'flex-end' },
-  timeModalCard: { width: '100%', maxHeight: '85%', padding: tokens.spacing.lg, gap: tokens.spacing.md, borderTopLeftRadius: tokens.radius.lg, borderTopRightRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
-  timeModalHandle: { width: tokens.spacing.xl + tokens.spacing.md, height: tokens.size.progress, borderRadius: tokens.radius.sm, backgroundColor: tokens.colors.border, alignSelf: 'center' },
+  timeModalBackdrop: { flex: 1, backgroundColor: tokens.colors.overlay },
+  timeModalKeyboard: { flex: 1 },
+  timeModalFrame: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.layout.pageInset, paddingVertical: tokens.spacing.md },
+  timeModalCard: { width: '100%', maxWidth: 560, maxHeight: '100%', padding: tokens.spacing.lg, gap: tokens.spacing.md, borderRadius: tokens.radius.lg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, backgroundColor: tokens.colors.surface },
   timeModalHeader: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   timeModalClose: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
   timeModalTitle: { ...tokens.typography.heading, color: tokens.colors.textPrimary, flex: 1, flexShrink: 1 },

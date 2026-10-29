@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 import os
 import re
+from datetime import datetime, timezone
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -11,6 +12,7 @@ base = os.environ.get("TASSLA_UI_BASE_URL", "http://127.0.0.1:4190/")
 review = os.environ.get("TASSLA_UI_REVIEW", "false").lower() == "true"
 second_journey_step = "Vila nära" if review else "En lugn paus"
 home_journey_program = "Trygg start hemma" if review else "Trygg vardagsstart"
+timeline_step_ids = ["review-v1:training:trygg-start:one", "review-v1:training:trygg-start:two", "review-v1:training:trygg-start:two:three"] if review else ["trygg-1", "trygg-2", "trygg-3"]
 results = []
 errors = []
 
@@ -36,6 +38,16 @@ with sync_playwright() as playwright:
 
     def visible_primary_button_count():
         return page.get_by_role("button").evaluate_all("nodes => nodes.filter(node => { const box = node.getBoundingClientRect(); return box.width > 0 && getComputedStyle(node).backgroundColor === 'rgb(24, 106, 77)'; }).length")
+
+    def open_session_feedback(write_mode):
+        open_page(f"&trainingScenario=unstarted&progression=empty&progressionWrite={write_mode}")
+        page.get_by_role("tab", name="Alla övningar").click()
+        page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+        page.get_by_role("button", name=re.compile("Starta träningsresa för")).click()
+        expect(page.get_by_text(re.compile("^Aktivt steg ·"))).to_have_count(1)
+        page.get_by_role("button", name=re.compile("Öppna aktivt steg:")).click()
+        page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last.click()
+        expect(page.get_by_test_id("training-session-feedback")).to_be_visible()
 
     initial_scenario = "half" if review else "default"
     open_page(f"&trainingScenario={initial_scenario}")
@@ -145,79 +157,234 @@ with sync_playwright() as playwright:
     results.append("reset icon opens named confirmation; cancel leaves progress and action unchanged")
     reset_action.click()
     page.get_by_role("button", name="Börja om", exact=True).click()
-    expect(page.get_by_role("progressbar", name="Aktivitetsmarkeringar: 0 av 2")).to_be_visible()
+    if review:
+        expect(page.get_by_role("button", name=re.compile("Öppna nästa steg:")).first).to_be_visible()
+    else:
+        expect(page.get_by_role("button", name=f"Starta träningsresa för {completed_title}")).to_be_visible()
+    expect(page.get_by_test_id("training-journey-timeline")).to_be_visible()
+    expect(page.get_by_text(re.compile("Nästa övning · 1/2"))).to_be_visible()
     expect(page.get_by_role("button", name=f"Börja om med {completed_title}")).to_have_count(0)
     capture("reset-confirmed-375x844")
-    results.append("confirm resets only the selected fixture program and removes its reset action")
+    results.append("confirm resets only the selected fixture program and returns it to an unstarted state")
 
     open_page("&trainingScenario=unstarted&progression=empty")
-    recommendation = page.get_by_role("button", name=re.compile("Öppna nästa övning")).first
-    recommendation.click()
-    start_from_recommendation = page.get_by_role("button", name=re.compile("Starta träningsresa för"))
-    expect(start_from_recommendation).to_have_count(1)
-    start_from_recommendation.click()
+    if review:
+        page.get_by_role("tab", name="Alla övningar").click()
+        page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    else:
+        page.get_by_role("button", name=re.compile("Öppna nästa övning")).first.click()
+    start_action = page.get_by_role("button", name=re.compile("Starta träningsresa för"))
+    expect(start_action).to_have_count(1)
+    start_action.click()
+    if review:
+        page.get_by_role("button", name=re.compile("Öppna aktivt steg:")).click()
     expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last).to_be_visible()
-    expect(page.get_by_text(re.compile("0 loggade pass · 0 delmål")).first).to_be_visible()
+    expect(page.get_by_text(re.compile("0 pass · 0 delmål" if review else "0 loggade pass · 0 delmål")).first).to_be_visible()
     capture("recommendation-start-opens-saved-active-step-375x844")
-    results.append("recommendation opens its exact exercise, starts one journey, and waits for the confirmed active step")
+    results.append("recommendation opens its exact exercise, starts one journey, and waits for the confirmed active step" if not review
+                   else "all-exercises opens a published program, starts one journey, and waits for the confirmed active step")
 
     open_page("&trainingScenario=unstarted&progression=empty")
     page.get_by_role("tab", name="Alla övningar").click()
     first_program = page.get_by_test_id("training-all-view").get_by_role("button").first
     first_program.click()
-    expect(page.get_by_text("Träningsresa", exact=True)).to_be_visible()
+    expect(page.get_by_test_id("training-journey-timeline")).to_be_visible()
+    expect(page.get_by_text("Börja med en övning i taget", exact=True)).to_be_visible()
     assert visible_primary_button_count() <= 1, "program overview must keep at most one primary action"
     page.get_by_role("button", name=re.compile("Starta träningsresa för")).click()
     expect(page.get_by_role("button", name=re.compile("Starta träningsresa för"))).to_have_count(0)
-    expect(page.get_by_text("Aktivt steg i träningsresan", exact=True).first).to_be_visible()
-    expect(page.get_by_test_id("training-active-journey-step")).to_have_count(1)
+    expect(page.get_by_text(re.compile("^Aktivt steg ·"))).to_have_count(1)
     capture("journey-started-375x844")
     results.append("start creates one saved journey and preserves its exact active step")
 
-    page.get_by_role("button", name=re.compile("Nästa övning: Utforska i egen takt")).click()
+    page.get_by_role("button", name=re.compile("Öppna aktivt steg: Utforska i egen takt")).click()
     expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last).to_be_visible()
     page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last.click()
-    page.get_by_role("button", name="Vi fortsätter öva.").click()
-    page.get_by_role("button", name="Spara återkopplingen för träningspasset").click()
-    expect(page.get_by_text(re.compile("1 loggade pass")).first).to_be_visible()
-    expect(page.get_by_role("button", name="Bekräfta delmålet för Utforska i egen takt")).to_be_visible()
+    expect(page.get_by_test_id("training-session-feedback")).to_be_visible()
+    expect(page.get_by_role("radio", name="Gick som planerat")).to_be_visible()
+    expect(page.get_by_text("Träningsresan är startad.", exact=True)).to_have_count(0)
+    expect(page.get_by_text("Aktivitetsmarkeringar i programmet", exact=True)).to_have_count(0)
+    capture("training-session-feedback-375x844")
+    page.get_by_role("radio", name="Vi fortsätter öva").click()
+    page.get_by_role("button", name="Spara träningspass").click()
+    expect(page.get_by_text(re.compile("1 pass · 0 delmål")).first).to_be_visible()
+    expect(page.get_by_test_id("training-milestone-ready")).to_have_count(0)
     expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
+    page.get_by_role("button", name="Logga ett träningspass för Utforska i egen takt").click()
+    page.get_by_role("radio", name="Gick som planerat").click()
+    page.get_by_role("button", name="Spara träningspass").click()
+    expect(page.get_by_test_id("training-milestone-ready")).to_be_visible()
+    expect(page.get_by_role("button", name="Bekräfta delmålet för Utforska i egen takt")).to_be_visible()
+    expect(page.get_by_text("Aktivitetsmarkeringar i programmet", exact=True)).to_have_count(0)
     assert visible_primary_button_count() <= 1, "saved-session state must keep at most one primary action"
-    capture("session-saved-no-automatic-milestone-375x844")
+    capture("positive-session-offers-explicit-milestone-375x844")
     page.get_by_role("button", name="Bekräfta delmålet för Utforska i egen takt").click()
-    expect(page.get_by_text("Delmålet är bekräftat av dig.", exact=True).first).to_be_visible()
-    expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_be_visible()
+    expect(page.get_by_text("Klart", exact=True).first).to_be_visible()
+    expect(page.get_by_text("Delmålet är bekräftat av dig.", exact=True)).to_have_count(0)
+    next_action = page.get_by_role("button", name="Fortsätt till nästa träningssteg")
+    expect(next_action).to_be_visible()
+    expect(next_action).to_have_text(re.compile("^Nästa"))
     page.get_by_role("button", name="Fortsätt till nästa träningssteg").click()
     page.get_by_role("button", name="Stäng").last.click()
-    expect(page.get_by_text("Aktivt steg i träningsresan", exact=True).first).to_be_visible()
-    expect(page.get_by_test_id("training-active-journey-step")).to_have_count(1)
+    expect(page.get_by_text(re.compile("^Aktivt steg ·"))).to_have_count(1)
     expect(page.get_by_text(second_journey_step, exact=True).first).to_be_visible()
     capture("explicit-next-saved-step-375x844")
     results.append("a saved session is separate from owner confirmation and explicit next step")
 
-    page.get_by_role("button", name=re.compile(f"Nästa övning: {second_journey_step}")).click()
+    open_page("&trainingScenario=modal-detail&progression=confirmable&progressionWrite=failed-confirm-once")
+    page.get_by_role("tab", name="Alla övningar").click()
+    page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    page.get_by_role("button", name=re.compile(f"Öppna aktivt steg: {second_journey_step}")).click()
+    confirm_prompt = page.get_by_test_id("training-milestone-ready")
+    expect(page.get_by_test_id("training-exercise-banner")).to_be_visible()
+    banner_box = page.get_by_test_id("training-exercise-banner").bounding_box()
+    assert banner_box and 108 <= banner_box["height"] <= 116, f"exercise banner should stay low: {banner_box}"
+    expect(page.get_by_test_id("training-exercise-step-position")).to_have_text("Steg 2/3")
+    expect(page.get_by_role("progressbar", name="1 av 3 delmål bekräftade")).to_be_visible()
+    expect(page.get_by_test_id("training-ai-origin")).to_be_visible()
+    expect(page.get_by_text("AI-genererat innehåll", exact=True)).to_be_visible()
+    expect(page.get_by_text("Anpassa efter din hund och pausa när det behövs.", exact=True)).to_have_count(0)
+    expect(page.get_by_test_id("center-modal-bottom-sheet").get_by_text("När hunden är lugn kan den själv få nosa eller närma sig samma sak.", exact=False)).to_be_visible()
+    capture("active-exercise-modal-375x844")
+    confirm_action = confirm_prompt.get_by_role("button", name=f"Bekräfta delmålet för {second_journey_step}")
+    confirm_action.click()
+    expect(confirm_prompt.get_by_text("Ändringen kunde inte sparas. Försök igen.", exact=True)).to_be_visible()
+    expect(confirm_action).to_be_visible()
+    capture("failed-confirm-remains-actionable-375x844")
+    failed_confirm_operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(failed_confirm_operations) == 1 and failed_confirm_operations[0]["action"]["kind"] == "confirm_step", "failed confirmation should remain the same explicit action"
+    confirm_action.click()
+    expect(page.get_by_text("Klart", exact=True)).to_be_visible()
+    expect(page.get_by_text("Delmålet är bekräftat av dig.", exact=True)).to_have_count(0)
+    confirmed_next = page.get_by_role("button", name="Fortsätt till nästa träningssteg")
+    expect(confirmed_next).to_have_text(re.compile("^Nästa"))
+    previous_action = page.get_by_role("button", name="Backa till föregående träningssteg")
+    expect(previous_action).to_contain_text("Föregående")
+    expect(page.get_by_test_id("training-exercise-step-position")).to_have_text("Steg 2/3")
+    expect(page.get_by_role("progressbar", name="2 av 3 delmål bekräftade")).to_be_visible()
+    undo_action = page.get_by_role("button", name=f"Ångra färdigmarkering för {second_journey_step}")
+    expect(undo_action).to_be_visible()
+    expect(undo_action).to_contain_text("Ångra")
+    undo_box = undo_action.bounding_box()
+    assert undo_box and undo_box["width"] >= 44 and undo_box["height"] >= 44, f"undo target is smaller than 44pt: {undo_box}"
+    previous_box = previous_action.bounding_box()
+    next_box = confirmed_next.bounding_box()
+    assert previous_box and previous_box["height"] >= 44, f"previous action target is smaller than 44pt: {previous_box}"
+    assert next_box and previous_box["width"] < next_box["width"], f"next should be the full-width primary action: next={next_box}, previous={previous_box}"
+    capture("confirmed-current-exercise-375x844")
+    for width, height, suffix in [(430, 844, "430x844"), (375, 667, "375x667")]:
+        page.set_viewport_size({"width": width, "height": height})
+        expect(page.get_by_text("Klart", exact=True)).to_be_visible()
+        expect(confirmed_next).to_have_text(re.compile("^Nästa"))
+        expect(previous_action).to_contain_text("Föregående")
+        expect(page.get_by_test_id("training-exercise-banner")).to_be_visible()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"confirmed exercise overflows at {width}x{height}"
+        capture(f"confirmed-current-exercise-{suffix}")
+    page.set_viewport_size({"width": 375, "height": 844})
+    page.evaluate("document.documentElement.style.zoom='1.4'")
+    expect(page.get_by_text("Klart", exact=True)).to_be_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "confirmed exercise overflows at 140% text proxy"
+    capture("confirmed-current-exercise-text-140-375x844")
+    modal = page.get_by_test_id("center-modal-bottom-sheet")
+    scroll_metrics = modal.evaluate("""node => {
+      const scroller = [...node.querySelectorAll('*')].find(element => element.scrollHeight > element.clientHeight + 1 && getComputedStyle(element).overflowY === 'auto');
+      if (!scroller) return null;
+      scroller.scrollTop = scroller.scrollHeight;
+      scroller.dispatchEvent(new Event('scroll', { bubbles: true }));
+      return { top: scroller.scrollTop, max: scroller.scrollHeight - scroller.clientHeight };
+    }""")
+    assert scroll_metrics and scroll_metrics["top"] > 0, "140% modal content should scroll to the navigation actions"
+    sheet_box = modal.bounding_box()
+    scrolled_next_box = confirmed_next.bounding_box()
+    scrolled_previous_box = previous_action.bounding_box()
+    assert sheet_box and scrolled_next_box and scrolled_previous_box, "navigation actions remain mounted after modal scroll"
+    for action_box in [scrolled_next_box, scrolled_previous_box]:
+        assert action_box["y"] >= sheet_box["y"] and action_box["y"] + action_box["height"] <= sheet_box["y"] + sheet_box["height"] + 1, f"navigation action escapes the modal after scroll: sheet={sheet_box}, action={action_box}"
+    capture("confirmed-current-exercise-text-140-scrolled-375x844")
+    page.evaluate("document.documentElement.style.zoom='1'")
+    page.set_viewport_size({"width": 375, "height": 844})
+    results.append(f"failed confirmation stays visible and retryable; saved confirmation appears once, Previous target is {previous_box['height']:.1f}pt, and 140% scroll reveals both actions")
+
+    open_page("&trainingScenario=modal-detail&progression=confirmable&progressionWrite=unknown-once")
+    page.get_by_role("tab", name="Alla övningar").click()
+    page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    page.get_by_role("button", name=re.compile(f"Öppna aktivt steg: {second_journey_step}")).click()
+    page.get_by_role("button", name=f"Bekräfta delmålet för {second_journey_step}").click()
+    unknown_confirm_modal = page.get_by_test_id("center-modal-bottom-sheet")
+    expect(unknown_confirm_modal.get_by_role("button", name="Kontrollera samma träningsändring igen")).to_be_visible()
+    unknown_confirm_operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(unknown_confirm_operations) == 1 and unknown_confirm_operations[0]["action"]["kind"] == "confirm_step", "unknown confirmation should create one pending action"
+    unknown_confirm_id = unknown_confirm_operations[0]["operationId"]
+    unknown_confirm_modal.get_by_role("button", name="Kontrollera samma träningsändring igen").click()
+    expect(unknown_confirm_modal.get_by_text("Klart", exact=True)).to_be_visible()
+    retried_confirm_operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(retried_confirm_operations) == 2 and retried_confirm_operations[-1]["operationId"] == unknown_confirm_id, "unknown confirmation retry must reuse its operation ID"
+    assert retried_confirm_operations[-1]["action"] == retried_confirm_operations[0]["action"], "unknown confirmation retry must preserve the exact payload"
+    results.append("unknown confirmation is checked using the same operation and exact action payload")
+
+    open_session_feedback("failed-session")
+    page.get_by_role("radio", name="Gick som planerat").click()
+    page.get_by_role("button", name="Spara träningspass").click()
+    expect(page.get_by_test_id("training-session-feedback").get_by_text("Ändringen kunde inte sparas. Försök igen.", exact=True)).to_be_visible()
+    expect(page.get_by_text(re.compile("0 pass · 0 delmål")).first).to_be_visible()
+    expect(page.get_by_test_id("training-milestone-ready")).to_have_count(0)
+    expect(page.get_by_role("button", name="Spara träningspass")).to_be_visible()
+    capture("failed-session-stays-unconfirmed-375x844")
+    results.append("failed pass write keeps the selected feedback retryable and confirms neither session nor milestone")
+
+    open_session_feedback("unknown-session-once")
+    page.get_by_role("radio", name="Gick som planerat").click()
+    page.get_by_role("button", name="Spara träningspass").click()
+    expect(page.get_by_test_id("center-modal-bottom-sheet").get_by_text("Vi kunde inte bekräfta om ändringen sparades. Kontrollera samma ändring igen.", exact=True)).to_be_visible()
+    expect(page.get_by_test_id("center-modal-bottom-sheet").get_by_role("button", name="Kontrollera samma träningsändring igen")).to_be_visible()
+    expect(page.get_by_test_id("training-milestone-ready")).to_have_count(0)
+    uncertain_operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(uncertain_operations) == 2 and uncertain_operations[-1]["action"]["kind"] == "record_session", "unknown pass should have one pending operation"
+    uncertain_operation_id = uncertain_operations[-1]["operationId"]
+    capture("unknown-session-awaits-same-operation-375x844")
+    page.get_by_test_id("center-modal-bottom-sheet").get_by_role("button", name="Kontrollera samma träningsändring igen").click()
+    expect(page.get_by_text("Träningspasset är loggat.", exact=True)).to_be_visible()
+    expect(page.get_by_text(re.compile("1 pass · 0 delmål")).first).to_be_visible()
+    expect(page.get_by_test_id("training-milestone-ready")).to_be_visible()
+    expect(page.get_by_text("Aktivitetsmarkeringar i programmet", exact=True)).to_have_count(0)
+    resolved_operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(resolved_operations) == 3 and resolved_operations[-1]["operationId"] == uncertain_operation_id, "unknown pass retry must reuse its operation ID"
+    capture("unknown-session-resolved-with-explicit-milestone-375x844")
+    results.append("unknown pass write retries the same operation, records one session, and leaves milestone confirmation explicit")
+
+    open_page("&trainingScenario=unstarted&progression=confirmed")
+    page.get_by_role("tab", name="Alla övningar").click()
+    page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    page.get_by_role("button", name=re.compile("Öppna aktivt steg: Utforska i egen takt")).click()
+    page.get_by_role("button", name="Fortsätt till nästa träningssteg").click()
+    page.get_by_role("button", name="Stäng").last.click()
+    expect(page.get_by_text(second_journey_step, exact=True).first).to_be_visible()
+
+    page.get_by_role("button", name=re.compile(f"Öppna aktivt steg: {second_journey_step}")).click()
     page.get_by_role("button", name="Backa till föregående träningssteg").click()
     page.get_by_role("button", name="Stäng").last.click()
     expect(page.get_by_text("Utforska i egen takt", exact=True).first).to_be_visible()
-    expect(page.get_by_test_id("training-active-journey-step")).to_have_count(1)
+    expect(page.get_by_text(re.compile("^Aktivt steg ·"))).to_have_count(1)
+    expect(page.get_by_text(re.compile("^Delmål bekräftat ·"))).to_be_visible()
+    capture("journey-back-to-confirmed-step-375x844")
     results.append("back returns to the previous saved step without deleting its milestone")
 
-    page.get_by_role("button", name=re.compile("Nästa övning: Utforska i egen takt")).click()
+    page.get_by_role("button", name=re.compile("Öppna aktivt steg: Utforska i egen takt")).click()
     page.get_by_role("button", name="Fortsätt till nästa träningssteg").click()
     page.get_by_role("button", name="Stäng").last.click()
-    page.get_by_role("button", name=re.compile(f"Nästa övning: {second_journey_step}")).click()
+    page.get_by_role("button", name=re.compile(f"Öppna aktivt steg: {second_journey_step}")).click()
     page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last.click()
-    page.get_by_role("button", name="Vi kom dit vi tänkt oss.").click()
-    page.get_by_role("button", name="Spara återkopplingen för träningspasset").click()
+    page.get_by_role("radio", name="Gick som planerat").click()
+    page.get_by_role("button", name="Spara träningspass").click()
     page.get_by_role("button", name=f"Bekräfta delmålet för {second_journey_step}").click()
     page.set_viewport_size({"width": 375, "height": 667})
     if review:
         expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
         capture("review-final-step-short-viewport-375x667")
-        page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last.click()
-        page.get_by_role("button", name="Vi tog en paus.").click()
-        page.get_by_role("button", name="Spara återkopplingen för träningspasset").click()
-        expect(page.get_by_text(re.compile("3 loggade pass")).first).to_be_visible()
+        page.get_by_role("button", name="Logga ett träningspass till för det här steget").click()
+        page.get_by_role("radio", name="Vi avslutade tidigare").click()
+        page.get_by_role("button", name="Spara träningspass").click()
+        expect(page.get_by_text(re.compile("3 pass ·")).first).to_be_visible()
         expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
         capture("review-final-step-still-practicable-375x667")
         results.append("the review fixture final step remains available for practice without an invented next step")
@@ -226,27 +393,45 @@ with sync_playwright() as playwright:
         expect(page.get_by_text("Vila nära", exact=True).first).to_be_visible()
         capture("final-step-short-viewport-375x667")
         page.get_by_role("button", name="Stäng").last.click()
-        page.get_by_role("button", name=re.compile("Nästa övning: Vila nära")).click()
+        page.get_by_role("button", name=re.compile("Öppna aktivt steg: Vila nära")).click()
         expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last).to_be_visible()
         expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
         page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last.click()
-        page.get_by_role("button", name="Vi tog en paus.").click()
-        page.get_by_role("button", name="Spara återkopplingen för träningspasset").click()
-        expect(page.get_by_text(re.compile("3 loggade pass")).first).to_be_visible()
+        page.get_by_role("radio", name="Vi avslutade tidigare").click()
+        page.get_by_role("button", name="Spara träningspass").click()
+        expect(page.get_by_text(re.compile("3 pass ·")).first).to_be_visible()
         expect(page.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
         capture("final-step-still-practicable-375x667")
         results.append("the final step remains available for practice and has no invented next step")
 
-    page.get_by_role("button", name="Stäng").last.click()
-    page.get_by_role("button", name="Pausa träningsresan").click()
-    expect(page.get_by_role("button", name=re.compile("Återuppta träningsresan för"))).to_be_visible()
-    capture("journey-paused-375x667")
-    page.get_by_role("button", name=re.compile("Återuppta träningsresan för")).click()
-    page.get_by_role("button", name="Sätt träningsresan i underhåll").click()
-    expect(page.get_by_text(re.compile("Underhåll")).first).to_be_visible()
-    page.set_viewport_size({"width": 430, "height": 844})
-    capture("journey-maintenance-430x844")
-    results.append("pause, resume and maintenance are explicit saved journey states")
+    open_page("&trainingScenario=confirmed&progression=confirmed")
+    page.get_by_role("tab", name="Alla övningar").click()
+    progress_card = page.get_by_test_id("training-all-view").get_by_role("button").first
+    expect(progress_card.get_by_role("progressbar", name="1 av 2 delmål bekräftade" if review else "1 av 3 delmål bekräftade")).to_be_visible()
+    expect(progress_card.get_by_text("1 pass loggat", exact=True)).to_be_visible()
+    expect(page.get_by_role("button", name="Pausa träningsresan")).to_have_count(0)
+    expect(page.get_by_role("button", name="Sätt träningsresan i underhåll")).to_have_count(0)
+    capture("program-card-confirmed-progress-1-of-3-375x844")
+    results.append("program card shows 1/3 owner-confirmed milestones separately from one logged session")
+
+    open_page("&progression=paused")
+    page.get_by_role("tab", name="Alla övningar").click()
+    page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    expect(page.get_by_role("button", name="Fortsätt med nästa övning")).to_be_visible()
+    expect(page.get_by_text("Återupptas vid: Utforska i egen takt.", exact=True).last).to_be_visible()
+    expect(page.get_by_role("button", name=re.compile("Öppna pausad steg:")).first).to_have_text("Visa övning")
+    expect(page.get_by_role("button", name="Pausa träningsresan")).to_have_count(0)
+    expect(page.get_by_role("button", name="Sätt träningsresan i underhåll")).to_have_count(0)
+    capture("paused-journey-only-offers-resume-375x667")
+    page.get_by_role("button", name=re.compile("Öppna pausad steg:")).first.click()
+    expect(page.get_by_text(re.compile("Pausad · 0 pass · 0 delmål"), exact=False).last).to_be_visible()
+    expect(page.get_by_role("button", name=re.compile("Fortsätt med nästa övning")).last).to_be_visible()
+    expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för")).last).to_have_count(0)
+    page.get_by_role("button", name=re.compile("Fortsätt med nästa övning")).last.click()
+    expect(page.get_by_text(re.compile("^Pågående · 0 pass · 0 delmål"), exact=False).last).to_be_visible()
+    expect(page.get_by_text("Utforska i egen takt", exact=True).last).to_be_visible()
+    expect(page.get_by_role("button", name=re.compile("Logga ett träningspass för Utforska i egen takt")).last).to_be_visible()
+    results.append("active journeys have no pause or maintenance actions; a paused journey clearly resumes on the same exercise")
 
     open_page("&trainingScenario=unstarted&progression=empty&progressionWrite=unknown-once")
     page.get_by_role("tab", name="Alla övningar").click()
@@ -255,23 +440,38 @@ with sync_playwright() as playwright:
     expect(page.get_by_role("button", name="Kontrollera samma träningsändring igen")).to_be_visible()
     capture("journey-unknown-awaiting-same-operation-retry-375x844")
     page.get_by_role("button", name="Kontrollera samma träningsändring igen").click()
-    expect(page.get_by_text("Aktivt steg i träningsresan", exact=True).first).to_be_visible()
+    expect(page.get_by_text(re.compile("^Aktivt steg ·"))).to_have_count(1)
     operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
     assert len(operations) == 2 and operations[0]["operationId"] == operations[1]["operationId"], "unknown retry must reuse the same operation ID"
     assert operations[0]["action"] == operations[1]["action"], "unknown retry must preserve the exact action payload"
     results.append("unknown start is retried with the same operation ID and exact action")
 
+    open_page("&trainingScenario=unstarted&progression=confirmed&progressionWrite=unknown-once")
+    page.get_by_role("tab", name="Alla övningar").click()
+    page.get_by_test_id("training-all-view").get_by_role("button").first.click()
+    page.get_by_role("button", name="Öppna aktivt steg: Utforska i egen takt").click()
+    page.get_by_role("button", name="Ångra färdigmarkering för Utforska i egen takt").click()
+    undo_modal = page.get_by_test_id("center-modal-bottom-sheet")
+    expect(undo_modal.get_by_role("button", name="Kontrollera samma träningsändring igen")).to_be_visible()
+    expect(undo_modal.get_by_role("button", name="Fortsätt till nästa träningssteg")).to_have_count(0)
+    undo_modal.get_by_role("button", name="Kontrollera samma träningsändring igen").click()
+    expect(undo_modal.get_by_role("button", name="Bekräfta delmålet för Utforska i egen takt")).to_be_visible()
+    operations = page.evaluate("window.__tasslaTrainingProgressionOperations")
+    assert len(operations) == 2 and operations[0]["operationId"] == operations[1]["operationId"]
+    assert operations[0]["action"] == operations[1]["action"] and operations[0]["action"]["kind"] == "undo_step"
+    results.append("unknown undo retries the exact confirmation and operation without advancing")
+
     page.goto(f"{base}?screen=home&progression=confirmed")
-    expect(page.get_by_text("1 loggade pass", exact=True)).to_be_visible()
-    expect(page.get_by_text("1 delmål bekräftade av dig", exact=True)).to_be_visible()
+    expect(page.get_by_text("1 loggat pass", exact=True)).to_be_visible()
+    expect(page.get_by_text("1 delmål bekräftat av dig", exact=True)).to_be_visible()
     page.get_by_role("button", name=re.compile(f"Fortsätt träningsresan: {home_journey_program}")).click()
     expect(page.get_by_role("heading", name=home_journey_program)).to_be_visible()
-    expect(page.get_by_text("Aktivt steg i träningsresan", exact=True).first).to_be_visible()
+    expect(page.get_by_text(re.compile("^Aktivt steg ·")).first).to_be_visible()
     capture("home-opens-exact-version-430x844")
     results.append("Home shows separate confirmed totals and opens the same saved program version")
 
     page.goto(f"{base}?screen=home&progression=unavailable")
-    expect(page.get_by_text("1 loggade pass", exact=True)).to_be_visible()
+    expect(page.get_by_text("1 loggat pass", exact=True)).to_be_visible()
     expect(page.get_by_text("Det sparade programmet eller steget är inte tillgängligt. Instruktioner visas inte.", exact=True)).to_be_visible()
     expect(page.get_by_role("button", name="Fortsätt träningsresan")).to_have_count(0)
     expect(page.get_by_text("withdrawn-fixture-step", exact=True)).to_have_count(0)
@@ -280,9 +480,9 @@ with sync_playwright() as playwright:
 
     page.goto(f"{base}?screen=home&progression=confirmed&progressionRead=error")
     expect(page.get_by_text("Träningsresan kunde inte hämtas. Inga framsteg visas som sparade.", exact=True)).to_be_visible()
-    expect(page.get_by_text("1 loggade pass", exact=True)).to_have_count(0)
+    expect(page.get_by_text("1 loggat pass", exact=True)).to_have_count(0)
     page.get_by_role("button", name="Kontrollera träningsresan igen").click()
-    expect(page.get_by_text("1 loggade pass", exact=True)).to_be_visible()
+    expect(page.get_by_text("1 loggat pass", exact=True)).to_be_visible()
     results.append("Home read failure does not display cached journey numbers as confirmed")
 
     page.goto(f"{base}?screen=training&trainingScenario={initial_scenario}&textScale=140")
@@ -292,6 +492,92 @@ with sync_playwright() as playwright:
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "140% text proxy introduces horizontal overflow"
     capture("text-140-375x844")
     results.append("140% browser text proxy has no horizontal overflow")
+
+    # Timeline-specific checks extend the established progression suite so its
+    # existing recommendation, persistence, retry and home regression coverage stays intact.
+    timeline_out = Path(os.environ.get("TASSLA_TRAINING_TIMELINE_EVIDENCE", "docs/design/evidence/training-timeline-01"))
+    timeline_out.mkdir(parents=True, exist_ok=True)
+    page.clock.install(time=datetime(2026, 10, 26, 12, 0, tzinfo=timezone.utc))
+
+    def open_timeline(width, height, large_text=False):
+        page.set_viewport_size({"width": width, "height": height})
+        page.goto(f"{base}?screen=training&trainingScenario=timeline&progression=timeline")
+        page.wait_for_timeout(150)
+        page.get_by_role("tab", name="Alla övningar").click()
+        page.get_by_role("button", name=home_journey_program, exact=False).click()
+        page.get_by_test_id("training-journey-timeline").wait_for()
+        if large_text:
+            page.evaluate("""() => {
+              for (const node of document.querySelectorAll('*')) {
+                if (![...node.childNodes].some(child => child.nodeType === Node.TEXT_NODE && child.textContent.trim())) continue;
+                const style = getComputedStyle(node);
+                const size = parseFloat(style.fontSize);
+                const line = parseFloat(style.lineHeight);
+                if (Number.isFinite(size)) node.style.fontSize = `${size * 1.4}px`;
+                if (Number.isFinite(line)) node.style.lineHeight = `${line * 1.4}px`;
+              }
+            }""")
+            page.wait_for_timeout(120)
+
+    timeline_passes = []
+    for width, height, large_text in [(375, 844, False), (430, 844, False), (375, 667, True)]:
+        open_timeline(width, height, large_text)
+        expect(page.get_by_test_id("training-journey-banner")).to_be_visible()
+        expect(page.get_by_text("Delmål bekräftat · 15 augusti", exact=False)).to_be_visible()
+        expect(page.get_by_text("Kommande · 3/3", exact=False)).to_be_visible()
+        expect(page.get_by_text("Aktivitet markerad · 1 oktober", exact=False)).to_be_visible()
+        expect(page.get_by_text(second_journey_step, exact=True)).to_have_count(1)
+        assert page.evaluate("document.getElementById('root').scrollWidth <= document.getElementById('root').clientWidth + 1"), f"timeline overflow at {width}x{height}"
+        for step_id in timeline_step_ids:
+            box = page.get_by_test_id(f"training-timeline-step-{step_id}").bounding_box()
+            assert box and box["height"] >= 44, f"timeline hit target smaller than 44pt: {width}x{height}: {step_id}: {box}"
+        suffix = "-large-text" if large_text else ""
+        page.screenshot(path=str(timeline_out / f"timeline-overview-{width}x{height}{suffix}.png"))
+        message = f"timeline statuses, one active title, date sources, dog banner, and 44pt hit targets at {width}x{height}{suffix}"
+        timeline_passes.append(message)
+        print(f"PASS {message}")
+        if large_text:
+            page.get_by_test_id(f"training-timeline-step-{timeline_step_ids[1]}").scroll_into_view_if_needed()
+            action_box = page.get_by_test_id(f"training-timeline-step-{timeline_step_ids[1]}").bounding_box()
+            nav_box = page.get_by_role("tablist", name="Huvudmeny").bounding_box()
+            assert action_box and nav_box and action_box["y"] + action_box["height"] <= nav_box["y"] + 1, f"active step remains covered by bottom navigation: {action_box}, {nav_box}"
+            page.screenshot(path=str(timeline_out / "timeline-overview-375x667-large-text-scrolled.png"))
+            timeline_passes.append("active step remains reachable above bottom navigation after vertical scroll at 140% text")
+            print("PASS active step remains reachable above bottom navigation after vertical scroll at 140% text")
+
+        if width == 375 and height == 844:
+            before = page.evaluate("(window.__tasslaTrainingProgressionOperations ?? []).length")
+            page.get_by_test_id(f"training-timeline-step-{timeline_step_ids[2]}").click()
+            expect(page.get_by_test_id("training-step-read-only")).to_be_visible()
+            expect(page.get_by_text("Kommande steg · endast förhandsvisning", exact=True)).to_be_visible()
+            page.wait_for_timeout(350)
+            for label in ["Logga ett träningspass", "Bekräfta delmålet", "Logga utförd aktivitet", "Fortsätt till nästa", "Starta träningsresa"]:
+                expect(page.get_by_role("button", name=re.compile(label))).to_have_count(0)
+            after = page.evaluate("(window.__tasslaTrainingProgressionOperations ?? []).length")
+            assert after == before, f"future preview invoked progression action: {before} -> {after}"
+            page.screenshot(path=str(timeline_out / "timeline-future-read-only-375x844.png"))
+            timeline_passes.append("future preview is read-only and produces zero progression operations")
+            print("PASS future preview is read-only and produces zero progression operations")
+            page.get_by_test_id("center-modal-bottom-sheet").get_by_role("button", name="Stäng", exact=True).click()
+
+            page.get_by_role("button", name=re.compile(f"Öppna aktivt steg: {second_journey_step}")).click()
+            expect(page.get_by_role("button", name="Logga ett träningspass till för det här steget")).to_be_visible()
+            expect(page.get_by_role("button", name=f"Bekräfta delmålet för {second_journey_step}", exact=True)).to_be_visible()
+            timeline_passes.append("active step alone exposes practice and milestone controls")
+            print("PASS active step alone exposes practice and milestone controls")
+            page.get_by_test_id("center-modal-bottom-sheet").get_by_role("button", name="Stäng", exact=True).click()
+
+            page.get_by_test_id(f"training-timeline-step-{timeline_step_ids[0]}").click()
+            expect(page.get_by_test_id("training-step-read-only")).to_be_visible()
+            expect(page.get_by_text("Tidigare steg · endast läsning", exact=True)).to_be_visible()
+            expect(page.get_by_role("button", name="Avmarkera", exact=True)).to_have_count(0)
+            timeline_passes.append("confirmed historic step opens as read-only detail")
+            print("PASS confirmed historic step opens as read-only detail")
+
+    (timeline_out / "browser-results.json").write_text(json.dumps({
+        "passes": timeline_passes,
+        "scope": "Synthetic React Native Web review fixture. Native accessibility, native iOS/Android, live Supabase/RLS and TestFlight are not verified.",
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     assert not errors, f"browser errors: {errors}"
     results.append("no browser runtime errors")

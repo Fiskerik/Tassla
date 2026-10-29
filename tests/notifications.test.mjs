@@ -134,6 +134,77 @@ test('notification preference validation is closed, bounded, and keyed per owner
   assert.equal(model.notificationPreferenceKey(firstOwner), 'tassla.notifications.v1.' + firstOwner);
 });
 
+test('new reminders remain optional and old preference data stays valid', () => {
+  const legacy = { version: 1, enabled: true, trainingEnabled: true, trainingMinutes: 615 };
+  const extended = { ...legacy, routineEnabled: true, routineMinutes: 480, phaseEnabled: true };
+  assert.equal(model.isNotificationPreferences(legacy), true);
+  assert.equal(model.isNotificationPreferences(extended), true);
+  assert.equal(model.isNotificationPreferences({ ...legacy, routineEnabled: true }), false);
+  assert.equal(model.isNotificationPreferences({ ...extended, routineMinutes: 1440 }), false);
+  assert.equal(model.isNotificationPreferences({ ...extended, extra: true }), false);
+});
+
+test('phase reminder uses the same clamped calendar ages and never schedules invalid or passed dates', () => {
+  const oldZone = process.env.TZ;
+  process.env.TZ = 'Europe/Stockholm';
+  try {
+    const result = model.nextPhaseFireTime('2026-08-31', new Date('2026-10-27T12:00:00Z'));
+    assert.equal(result.status, 'scheduled');
+    assert.equal(result.date.toISOString(), '2027-02-28T08:00:00.000Z');
+    assert.equal(model.nextPhaseFireTime('2028-01-01', new Date('2026-10-27T12:00:00Z')).status, 'unrepresentable');
+    assert.equal(model.nextPhaseFireTime('2020-01-01', new Date('2026-10-27T12:00:00Z')).status, 'passed-time');
+    assert.equal(model.nextPhaseFireTime('not-a-date', new Date('2026-10-27T12:00:00Z')).status, 'unrepresentable');
+    const next = model.nextPhaseFireTime('2026-04-27', new Date('2026-10-27T06:00:00Z'));
+    assert.equal(next.date.getFullYear(), 2026);
+    const afterFire = model.nextPhaseFireTime('2026-04-27', new Date('2026-10-27T10:00:00Z'));
+    assert.equal(afterFire.date.getFullYear(), 2028);
+  } finally {
+    if (oldZone === undefined) delete process.env.TZ; else process.env.TZ = oldZone;
+  }
+});
+
+test('routine and phase reminders schedule independently with generic content and route to their screens', async () => {
+  const { ReminderService } = buildServiceHarness();
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const scheduled = [];
+  const service = new ReminderService(fakeAdapter({ scheduled }));
+  const context = service.setActiveContext(ownerId, dogId);
+  const preferences = { version: 1, enabled: true, trainingEnabled: false, trainingMinutes: 540, routineEnabled: true, routineMinutes: 480, phaseEnabled: true };
+  const result = await service.reconcile({ ...context, preferences, plans: [], birthDate: '2026-08-31', now: new Date('2026-10-27T06:00:00Z') });
+  assert.equal(result.status, 'scheduled');
+  assert.equal(scheduled.length, 2);
+  assert.deepEqual(scheduled.map((entry) => entry.content.data.target).sort(), ['phase', 'routine']);
+  for (const entry of scheduled) {
+    assert.equal(entry.content.body, model.GENERIC_REMINDER_BODY);
+    assert.equal(model.parseReminderPayload(entry.content.data).target, entry.content.data.target);
+    const response = nativeResponse(entry.identifier, entry.content.data);
+    const harness = buildTapHandlerHarness({ context, current: true, response, lastResponse: response });
+    await harness.handle(response);
+    assert.deepEqual(harness.pages, [entry.content.data.target === 'phase' ? 'development' : 'checklist']);
+    assert.equal(harness.lookups.length, 0);
+  }
+});
+
+test('removing a phase date and disabling routine cancels only the obsolete own notifications', async () => {
+  const { ReminderService } = buildServiceHarness();
+  const ownerId = '11111111-1111-4111-8111-111111111111';
+  const dogId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const otherOwner = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+  const now = new Date('2026-10-27T06:00:00Z');
+  const ownPayloads = ['phase', 'routine'].map((target) => model.otherReminderPayload(ownerId, dogId, target));
+  const ownRequests = ownPayloads.map((payload) => notificationRequest(model.reminderLogicalKey(payload), payload, new Date('2026-11-01T08:00:00Z')));
+  const foreignPayload = model.otherReminderPayload(otherOwner, dogId, 'phase');
+  const foreign = notificationRequest(model.reminderLogicalKey(foreignPayload), foreignPayload, new Date('2026-11-01T08:00:00Z'));
+  const cancelled = [], scheduled = [];
+  const service = new ReminderService(fakeAdapter({ requests: [...ownRequests, foreign], cancelled, scheduled }));
+  const context = service.setActiveContext(ownerId, dogId);
+  const preferences = { version: 1, enabled: true, trainingEnabled: false, trainingMinutes: 540, routineEnabled: false, routineMinutes: 480, phaseEnabled: true };
+  await service.reconcile({ ...context, preferences, plans: [], birthDate: null, now });
+  assert.deepEqual(cancelled.sort(), ownRequests.map((entry) => entry.identifier).sort());
+  assert.deepEqual(scheduled, []);
+});
+
 test('preference storage reads and writes each owner key independently and defaults malformed data off', async () => {
   const values = new Map();
   const calls = [];
@@ -688,14 +759,14 @@ function buildServiceHarness(platformOS = 'ios') {
     'Notifications', 'Platform', 'DEFAULT_NOTIFICATION_PREFERENCES', 'GENERIC_REMINDER_BODY', 'GENERIC_REMINDER_TITLE',
     'MAX_HEALTH_REMINDERS', 'REMINDER_FEATURE', 'createNextTrainingFireTime', 'createLocalFireTime',
     'isNotificationPreferences', 'isReminderMinutes', 'isUuid', 'parseReminderPayload', 'planReminderPayload',
-    'reminderLogicalKey', 'trainingReminderPayload', 'readNotificationPreferences', 'writeNotificationPreferences',
+    'reminderLogicalKey', 'trainingReminderPayload', 'otherReminderPayload', 'nextPhaseFireTime', 'readNotificationPreferences', 'writeNotificationPreferences',
   ];
   const values = [{ SchedulableTriggerInputTypes: { DATE: 'date', CALENDAR: 'calendar' }, AndroidImportance: { DEFAULT: 3 }, IosAuthorizationStatus: {
     AUTHORIZED: 2, PROVISIONAL: 3, EPHEMERAL: 4,
   }, setNotificationHandler() {} }, { OS: platformOS }, model.DEFAULT_NOTIFICATION_PREFERENCES, model.GENERIC_REMINDER_BODY,
   model.GENERIC_REMINDER_TITLE, model.MAX_HEALTH_REMINDERS, model.REMINDER_FEATURE, model.createNextTrainingFireTime,
   model.createLocalFireTime, model.isNotificationPreferences, model.isReminderMinutes, model.isUuid, model.parseReminderPayload,
-  model.planReminderPayload, model.reminderLogicalKey, model.trainingReminderPayload, async () => ({ ...model.DEFAULT_NOTIFICATION_PREFERENCES }), async () => {}];
+  model.planReminderPayload, model.reminderLogicalKey, model.trainingReminderPayload, model.otherReminderPayload, model.nextPhaseFireTime, async () => ({ ...model.DEFAULT_NOTIFICATION_PREFERENCES }), async () => {}];
   const load = new Function(...names, `${code}\nreturn { ReminderService };`);
   return load(...values);
 }
