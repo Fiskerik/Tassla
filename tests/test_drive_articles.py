@@ -1,3 +1,4 @@
+import tomllib
 import importlib.util
 import hashlib
 import io
@@ -86,12 +87,27 @@ class DriveArticles(unittest.TestCase):
 
     def test_endpoint_is_pinned_to_protected_project(self):
         project = 'abcdefghijklmnopqrst'
-        sync.validate_endpoint('https://' + project + '.supabase.co/functions/v1/sync-drive-article', project)
-        for endpoint in ('https://otherotherotherother.supabase.co/functions/v1/sync-drive-article',
-                         'https://evil.example/functions/v1/sync-drive-article',
-                         'http://' + project + '.supabase.co/functions/v1/sync-drive-article'):
+        sync.validate_endpoint('https://' + project + '.supabase.co/functions/v1/bright-task', project)
+        for endpoint in ('https://otherotherotherother.supabase.co/functions/v1/bright-task',
+                         'https://evil.example/functions/v1/bright-task',
+                         'http://' + project + '.supabase.co/functions/v1/bright-task',
+                         'https://' + project + '.supabase.co/functions/v1/sync-drive-article',
+                         'https://' + project + '.supabase.co/functions/v1/bright-task?query=1',
+                         'https://' + project + '.supabase.co/functions/v1/bright-task#fragment',
+                         'https://user@' + project + '.supabase.co/functions/v1/bright-task',
+                         'https://' + project + '.supabase.co:443/functions/v1/bright-task',
+                         'https://' + project + '.supabase.co/functions/v1/bright-task/'):
             with self.assertRaises(ValueError):
                 sync.validate_endpoint(endpoint, project)
+
+    def test_deployed_function_names_resolve_to_distinct_source_entries(self):
+        config = tomllib.loads((ROOT / 'supabase/config.toml').read_text())['functions']
+        self.assertEqual(set(config), {'swift-api', 'bright-task'})
+        for name, folder, verify_jwt in [('swift-api', 'delete-account', True), ('bright-task', 'sync-drive-article', False)]:
+            self.assertEqual(config[name]['verify_jwt'], verify_jwt)
+            self.assertEqual(config[name]['entrypoint'], './functions/' + folder + '/index.ts')
+            self.assertTrue((ROOT / 'supabase' / config[name]['entrypoint']).is_file())
+            self.assertTrue((ROOT / 'supabase/functions' / folder / 'handler.ts').is_file())
 
     def test_initial_migration_exactly_matches_three_reviewed_payloads(self):
         values = json.loads(sync.BUNDLE.read_text())

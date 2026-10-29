@@ -13899,6 +13899,79 @@
         }
       ],
       "next_step": "Oberoende Frozen Reviewer PASS på slutdiff/fullcheck101/101/bild/guards, ingen scope creep. Nästa commit och URL-slugkoppling."
+    },
+    {
+      "id": "EDGE-FUNCTION-SLUGS-01",
+      "title": "Koppla befintlig kontoradering/synk till URL-sluggar swift-api och bright-task",
+      "mvp_requirement": "Eriks korrigerade driftsättningsbesked2026-10-29",
+      "plan": "docs/tasks/dev/EDGE-FUNCTION-SLUGS-01.md v1",
+      "write_paths": [
+        "src/features/account/account-delete.ts",
+        "tools/sync_drive_articles.py",
+        "supabase/config.toml",
+        "tests/account-delete.test.mjs",
+        "tests/test_drive_articles.py",
+        "supabase/functions/delete-account/README.md",
+        "supabase/functions/README.md",
+        "src/features/account/README.md",
+        "docs/content/artiklar/README.md",
+        "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+        "docs/tasks/dev/EDGE-FUNCTION-SLUGS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Exakta invoke-/runner-/configsluggar med bevarad auth, kvittens, projektpinning och pendingguard.",
+        "Real SDK syntetiskt anrop, PythonURLnegativtest och TOMLentrypointresolver, fullcheck och oberoende QA/Reviewer/Security.",
+        "Endast lokal checkpoint; ACCOUNT-DELETE-STATUS-01 förblir blocked tills verklig verifiering."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/account-delete.test.mjs tests/article-delivery.test.mjs",
+        "python -m unittest discover -s tests -p test_drive_articles.py",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-SOURCE-PUBLISHER-01"
+      ],
+      "risk": "H: befintligt auth/raderingsanrops routing, inga nya ändamål eller guards",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE planv1 och Security initialPASS; exakt mapping till befintliga entrypoints, guards/ändamål oförändrade. Endast lokal implementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Ändra en invoke-slug, exakt runner-URL och configentrypoints; bevara alla handler-/pending-/JWTskydd."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktad SDK/handler2filer och Python8tester PASS; fullcheck101/101, public iOS-export/diff/pathaudit PASS. Security finalPASS utan fynd."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA egen pnpmcheck/diffPASS101/101, lokalacceptans/mapping/guards/scopePASS. Live/gateway/Deno/nativeNOTTESTABLE, gammal runtimepostblocked. Security finalPASS sparad."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
     }
   ]
 }

@@ -78,7 +78,7 @@ export async function requestAccountDeletion(
   }
 
   try {
-    const { data, error } = await client.functions.invoke<unknown>('delete-account', {
+    const { data, error } = await client.functions.invoke<unknown>('swift-api', {
       headers: { Authorization: 'Bearer ' + captured.accessToken },
     });
     if (!isCurrent()) return { status: 'unknown' };

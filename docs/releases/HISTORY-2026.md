@@ -718,3 +718,11 @@ Bas601f17d, planv2, branchfix/mvp-build-feedback. Eriks sju iPhone-punkter imple
 ## 2026-10-29 — UI-SOURCE-PUBLISHER-01, senaste etikettbeslut
 
 Bas81cbfc1; planv1 L. Erik ändrade till endast utgivarnamn i källraden. Delade ContentSources visar Avsab/RSPCA/Dogs Trust/Blue Cross för exakta kända värdar och ärlig värdfallback annars; full granskad sidtitel kvarstår i hjälpmedelsnamn. URL,44pt-mål, swipeguard, länkfel och ingen öppnad-status bevaras. UI Critic PROCEED/REVIEW och oberoende Reviewer PASS; riktat13/13, RNWeb source-only, fullcheck101/101 och diff/pathauditPASS. Evidens: docs/design/evidence/ui-source-publisher-01. Ingen native/liveverifiering. Nästa commit och separat endpointkoppling.
+
+## 2026-10-29 — EDGE-FUNCTION-SLUGS-01, lokal URL-koppling
+
+Bas52961e5, plan v1 risk H, branch fix/mvp-build-feedback. Eriks slutliga besked skiljer visningsnamn från faktiska URL-slugs: appen anropar swift-api och synkverktyget accepterar endast bright-task på det separat pinnade projektet. Config mappar slugs till befintliga index.ts-filer i originalmapparna. Handlers, JWT/tokenkontroll, fångad Bearer/bodyless POST, kvittens- och unknown-/retry-skydd är oförändrade. Tidigare okänd kontoradering är fortsatt blocked. Ingen backend-, miljövariabel-, sync- eller raderingsåtgärd utfördes.
+
+Architect APPROVE, Security initial/final PASS, oberoende QA egen fullcheck PASS och Frozen Reviewer PASS utan fynd. Riktad Node2/2 filer, Python8/8 (inklusive verklig TOMLparsning/entrypointfiler och URL-negativfall), pnpm check101/101, public iOS-export samt diff/path-/köaudit PASS. Officiellt stöd för relativa entrypoints/CLI>=1.215 länkas i tasken. Gateway JWT, deployad kodparitet, livekonto/synk och native förblir NOT TESTABLE. GitHub-miljöns ARTICLE_SYNC_URL behöver sluta på /bright-task; befintligt projektref-lås kvarstår.
+
+Samlad lokalt committad bas före denna slice: 601f17d public-workflow, 81cbfc1 UI-feedback, 52961e5 korta utgivarlänkar. Nästa: commit/push av denna lokala routingfix och gör ändringarna reviewbara för Main; runtimeposten stängs först med verkligt bevis.
