@@ -155,7 +155,7 @@ Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sa
 
 ### Ägarjustering 2026-10-29: träningsläsning och källor
 
-Nya träningsinstruktioner ska ha ett kort neutralt mål och en numrerad Steg för steg-lista. Målet beskriver övningens avsikt, inte uppnådd färdighet. Befintligt innehåll får struktureras om endast med bevarade ord, villkor och säkerhetsråd; ändrade/okända versioner ska inte få ett mål från äldre text. Hänvisningar till andra programsteg ska vara entydiga även när instruktionen får egen numrering. Källor visar kompakta, läsbara sidtitlar/utgivare i stället för enbart siffror. Öppnad-status visas inte rutinmässigt; verkliga länkfel ska kunna förstås. Dessa uttryckliga ägarbeslut ersätter äldre önskemål om enbart numeriska källmarkörer.
+Nya träningsinstruktioner ska ha ett kort neutralt mål och en numrerad Steg för steg-lista. Målet beskriver övningens avsikt, inte uppnådd färdighet. Befintligt innehåll får struktureras om endast med bevarade ord, villkor och säkerhetsråd; ändrade/okända versioner ska inte få ett mål från äldre text. Hänvisningar till andra programsteg ska vara entydiga även när instruktionen får egen numrering. Senaste ägarjusteringen samma dag: källor visar endast kort utgivarnamn (Avsab, RSPCA, Dogs Trust), med full granskad sidtitel kvar i hjälpmedelsnamnet och värdnamn för säker okänd källa. Öppnad-status visas inte rutinmässigt; verkliga länkfel ska kunna förstås. Dessa uttryckliga ägarbeslut ersätter äldre önskemål om enbart numeriska källmarkörer.
 
 ## 10. Tillstånd och tillgänglighet
 

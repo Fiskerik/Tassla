@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { HorizontalGestureRegion } from '../../components/ui/MainSwipeNavigation';
 import { tokens } from '../../theme/tokens';
-import { getContentSourceMetadata, getSafeContentSourceUrl } from './source-links';
+import { getContentSourceLabel, getContentSourceMetadata, getSafeContentSourceUrl } from './source-links';
 
 export function ContentSources({ sources, onOpenSource, testID = 'content-sources' }: {
   sources: readonly string[];
@@ -15,13 +15,14 @@ export function ContentSources({ sources, onOpenSource, testID = 'content-source
       {sources.map((source, index) => {
         const url = getSafeContentSourceUrl(source);
         if (!url) return <Text key={`${index}:${source}`} style={styles.fallback}>{source}</Text>;
+        const label = getContentSourceLabel(source);
         const metadata = getContentSourceMetadata(source);
         const title = metadata ? `${metadata.title} · ${metadata.publisher}` : new URL(url).hostname;
         return <Pressable key={`${index}:${source}`} accessibilityRole="link"
           accessibilityLabel={`Öppna källa: ${title}`} accessibilityHint="Öppnar källan i webbläsaren."
           onPress={() => onOpenSource(url)} style={({ pressed }) => [styles.link, pressed && styles.pressed]}>
           <Ionicons name="open-outline" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title}>{label}</Text>
         </Pressable>;
       })}
     </ScrollView>

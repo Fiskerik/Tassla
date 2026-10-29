@@ -1,0 +1,8 @@
+{
+  "results": [
+    "Account unknown state stays disabled; no deletion request made",
+    "Short publisher links open exact URL; no success noise; failure visible and cleared after success"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RN Web, not native or live backend"
+}

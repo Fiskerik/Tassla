@@ -13831,6 +13831,74 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS utan fynd på slutdiff; oberoende QA PASS och faktiska lokala kontroller sparade i task/MASTER-LOG. Nästa: commitcheckpoint och separat URL-slugkoppling; native/live och helpaneler ej verifierade."
+    },
+    {
+      "id": "UI-SOURCE-PUBLISHER-01",
+      "title": "Källänkar visar bara utgivaren enligt senaste ägarinstruktion",
+      "mvp_requirement": "Eriks direkta etikettbeslut2026-10-29",
+      "plan": "docs/tasks/dev/UI-SOURCE-PUBLISHER-01.md v1",
+      "write_paths": [
+        "src/features/knowledge/ContentSources.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/README.md",
+        "src/features/training/README.md",
+        "tests/content-delivery.test.mjs",
+        "docs/design-rules.md",
+        "tools/visual-check/verify-mvp-build-feedback.py",
+        "docs/design/evidence/ui-source-publisher-01",
+        "docs/tasks/dev/UI-SOURCE-PUBLISHER-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Korta utgivarnamn, full tillgänglig titel, exakt tryggt länkmål och befintliga guards.",
+        "375px källbild, riktade kontroller, fullcheck, UI Critic och oberoende Reviewer."
+      ],
+      "checks": [
+        "CI=1 pnpm check",
+        "python tools/visual-check/verify-mvp-build-feedback.py",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UI-MVP-BUILD-FEEDBACK-01"
+      ],
+      "risk": "L: enbart källänkens synliga etikett",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UI Critic PROCEED planv1 efter BRIEF; underliggande delad arkitektur återanvänds från UI-feedbackv2 APPROVE, ingen strukturell ändring."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementera exakt beställd kort utgivaretikett; bibehåll tillgänglig fulltitel och skydd."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktad lokal QA13/13 och source-only RNWebPASS, fullcheck101/101. L kräver oberoende Reviewer, ingen separat QAagent."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Riktad QA och visuellt UI Critic REVIEW utan blockerare sparade; oberoende slutreview mottagen."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Frozen Reviewer PASS på slutdiff/fullcheck101/101/bild/guards, ingen scope creep. Nästa commit och URL-slugkoppling."
+        }
+      ],
+      "next_step": "Oberoende Frozen Reviewer PASS på slutdiff/fullcheck101/101/bild/guards, ingen scope creep. Nästa commit och URL-slugkoppling."
     }
   ]
 }

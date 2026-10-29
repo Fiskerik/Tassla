@@ -6,7 +6,7 @@ from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 
 base = os.environ.get('TASSLA_UI_BASE_URL', 'http://127.0.0.1:5429').rstrip('/')
-out = Path('docs/design/evidence/ui-mvp-build-feedback-01/final')
+out = Path(os.environ.get('TASSLA_UI_EVIDENCE', 'docs/design/evidence/ui-mvp-build-feedback-01/final'))
 out.mkdir(parents=True, exist_ok=True)
 results, errors = [], []
 
@@ -35,7 +35,8 @@ with sync_playwright() as p:
         assert page.evaluate("document.getElementById('root').scrollWidth <= innerWidth + 1"), name
         page.screenshot(path=str(out / f'{name}.png'))
 
-    for width, height, large in [(375, 844, False), (430, 844, False), (375, 667, False), (375, 844, True)]:
+    cases = [] if os.environ.get('TASSLA_UI_SOURCE_ONLY') == 'true' else [(375, 844, False), (430, 844, False), (375, 667, False), (375, 844, True)]
+    for width, height, large in cases:
         suffix = f'{width}x{height}' + ('-text140' if large else '')
         page = open_page('app/?screen=training&trainingScenario=feedback&progression=active', width, height)
         page.get_by_role('tab', name='Alla övningar').click()
@@ -108,7 +109,9 @@ with sync_playwright() as p:
     sources = page.get_by_test_id('article-references')
     sources.scroll_into_view_if_needed()
     link = sources.get_by_role('link').first
-    assert len(link.inner_text()) > 8 and link.bounding_box()['height'] >= 44
+    expect(link.get_by_text('Avsab', exact=True)).to_be_visible()
+    assert 'Position Statement' in link.get_attribute('aria-label')
+    assert link.bounding_box()['height'] >= 44 and link.bounding_box()['width'] >= 44
     page.evaluate('window.__sourceUrls=[];window.open=(url)=>{if(url)window.__sourceUrls.push(url);return null;}')
     link.click()
     expect(page.get_by_text('Källan öppnades.', exact=True)).to_have_count(0)
@@ -127,7 +130,7 @@ with sync_playwright() as p:
     expect(sources.get_by_role('link', name='docs/source.md', exact=False)).to_have_count(0)
     expect(page.get_by_role('tab', name='Kunskap', exact=True)).to_have_attribute('aria-selected', 'true')
     page.close()
-    results.append('Titled source links open exact URL; no success noise; failure visible and cleared after success')
+    results.append('Short publisher links open exact URL; no success noise; failure visible and cleared after success')
     browser.close()
 
 assert not errors, errors

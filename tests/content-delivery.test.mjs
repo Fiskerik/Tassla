@@ -112,6 +112,16 @@ test('source link helper allows only normalized public HTTPS URLs', () => {
   ]) assert.equal(sourceLinks.getSafeContentSourceUrl(value), null, `${value} must remain plain text`);
 });
 
+test('source labels identify exact publishers without disguising unknown or unsafe hosts', () => {
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org/resources/position-statements/'), 'Avsab');
+  assert.equal(sourceLinks.getContentSourceLabel('https://www.rspca.org.uk/any-page'), 'RSPCA');
+  assert.equal(sourceLinks.getContentSourceLabel('https://www.dogstrust.org.uk/advice'), 'Dogs Trust');
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org.evil.example/'), 'avsab.org.evil.example');
+  assert.equal(sourceLinks.getContentSourceLabel('https://example.org/guide'), 'example.org');
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org@evil.example/'), null);
+  assert.equal(sourceLinks.getContentSourceLabel('repo://src/app.ts'), null);
+});
+
 test('actual Knowledge source handler opens only user-requested HTTPS and reports rejected opens', async () => {
   const body = extractFunction(knowledgeSource, 'openSource');
   const compiled = ts.transpileModule(body, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } });
