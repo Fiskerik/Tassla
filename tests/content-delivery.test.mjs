@@ -127,10 +127,9 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
   await openSource('https://example.org/guide');
   await openSource('https://example.org/unavailable');
   assert.deepEqual(calls, ['https://example.org/guide', 'https://example.org/unavailable']);
-  assert.deepEqual(messages, ['Källan öppnades.', 'Källan kunde inte öppnas just nu. Du kan försöka igen.']);
-  assert.match(knowledgeSource, /const safeUrl = getSafeContentSourceUrl\(source\)/);
-  assert.match(knowledgeSource, /<Pressable key=\{`\$\{selectedItem\.id\}:\$\{index\}`\} accessibilityRole="link"[\s\S]*?onPress=\{\(\) => \{ void openSource\(source\); \}\}/);
-  assert.match(knowledgeSource, /<Text style=\{styles\.sourceReferenceText\}>\{index \+ 1\}\)<\/Text>/);
+  assert.deepEqual(messages, ['', 'Källan kunde inte öppnas just nu. Du kan försöka igen.']);
+  assert.match(knowledgeSource, /<ContentSources sources=\{selectedItem\.sources\}/);
+  assert.doesNotMatch(knowledgeSource, /Källan öppnades/);
 });
 
 test('actual screen states separate loading, error with retry, and ready-empty', () => {

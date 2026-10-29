@@ -40,7 +40,7 @@ export function BottomSheet({ visible, title, children, onRequestClose, onPrimar
             </View>
           </View>
           {scrollContent
-            ? <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={[styles.scroll, keyboardAware && styles.keyboardAwareScroll]} contentContainerStyle={styles.content}>{children}</ScrollView>
+            ? <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={[styles.scroll, keyboardAware && styles.keyboardAwareScroll]} contentContainerStyle={styles.content}>{children}</ScrollView>
             : <View style={styles.childScrollBody}>{children}</View>}
           {footer ? <View style={styles.footer}>{footer}</View> : null}
           {onPrimaryAction ? <Button label={primaryLabel} accessibilityLabel={primaryLabel} onPress={onPrimaryAction} /> : null}

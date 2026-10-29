@@ -45,7 +45,8 @@ test('TimePicker is centered with reduced-motion-aware fade and bounded scrollab
   assert.match(appPrimitives, /animationType=\{reducedMotion \? 'none' : 'fade'\}/);
   assert.match(appPrimitives, /timeModalFrame: \{[^}]*alignItems: 'center', justifyContent: 'center'/);
   assert.match(appPrimitives, /timeModalCard: \{[^}]*maxWidth: 560[^}]*maxHeight: '100%'/);
-  assert.match(appPrimitives, /<ScrollView testID="time-picker-options" style=\{styles\.timeModalList\}/);
+  assert.match(appPrimitives, /<ScrollView[^>]*testID="time-picker-options"[^>]*style=\{styles\.timeModalList\}/);
+  assert.match(appPrimitives, /<ScrollView[^>]*showsVerticalScrollIndicator=\{false\}[^>]*testID="time-picker-options"/);
   assert.match(appPrimitives, /onRequestClose=\{\(\) => setVisible\(false\)\}/);
   assert.match(appPrimitives, /ModalSwipeHandle panHandlers=\{swipe\.panHandlers\}/);
 });

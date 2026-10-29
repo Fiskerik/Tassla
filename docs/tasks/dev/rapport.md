@@ -1426,3 +1426,9 @@ Disposable PostgreSQL 16 syntetisk migration/import/retry/drift refusal/separat 
 ### KNOWLEDGE-FAQ-CATALOG-01 — post-completion releaselogg, 2026-10-28
 
 FAQ v5 är pushad som f75279f6b71fa2a224297a9ffc05150244d84c8c till origin/knowledge/d3-catalog-delivery. Historikposten finns nu i docs/releases/HISTORY-2026.md. Critic PROCEED och Frozen Reviewer supplemental PASS för dokumentationsenbart v6 closeout; 35/37 paths inom scope. v5:s produktacceptans oförändrad. Inga live DB- eller publiceringsåtgärder.
+
+## 2026-10-29 — UI-MVP-BUILD-FEEDBACK-01, lokal checkpoint
+
+Bas601f17d, planv2, branchfix/mvp-build-feedback. Eriks sju iPhone-punkter implementerade: mål och bevarad numrerad träningsinstruktion, hela ansiktet i låg banner, scroll utan indikator, soptunna på höger rubrikrad, separat åldersbåge, kompakta titellänkar utan successbrus och liten gemen faslänk. Inga spar-/raderingsguards eller backend ändrades. Architect APPROVEv2, innehållsråd PASS (AI, ej veterinär), UI Critic REVIEW utan avgränsade blockerare, oberoende QA PASS och Frozen Reviewer PASS utan fynd.
+
+`pnpm check`101/101, public iOS-export, syntetisk RN Web375/430/667/CSS140, diff/path-/köaudit PASS. Evidens och §14-checklista: docs/design/evidence/ui-mvp-build-feedback-01/VERIFICATION.md. Native/livebackend/signerad release och hela rev02-paneler förblir NOT TESTABLE. Nästa steg är commit, sedan separat endpointkoppling till faktiska URL-sluggar swift-api och bright-task; konto-unknown förblir skyddad.

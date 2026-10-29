@@ -13733,6 +13733,104 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS: exakt tre YAML-värden, oförändrad pipeline/distribution; samtliga åtta paths inom plan; PyYAML/guard/fullcheck och diffcheck PASS. Ingen hosted build eller kontoradering verifierad."
+    },
+    {
+      "id": "UI-MVP-BUILD-FEEDBACK-01",
+      "title": "Rätta Main-byggets läsning, källänkar, åldersbåge och kontrollplacering",
+      "mvp_requirement": "Eriks sju iPhone-punkter 2026-10-29",
+      "plan": "docs/tasks/dev/UI-MVP-BUILD-FEEDBACK-01.md v2",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/theme/tokens.ts",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/README.md",
+        "src/features/knowledge/ContentSources.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-step-presentation.ts",
+        "src/features/training/README.md",
+        "src/features/home/README.md",
+        "tests/training-step-presentation.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/knowledge-faq-content.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tests/development-screen-model.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-mvp-build-feedback.py",
+        "docs/design/evidence/ui-mvp-build-feedback-01",
+        "docs/design-rules.md",
+        "docs/tasks/dev/UI-MVP-BUILD-FEEDBACK-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/ui-modal-centering.test.mjs"
+      ],
+      "acceptance": [
+        "Mål/steglista utan textförlust eller ändrad progression; okänt innehåll behåller original.",
+        "Sidtitlar ersätter enbart sifferkällor utan successbrus; länkar och fel fungerar.",
+        "Synlig separat åldersbåge, kompakt faslänk och högerställd soptunna.",
+        "Modaler scrollar utan indikator; träningsbilder visar hela ansiktet.",
+        "Riktad RN Web i standard/kort/stor text, innehållstester, full check, UI Critic, QA och Reviewer."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/training-step-presentation.test.mjs",
+        "python tools/visual-check/verify-mvp-build-feedback.py",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "BUILD-PUBLIC-TESTFLIGHT-01"
+      ],
+      "risk": "M: läs-/innehållspresentation och delad modal/källvy; ingen server eller sparsemantik ändras.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1, UI Critic BRIEF från öppnade panel2/panel6-bilder sparad; exakt-text-källskydd, befintliga API och safe URL/scrollguard bevaras."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementera ägarens sex UI-punkter på branch med färdig config-checkpoint601f17d. Kontoraderingsendpoint/drift följs separat."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Planv2 APPROVE; pnpmcheck101/101 och public iOS-export PASS. RN Web verify-mvp-build-feedback.py PASS375/430/667/140; stabila bilder/results.json i taskens evidens. Innehållsråd PASS, inga runtime/native/backendpåståenden."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS: egen pnpmcheck101/101, öppnade kompositer/screens och separat visuell/beteendegranskning inom scope. Native/live/fullpanels NOT TESTABLE; slutreview återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd på slutdiff; oberoende QA PASS och faktiska lokala kontroller sparade i task/MASTER-LOG. Nästa: commitcheckpoint och separat URL-slugkoppling; native/live och helpaneler ej verifierade."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd på slutdiff; oberoende QA PASS och faktiska lokala kontroller sparade i task/MASTER-LOG. Nästa: commitcheckpoint och separat URL-slugkoppling; native/live och helpaneler ej verifierade."
     }
   ]
 }

@@ -153,6 +153,10 @@ Samma publicerade artikel-, guide- och träningscopy visas oavsett vald hund. Sk
 
 Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sanningsenlig osäker sparstatus får aldrig döljas för att passa målbilden.
 
+### Ägarjustering 2026-10-29: träningsläsning och källor
+
+Nya träningsinstruktioner ska ha ett kort neutralt mål och en numrerad Steg för steg-lista. Målet beskriver övningens avsikt, inte uppnådd färdighet. Befintligt innehåll får struktureras om endast med bevarade ord, villkor och säkerhetsråd; ändrade/okända versioner ska inte få ett mål från äldre text. Hänvisningar till andra programsteg ska vara entydiga även när instruktionen får egen numrering. Källor visar kompakta, läsbara sidtitlar/utgivare i stället för enbart siffror. Öppnad-status visas inte rutinmässigt; verkliga länkfel ska kunna förstås. Dessa uttryckliga ägarbeslut ersätter äldre önskemål om enbart numeriska källmarkörer.
+
 ## 10. Tillstånd och tillgänglighet
 
 Varje del har ready/loading/empty/error och relevanta partial/pending/failed/unsure-lägen. Läsfel är inte noll aktiviteter. Konto-/hundbyte tömmer gamla data och ignorerar sena svar. Publicerings- och reviewgränser gäller vid både läsning och skrivning.

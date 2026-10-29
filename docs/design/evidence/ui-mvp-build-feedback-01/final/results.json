@@ -1,0 +1,12 @@
+{
+  "results": [
+    "375x844: goal/numbered original instructions, save, explicit milestone, next, clarification reachable",
+    "430x844: goal/numbered original instructions, save, explicit milestone, next, clarification reachable",
+    "375x667: goal/numbered original instructions, save, explicit milestone, next, clarification reachable",
+    "375x844-text140: goal/numbered original instructions, save, explicit milestone, next, clarification reachable",
+    "Account unknown state stays disabled; no deletion request made",
+    "Titled source links open exact URL; no success noise; failure visible and cleared after success"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RN Web, not native or live backend"
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { MessageCard, PrimaryButton } from '../../components/AppPrimitives';
 import { SectionHeader, Skeleton, Tabs } from '../../components/ui';
@@ -10,7 +10,7 @@ import type { ChecklistContext } from './checklist-model';
 import { isChecklistContext } from './checklist-model';
 import faqBundle from '../../../docs/content/knowledge-faq-v1.json';
 import { REVIEW_FAQ } from './review-content';
-import { getContentSourceMetadata } from './source-links';
+import { ContentSources } from './ContentSources';
 
 const contextTitles: Record<ChecklistContext, string> = {
   before_homecoming: 'Hemkomst', first_days: 'Första dagarna', by_age: 'Efter ålder',
@@ -70,8 +70,7 @@ export function FAQScreen({
       : null}
     {((!reviewEnabled && state === 'ready') || reviewEnabled) ? questions.map((item) => {
       const isOpen = opened === item.id;
-      const sources = item.sources.map((source, index) => ({ source, index, metadata: getContentSourceMetadata(source) }))
-        .filter((entry) => entry.metadata !== null);
+      const sources = item.sources;
       return <View key={item.id} style={[styles.card, isOpen && styles.openCard]}>
         <MotionPressable
           accessibilityRole="button"
@@ -88,16 +87,7 @@ export function FAQScreen({
         </MotionPressable>
         {isOpen ? <View style={styles.answerArea}>
           <Text style={styles.answer}>{item.answer}</Text>
-          {sources.length > 0 ? <View style={styles.references}>
-            {sources.map(({ source, index, metadata }) => <Pressable
-              key={`${item.id}:source:${index}`}
-              accessibilityRole="link"
-              accessibilityLabel={`${index + 1}) ${metadata?.publisher}: ${metadata?.title}`}
-              accessibilityHint="Öppnar källan i webbläsaren."
-              style={styles.reference}
-              onPress={() => onOpenSource(source)}
-            ><Text style={styles.referenceText}>{index + 1})</Text></Pressable>)}
-          </View> : null}
+          <ContentSources sources={sources} onOpenSource={onOpenSource} />
         </View> : null}
       </View>;
     }) : null}
@@ -118,9 +108,6 @@ const styles = StyleSheet.create({
   question: { ...tokens.typography.label, color: tokens.colors.textPrimary, flex: 1 },
   answerArea: { paddingHorizontal: tokens.layout.cardPadding, paddingTop: 0, paddingBottom: tokens.spacing.xs },
   answer: { ...tokens.typography.body, color: tokens.colors.textPrimary },
-  references: { marginTop: tokens.spacing.xs, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 0 },
-  reference: { width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  referenceText: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   sourceMessage: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
   meta: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
 });

@@ -72,9 +72,11 @@ test('FAQ presentation keeps the open card lilac and source links compact, legib
   assert.match(screen, /before_homecoming: 'Hemkomst', first_days: 'Första dagarna', by_age: 'Efter ålder'/);
   assert.match(screen, /accessibilityLabel="Sammanhang för vanliga frågor" variant="rev02-segmented" scrollable/);
   assert.match(screen, /backgroundColor: tokens\.colors\.destination\.knowledge\.surface/);
-  assert.match(screen, /accessibilityRole="link"/);
-  assert.match(screen, /accessibilityLabel=\{`\$\{index \+ 1\}\) \$\{metadata\?\.publisher\}: \$\{metadata\?\.title\}`\}/);
-  assert.match(screen, /width: tokens\.size\.touchMin, height: tokens\.size\.touchMin/);
-  assert.match(screen, /gap: 0/);
+  const links = await readFile(new URL('../src/features/knowledge/ContentSources.tsx', import.meta.url), 'utf8');
+  assert.match(screen, /<ContentSources sources=\{sources\}/);
+  assert.match(links, /accessibilityRole="link"/);
+  assert.match(links, /metadata\.title/);
+  assert.match(links, /metadata\.publisher/);
+  assert.match(links, /minHeight: tokens\.size\.touchMin/);
   assert.match(sources, /https:\/\/www\.dogstrust\.org\.uk\/dog-advice\/getting-dog\/dog-ready\/when-you-have-children': 'Getting a dog when you have children'/);
 });

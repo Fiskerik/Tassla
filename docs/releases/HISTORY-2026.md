@@ -708,3 +708,9 @@ Administrativt closeout v6: Critic PROCEED för denna historikrad som post-compl
 ## BUILD-PUBLIC-TESTFLIGHT-01 — public TestFlight, 2026-10-29
 
 Lokalt implementerat och verifierat på `fix/mvp-build-feedback`, bas `be2efa60ad6cdbbd6bf209194425b2fd03d1679e`; Frozen Reviewer PASS utan fynd. Ordinarie TestFlight-workflow använder public/false och tydligt public-namn. Signering, buildnummer och distributionsval är oförändrade. Riktig content guard och full check PASS (100/100 testfiler). Ingen signerad build eller faktisk distribution verifierad. Kontoraderingsproblemet är fortsatt separat öppet.
+
+## 2026-10-29 — UI-MVP-BUILD-FEEDBACK-01, lokal checkpoint
+
+Bas601f17d, planv2, branchfix/mvp-build-feedback. Eriks sju iPhone-punkter implementerade: mål och bevarad numrerad träningsinstruktion, hela ansiktet i låg banner, scroll utan indikator, soptunna på höger rubrikrad, separat åldersbåge, kompakta titellänkar utan successbrus och liten gemen faslänk. Inga spar-/raderingsguards eller backend ändrades. Architect APPROVEv2, innehållsråd PASS (AI, ej veterinär), UI Critic REVIEW utan avgränsade blockerare, oberoende QA PASS och Frozen Reviewer PASS utan fynd.
+
+`pnpm check`101/101, public iOS-export, syntetisk RN Web375/430/667/CSS140, diff/path-/köaudit PASS. Evidens och §14-checklista: docs/design/evidence/ui-mvp-build-feedback-01/VERIFICATION.md. Native/livebackend/signerad release och hela rev02-paneler förblir NOT TESTABLE. Nästa steg är commit, sedan separat endpointkoppling till faktiska URL-sluggar swift-api och bright-task; konto-unknown förblir skyddad.

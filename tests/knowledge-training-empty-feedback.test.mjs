@@ -64,11 +64,9 @@ test('Knowledge and Training hide old content while the active dog or account sc
   assert.match(knowledge, /if \(guideViewState\.scopeKey !== searchScopeKey\) \{\s*setGuideViewState\(\{ scopeKey: searchScopeKey, value: '', showAll: false \}\);/);
 });
 
-test('article sources are compact numbered links without a heading or repeated URL copy', async () => {
+test('article sources use compact titled shared links without a heading or success noise', () => {
   assert.match(knowledge, /testID="article-references"/);
-  assert.match(knowledge, /\{index \+ 1\}\)/);
-  assert.match(knowledge, /accessibilityRole="link"/);
-  assert.match(knowledge, /Öppna källa \$\{index \+ 1\}: \$\{new URL\(safeUrl\)\.hostname\}/);
+  assert.match(knowledge, /<ContentSources sources=\{selectedItem.sources\}/);
   assert.doesNotMatch(knowledge, /style=\{styles\.sourcesHeading\}/);
-  assert.doesNotMatch(knowledge, /Öppna extern källa/);
+  assert.doesNotMatch(knowledge, /Öppna extern källa|Källan öppnades/);
 });
