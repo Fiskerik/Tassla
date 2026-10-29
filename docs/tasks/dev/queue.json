@@ -13679,7 +13679,7 @@
           "evidence": "Frozen Reviewer PASS: declared v4 diff stays in task/queue paths; APIs and panel-7 hierarchy match implementation; screenshots cover recommendation/search semantics, card crops, short viewport, FAQ/checklist returns. Residual limits: synthetic RN Web only; native accessibility, physical iPhone, and live Supabase untested."
         }
       ],
-      "next_step": "Stängt efter QA PASS och Frozen Reviewer PASS. Ändringen är lokal på knowledge/panel7-visual-alignment; ingen commit eller push har gjorts."
+      "next_step": "Stängt efter QA PASS och Frozen Reviewer PASS. Commit 2486b0b8a8322526c8d075b0a15f10df8fc2e0dd pushad till origin/knowledge/panel7-visual-alignment; ej mergad och ingen TestFlight-build verifierad."
     }
   ]
 }

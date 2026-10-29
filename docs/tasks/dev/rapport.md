@@ -1,12 +1,12 @@
 # FOUNDATION — leveransrapport 2026-10-04
 
-### KNOWLEDGE-PANEL7-VISUAL-01 — Kunskapsöversikt mot panel 7, slutcheckpoint 2026-10-28
+### KNOWLEDGE-PANEL7-VISUAL-01 — Kunskapsöversikt mot panel 7, slutcheckpoint 2026-10-29
 
 Guideöversikten har nu en tydlig tvålägesväxel (`För dig` / `Alla artiklar`), rekommendationsrubrik, neutral ingress ur befintlig artikeltext och mindre 16:9-bildkort. Hela biblioteket och sökning når även innehåll som inte rekommenderas för hunden; rekommendationsrubriken döljs under sökning. FAQ och Checklistor är fortsatt separata destinationer. UI Critic REVIEW **PASS** efter att avståndet minskades till cirka 24 pt mellan växeln och rekommendationsrubriken samt 12 pt mellan rubrik och huvudbild; alla sex visuella dimensioner bedömdes godkända.
 
 Plan v4 lägger till `tests/knowledge-search-screen.test.mjs` i både task- och queue-scope efter att QA hittade den saknad i v3; Critic gav **PROCEED**, Architect **APPROVE**. Oberoende QA **PASS** på v4:s deklarerade scope och Frozen Reviewer **PASS** på slutdiff, API-användning, panelhierarki och sparad evidens. `CI=1 pnpm check` passerar TypeScript, edge TypeScript, ESLint och 100/100 testfiler. Separat verifierare passerar public 4/4 och review 23/23 vid 375/430 px samt 375×667 med 140 %-textproxy; granskar även fullbibliotekssökning, FAQ-öppning och checklistans returväg. Riktade tester är 29/29; Python syntax, `git diff --check` och dev-flow passerar.
 
-Arbetskortet är stängt. Beviset är lokal RN Web och syntetiska fixtureposter; native Dynamic Type/VoiceOver, fysisk iPhone och live Supabase/data är inte verifierade. Ändringarna ligger lokalt på `knowledge/panel7-visual-alignment`; commit/push är inte utförd.
+Arbetskortet är stängt. Beviset är lokal RN Web och syntetiska fixtureposter; native Dynamic Type/VoiceOver, fysisk iPhone och live Supabase/data är inte verifierade. Commit `2486b0b8a8322526c8d075b0a15f10df8fc2e0dd` är pushad till `origin/knowledge/panel7-visual-alignment`; den är inte mergad och ingen TestFlight-build verifierades.
 
 ### KNOWLEDGE-FAQ-CATALOG-01 — public FAQ-katalog v1, slutreview-checkpoint 2026-10-28
 
