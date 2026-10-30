@@ -20,14 +20,9 @@ test('public checklist actions require the complete published catalog while revi
   assert.match(screen, /!reviewEnabled && state === 'ready' && !catalogReady/);
   assert.doesNotMatch(screen, /if \(!reviewEnabled \|\|/);
   assert.match(screen, /checklistCatalogReadCacheScope\(cacheScope, loadedCatalog\.versionIds\)/);
-  assert.match(screen, /sourceLinks\.map/);
-  assert.match(screen, /getContentSourceMetadata\(source\)/);
-  assert.match(screen, /accessibilityLabel=\{`Öppna referens \$\{referenceNumber\}: \$\{metadata\.title\} \(\$\{metadata\.publisher\}\)`\}/);
-  assert.match(screen, /<Text style=\{styles\.referenceNumber\}>\{referenceNumber\}\)<\/Text>/);
+  assert.match(screen, /<ContentSources sources=\{sourceLinks\}/);
+  assert.doesNotMatch(screen, /Källan öppnades/);
   assert.doesNotMatch(screen, /<Text[^>]*>Referenser<\/Text>/);
-  assert.match(screen, /referenceNumber: \{ \.\.\.tokens\.typography\.smallCaption/);
-  assert.match(screen, /minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
-  assert.match(screen, /referenceLink: \{ minWidth: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin, alignItems: 'center', justifyContent: 'center' \}/);
   assert.match(screen, /checklistPhaseVisualFor\(activeTemplate\.phase\)/);
   assert.match(knowledge, /CHECKLIST_DESTINATION_ID/);
   assert.match(knowledge, /FAQ_DESTINATION_ID/);

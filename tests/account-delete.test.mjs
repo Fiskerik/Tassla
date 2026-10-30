@@ -42,7 +42,7 @@ function request(options = {}) {
   const method = options.method ?? 'POST';
   const authorization = Object.hasOwn(options, 'authorization') ? options.authorization : `Bearer ${bearer}`;
   const body = options.body;
-  const url = options.url ?? 'https://local.invalid/functions/v1/delete-account';
+  const url = options.url ?? 'https://local.invalid/functions/v1/swift-api';
   return new Request(url, { method, headers: authorization ? { authorization } : {}, ...(body === undefined ? {} : { body }) });
 }
 
@@ -55,7 +55,7 @@ test('server handler rejects method, query, body and malformed bearer before any
   });
   const cases = [
     [request({ method: 'GET' }), 405],
-    [request({ url: 'https://local.invalid/functions/v1/delete-account?user_id=' + suppliedOtherId }), 400],
+    [request({ url: 'https://local.invalid/functions/v1/swift-api?user_id=' + suppliedOtherId }), 400],
     [request({ body: JSON.stringify({ userId: suppliedOtherId }) }), 400],
     [request({ authorization: null }), 401],
     [request({ authorization: 'Bearer' }), 401],
@@ -226,7 +226,7 @@ test('edge entry pins server SDK, uses server environment only, and returns no a
   assert.match(entry, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.doesNotMatch(entry, /EXPO_PUBLIC|VITE_/);
   assert.match(entry, /admin\.deleteUser\(verifiedUserId, false\)/);
-  assert.match(config, /\[functions\.delete-account\][\s\S]*?verify_jwt\s*=\s*true/);
+  assert.match(config, /\[functions\.swift-api\][\s\S]*?verify_jwt\s*=\s*true/);
   assert.doesNotMatch(entry, /console\.(log|error|warn)/);
 });
 
@@ -276,7 +276,7 @@ test('client invokes real Supabase Functions API bodyless with captured bearer a
     const result = await accountDelete.requestAccountDeletion(client, { ownerId: verifiedId, accessToken: bearer }, () => true);
     assert.deepEqual(result, { status: 'confirmed' });
     assert.equal(seen.length, 1);
-    assert.equal(seen[0].url, 'https://local.invalid/functions/v1/delete-account');
+    assert.equal(seen[0].url, 'https://local.invalid/functions/v1/swift-api');
     assert.equal(seen[0].method, 'POST');
     assert.equal(seen[0].authorization, `Bearer ${bearer}`);
     assert.equal(seen[0].body, undefined);
@@ -348,7 +348,7 @@ test('pending-marker read/write failures stay unavailable; confirmed server resu
 });
 
 test('definite HTTP rejection clears only captured pending marker; transport and server ambiguity retain it', async (t) => {
-  for (const [status, expected] of [[409, 'failed'], [503, 'unknown']]) {
+  for (const [status, expected] of [[409, 'failed'], [404, 'unknown'], [503, 'unknown']]) {
     await t.test(String(status), async () => {
       const store = memorySecureStore();
       const api = await loadClientDeletionModule(store);

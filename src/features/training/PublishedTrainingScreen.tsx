@@ -18,8 +18,10 @@ import { tokens } from '../../theme/tokens';
 import { useReducedMotion } from '../../components/ui/Motion';
 import { allProgramsComplete, completedCount, exerciseCountLabel, pickNextExercise, programStatus, programStatusWord, programsWithProgress, recommendedPrograms, sortPrograms, stepStates } from './training-overview';
 import { buildTrainingTimeline } from './training-timeline-model';
-import { parseTrainingInstruction, trainingInstructionPreview } from './training-instruction';
-import { getSafeContentSourceUrl } from '../knowledge/source-links';
+import { trainingInstructionPreview } from './training-instruction';
+import { ContentSources } from '../knowledge/ContentSources';
+import { KnowledgeImage } from '../knowledge/KnowledgeImage';
+import { presentTrainingInstruction } from './training-step-presentation';
 
 function exerciseProgressLabel(program: PublishedTrainingProgram): string {
   if (program.steps.length === 0) return '';
@@ -85,7 +87,6 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const [reviewCompleted, setReviewCompleted] = useState<Record<string, string[]>>({});
   const [resetTarget, setResetTarget] = useState<{ program: PublishedTrainingProgram; fingerprint: string } | null>(null);
   const [recommendationCopyHeight, setRecommendationCopyHeight] = useState<{ key: string; height: number } | null>(null);
-  const [journeyBannerWidth, setJourneyBannerWidth] = useState(0);
   const [animateCompleteTarget, setAnimateCompleteTarget] = useState<{ key: string; programId: string; stepId: string } | null>(null);
   const animationSequence = useRef(0);
   const resetFlight = useRef<{ programId: string; sawBusy: boolean } | null>(null);
@@ -302,17 +303,9 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     const waitingForRefresh = awaitingProgressionRefresh?.programId === program.id
       && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, program.id);
     return <View style={styles.journeySection} testID={`training-journey-${program.id}`}>
-      <View style={styles.journeyBanner} testID="training-journey-banner" onLayout={(event) => {
-        const width = Math.round(event.nativeEvent.layout.width);
-        if (width > 0 && width !== journeyBannerWidth) setJourneyBannerWidth(width);
-      }}>
-        <Image source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
-          style={journeyBannerWidth > 0 ? [styles.journeyBannerImage, {
-            width: journeyBannerWidth,
-            height: journeyBannerWidth * 0.75,
-            top: styles.journeyBanner.height / 2 - journeyBannerWidth * 0.75 * 0.36,
-          }] : styles.journeyBannerImage}
-          resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+      <View style={styles.journeyBanner} testID="training-journey-banner">
+        <KnowledgeImage source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
+          focus={{ x: 0.5, y: 0.35, zoom: 1, aspectRatio: 4 / 3 }} />
       </View>
 {waitingForRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : progressionState === 'error' ? <View style={styles.emptyCard}>
         <Text style={styles.body}>Träningsresan kunde inte hämtas just nu. Aktivitetsmarkeringarna finns kvar.</Text>
@@ -556,7 +549,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.stepMeta}>{historicalDetail.detail.programTitle} · {formatHistoricalDate(focusStep.dateKey)}</Text>
       <Text accessibilityRole="header" style={styles.sheetHeading}>{historicalDetail.detail.stepTitle}</Text>
       {historicalDetail.detail.isAiGenerated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
-      <TrainingInstruction instruction={historicalDetail.detail.instruction} />
+      <TrainingInstruction title={historicalDetail.detail.stepTitle} instruction={historicalDetail.detail.instruction} />
       <Text style={styles.note}>{focusStep.completed ? 'Markerad som genomförd' : 'Inte markerad för den dagen'} · Endast läsning</Text>
     </View>}
   </View>;
@@ -573,7 +566,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Text style={styles.stepMeta}>{selectedProgram.title}</Text>
       <Text accessibilityRole="header" style={styles.sheetHeading}>{selectedStep.title}</Text>
       {selectedProgram.is_ai_generated ? <Text style={styles.note}>AI-genererat innehåll</Text> : null}
-      <TrainingInstruction instruction={selectedStep.instruction} />
+      <TrainingInstruction title={selectedStep.title} instruction={selectedStep.instruction} />
       <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text>
       {selectedProgram.completedStepIds.includes(selectedStep.id) ? <>
         <Text style={styles.note}>Aktiviteten är markerad. Färdighet bedömer du separat i träningsresan.</Text>
@@ -759,8 +752,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     <BottomSheet visible={Boolean(selectedProgram)} title={waitingForSelectedRefresh ? 'Träning' : selectedStep ? 'Övning' : 'Om programmet'} onRequestClose={() => { if (!busyStepKey && !waitingForSelectedRefresh) setSelection(null); }}>
       {waitingForSelectedRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Hämtar det aktiva steget.</Text></View> : <>
       {selectedStep ? <View style={styles.exerciseBanner} testID="training-exercise-banner">
-        <Image source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
-          style={styles.exerciseBannerImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+        <KnowledgeImage source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
+          focus={{ x: 0.5, y: 0.35, zoom: 1, aspectRatio: 4 / 3 }} />
       </View> : null}
       <Text style={styles.sheetHeading}>{selectedStep?.title ?? selectedProgram?.title}</Text>
       {selectedStep && selectedTimelineEntry ? <View style={styles.exerciseProgress}>
@@ -772,17 +765,12 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         <Ionicons name="sparkles-outline" size={tokens.size.iconSm} color={tokens.colors.training.accent} accessibilityElementsHidden />
         {aiOriginText}
       </View> : null}
-      {selectedStep ? <TrainingInstruction instruction={selectedStep.instruction} /> : <Text style={styles.body}>{selectedProgram?.body}</Text>}
+      {selectedStep ? <TrainingInstruction title={selectedStep.title} instruction={selectedStep.instruction} /> : <Text style={styles.body}>{selectedProgram?.body}</Text>}
       {!selectedStep ? <Text style={styles.note}>Anpassa efter din hund och pausa när det behövs.</Text> : null}
       {!selectedStep && selectedProgram ? <>
-        <View style={styles.referenceLinks}>{selectedProgram.sources.map((source, index) => {
-          const url = getSafeContentSourceUrl(source);
-          if (!url) return <Text key={`${index}:${source}`} style={styles.note}>{source}</Text>;
-          return <Pressable key={`${index}:${source}`} accessibilityRole="link" accessibilityLabel={`Öppna referens ${index + 1}: ${new URL(url).hostname}`}
-            style={styles.referenceLink} onPress={() => { void Linking.openURL(url).then(() => setSourceMessage('')).catch(() => setSourceMessage('Källan kunde inte öppnas. Försök igen.')); }}>
-            <Text style={styles.referenceNumber}>{index + 1})</Text>
-          </Pressable>;
-        })}</View>
+        <ContentSources sources={selectedProgram.sources} onOpenSource={(source) => {
+          void Linking.openURL(source).then(() => setSourceMessage('')).catch(() => setSourceMessage('Källan kunde inte öppnas. Försök igen.'));
+        }} />
         {sourceMessage ? <Text accessibilityLiveRegion="polite" style={styles.note}>{sourceMessage}</Text> : null}
       </> : null}
       {selectedProgram && selectedStep && !selectedTimelineReadOnly && (progressionState !== 'ready' || !progression.journeys.some((journey) => journey.program_version_id === selectedProgram.id) || progression.journeys.find((journey) => journey.program_version_id === selectedProgram.id)?.state === 'paused') ? renderJourneyOverview(selectedProgram) : null}
@@ -811,13 +799,24 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   </View>;
 }
 
-function TrainingInstruction({ instruction }: { instruction: string }) {
-  return <View style={styles.instructionBlocks}>{parseTrainingInstruction(instruction).map((block, index) => {
-    if (block.type === 'heading') return <Text key={`heading-${index}`} accessibilityRole="header" style={styles.instructionHeading}>{block.text}</Text>;
-    if (block.type === 'ordered') return <View key={`list-${index}`} style={styles.instructionList}>{block.items.map((item, itemIndex) =>
-      <Text key={`${item.number}-${itemIndex}`} style={styles.body}>{item.number}. {item.text}</Text>)}</View>;
-    return <Text key={`paragraph-${index}`} style={styles.body}>{block.text}</Text>;
-  })}</View>;
+function TrainingInstruction({ title, instruction }: { title: string; instruction: string }) {
+  const presentation = presentTrainingInstruction(title, instruction);
+  return <View style={styles.instructionBlocks}>
+    {presentation.goal ? <View style={styles.instructionGoal} testID="training-exercise-goal">
+      <Ionicons name="flag-outline" size={tokens.size.iconMd} color={tokens.colors.training.accent} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+      <View style={styles.instructionGoalCopy}><Text accessibilityRole="header" style={styles.instructionHeading}>Mål med övningen</Text>
+        <Text style={styles.body}>{presentation.goal}</Text></View>
+    </View> : null}
+    {presentation.blocks.map((block, index) => {
+      if (block.type === 'heading') return <Text key={`heading-${index}`} accessibilityRole="header" style={styles.instructionHeading}>{block.text}</Text>;
+      if (block.type === 'ordered') return <View key={`list-${index}`} style={styles.instructionList}>{block.items.map((item, itemIndex) =>
+        <View key={`${item.number}-${itemIndex}`} style={styles.instructionStep}>
+          <Text style={styles.instructionNumber}>{item.number}.</Text><Text style={[styles.body, styles.instructionStepText]}>{item.text}</Text>
+        </View>)}</View>;
+      return <Text key={`paragraph-${index}`} style={styles.body}>{block.text}</Text>;
+    })}
+    {presentation.clarification ? <Text style={styles.stepMeta}>{presentation.clarification}</Text> : null}
+  </View>;
 }
 
 function TrainingTimelineStatusIcon({ name, size, color, animateCompleteKey, onCompleteAnimationStart }: {
@@ -867,9 +866,6 @@ function formatHistoricalDate(dateKey?: string): string {
 }
 
 const styles = StyleSheet.create({
-  referenceLinks: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  referenceLink: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  referenceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   focusedPage: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl },
   focusedCard: { padding: tokens.spacing.lg, gap: tokens.spacing.sm, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.training.continueSurface, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
   screenTitle: { ...tokens.typography.title, color: tokens.colors.textPrimary, marginBottom: tokens.spacing.md },
@@ -907,11 +903,15 @@ const styles = StyleSheet.create({
   timelineUpcomingText: { color: tokens.colors.textSecondary },
   timelineTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary, flexShrink: 1 },
   timelineInstruction: { ...tokens.typography.caption, color: tokens.colors.textSecondary },
+  instructionGoal: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
+  instructionGoalCopy: { flex: 1, gap: tokens.spacing.xs },
+  instructionStep: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm },
+  instructionNumber: { ...tokens.typography.body, color: tokens.colors.training.accent, fontWeight: '700', minWidth: tokens.size.iconMd },
+  instructionStepText: { flex: 1 },
   instructionBlocks: { gap: tokens.spacing.sm, alignItems: 'stretch' },
   instructionHeading: { ...tokens.typography.label, color: tokens.colors.training.accent, textAlign: 'left' },
   instructionList: { gap: tokens.spacing.xs },
-  journeyBanner: { height: 112, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card, position: 'relative' },
-  journeyBannerImage: { position: 'absolute', width: '100%', height: '100%', left: 0, top: 0 },
+  journeyBanner: { height: tokens.size.trainingBannerHeight, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card, position: 'relative' },
   journeySummaryLine: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   journeySummaryText: { ...tokens.typography.caption, color: tokens.colors.textPrimary, fontWeight: '700', flexShrink: 1 },
   readOnlyNotice: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingVertical: tokens.spacing.xs },
@@ -953,8 +953,7 @@ const styles = StyleSheet.create({
   confirmedMilestone: { ...tokens.typography.caption, color: tokens.colors.training.accent, fontWeight: '700' },
   undoAction: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.continueSurface },
   undoLabel: { ...tokens.typography.label, color: tokens.colors.training.accent },
-  exerciseBanner: { height: 112, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card },
-  exerciseBannerImage: { width: '100%', height: '100%' },
+  exerciseBanner: { height: tokens.size.trainingBannerHeight, width: '100%', borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card },
   exerciseProgress: { gap: tokens.spacing.xs },
   aiDisclosure: { alignSelf: 'flex-start', minHeight: tokens.size.touchMin - tokens.spacing.xs * 2, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.training.continueSurface },
   aiDisclosureText: { ...tokens.typography.smallCaption, color: tokens.colors.training.accent, fontWeight: '700' },

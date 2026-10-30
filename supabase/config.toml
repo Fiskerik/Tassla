@@ -1,7 +1,9 @@
-[functions.delete-account]
+[functions.swift-api]
 verify_jwt = true
+entrypoint = "./functions/delete-account/index.ts"
 
 # A dedicated editorial sync token is checked by this handler. No user JWT or
 # database credential is accepted from the scheduled runner.
-[functions.sync-drive-article]
+[functions.bright-task]
 verify_jwt = false
+entrypoint = "./functions/sync-drive-article/index.ts"

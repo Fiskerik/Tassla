@@ -112,6 +112,16 @@ test('source link helper allows only normalized public HTTPS URLs', () => {
   ]) assert.equal(sourceLinks.getSafeContentSourceUrl(value), null, `${value} must remain plain text`);
 });
 
+test('source labels identify exact publishers without disguising unknown or unsafe hosts', () => {
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org/resources/position-statements/'), 'Avsab');
+  assert.equal(sourceLinks.getContentSourceLabel('https://www.rspca.org.uk/any-page'), 'RSPCA');
+  assert.equal(sourceLinks.getContentSourceLabel('https://www.dogstrust.org.uk/advice'), 'Dogs Trust');
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org.evil.example/'), 'avsab.org.evil.example');
+  assert.equal(sourceLinks.getContentSourceLabel('https://example.org/guide'), 'example.org');
+  assert.equal(sourceLinks.getContentSourceLabel('https://avsab.org@evil.example/'), null);
+  assert.equal(sourceLinks.getContentSourceLabel('repo://src/app.ts'), null);
+});
+
 test('actual Knowledge source handler opens only user-requested HTTPS and reports rejected opens', async () => {
   const body = extractFunction(knowledgeSource, 'openSource');
   const compiled = ts.transpileModule(body, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } });
@@ -127,10 +137,9 @@ test('actual Knowledge source handler opens only user-requested HTTPS and report
   await openSource('https://example.org/guide');
   await openSource('https://example.org/unavailable');
   assert.deepEqual(calls, ['https://example.org/guide', 'https://example.org/unavailable']);
-  assert.deepEqual(messages, ['Källan öppnades.', 'Källan kunde inte öppnas just nu. Du kan försöka igen.']);
-  assert.match(knowledgeSource, /const safeUrl = getSafeContentSourceUrl\(source\)/);
-  assert.match(knowledgeSource, /<Pressable key=\{`\$\{selectedItem\.id\}:\$\{index\}`\} accessibilityRole="link"[\s\S]*?onPress=\{\(\) => \{ void openSource\(source\); \}\}/);
-  assert.match(knowledgeSource, /<Text style=\{styles\.sourceReferenceText\}>\{index \+ 1\}\)<\/Text>/);
+  assert.deepEqual(messages, ['', 'Källan kunde inte öppnas just nu. Du kan försöka igen.']);
+  assert.match(knowledgeSource, /<ContentSources sources=\{selectedItem\.sources\}/);
+  assert.doesNotMatch(knowledgeSource, /Källan öppnades/);
 });
 
 test('actual screen states separate loading, error with retry, and ready-empty', () => {

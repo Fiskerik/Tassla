@@ -37,17 +37,17 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
       <View style={styles.hero} testID="development-hero">
         <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
           accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
-        <View style={styles.ageJourney} testID="development-age-journey">
-          {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
-            : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
-            <Text style={styles.matureAgeLabel}>KRONOLOGISK ÅLDER</Text>
-            <Text style={styles.matureAgeValue}>{age.label}</Text>
-            <View style={styles.phasePill}><View style={styles.phaseDot} /><Text style={styles.phaseText}>Vuxen</Text></View>
-          </View> : <View style={styles.unknownAge}>
-            <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
-            <Text style={styles.unknownAgeText}>Åldersresan visas när ett giltigt födelsedatum finns.</Text>
-          </View>}
-        </View>
+      </View>
+      <View style={styles.ageJourney} testID="development-age-journey">
+        {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
+          : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
+          <Text style={styles.matureAgeLabel}>KRONOLOGISK ÅLDER</Text>
+          <Text style={styles.matureAgeValue}>{age.label}</Text>
+          <View style={styles.phasePill}><View style={styles.phaseDot} /><Text style={styles.phaseText}>Vuxen</Text></View>
+        </View> : <View style={styles.unknownAge}>
+          <Ionicons name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
+          <Text style={styles.unknownAgeText}>Åldersresan visas när ett giltigt födelsedatum finns.</Text>
+        </View>}
       </View>
     </View>
 
@@ -132,7 +132,7 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
       <View testID="development-age-arc-clip" style={styles.arcClip}>
         <Svg testID="development-age-arc-svg" accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none"
           width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={styles.arcSvg}>
-          <Path testID="development-age-arc-track" d={arcPath} fill="none" stroke={tokens.colors.home.progressTrack}
+          <Path testID="development-age-arc-track" d={arcPath} fill="none" stroke={tokens.colors.borderStrong}
             strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" />
           {progressPath ? <Path testID="development-age-progress" d={progressPath} fill="none" stroke={tokens.colors.home.greenStrong}
             strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" /> : null}
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   heroSection: { alignSelf: 'stretch' },
   hero: { position: 'relative', alignSelf: 'stretch', aspectRatio: tokens.size.developmentHeroAspectRatio, borderRadius: tokens.radius.lg, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   heroImage: { width: '100%', height: '100%' },
-  ageJourney: { position: 'absolute', bottom: 0, left: 0, right: 0, minHeight: tokens.size.developmentAgeJourneyHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.xs, backgroundColor: tokens.colors.home.heroOverlay },
+  ageJourney: { alignSelf: 'stretch', marginTop: tokens.spacing.sm, borderRadius: tokens.radius.lg, minHeight: tokens.size.developmentAgeJourneyHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.xs, backgroundColor: tokens.colors.home.card },
   currentStage: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md },
   currentStageIcon: { width: tokens.size.touchMin, height: tokens.size.touchMin, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   currentStageCopy: { flex: 1, gap: tokens.spacing.xs },

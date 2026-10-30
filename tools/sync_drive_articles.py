@@ -246,7 +246,7 @@ def validate_endpoint(endpoint, approved_project_ref):
     # The exact project ref is pinned in the protected environment, separately
     # from the configurable URL. Never transmit the token to another project.
     require(bool(re.fullmatch(r'[a-z0-9]{20}', approved_project_ref)), 'Invalid approved project ref')
-    require(endpoint == 'https://' + approved_project_ref + '.supabase.co/functions/v1/sync-drive-article', 'Importer endpoint differs from approved project')
+    require(endpoint == 'https://' + approved_project_ref + '.supabase.co/functions/v1/bright-task', 'Importer endpoint differs from approved project')
 
 
 def sync():

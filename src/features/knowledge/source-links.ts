@@ -21,6 +21,21 @@ const REVIEWED_SOURCE_TITLES: Readonly<Record<string, string>> = {
   'https://avsab.org/wp-content/uploads/2024/12/Puppy-Socialization-Position-Statement-FINAL.pdf': 'AVSAB Puppy Socialization Position Statement',
 };
 
+const SOURCE_PUBLISHERS: Readonly<Record<string, string>> = {
+  'rspca.org.uk': 'RSPCA',
+  'dogstrust.org.uk': 'Dogs Trust',
+  'avsab.org': 'Avsab',
+  'bluecross.org.uk': 'Blue Cross',
+};
+
+/** Known publishers use a short label; unknown safe sources keep their host. */
+export function getContentSourceLabel(source: string): string | null {
+  const url = getSafeContentSourceUrl(source);
+  if (!url) return null;
+  const hostname = new URL(url).hostname.replace(/^www\./, '');
+  return SOURCE_PUBLISHERS[hostname] ?? hostname;
+}
+
 export interface ContentSourceMetadata { url: string; title: string; publisher: string; }
 
 /** Resolve only URLs with reviewed title metadata and a recognized exact publisher host. */
@@ -30,11 +45,6 @@ export function getContentSourceMetadata(source: string): ContentSourceMetadata 
   const title = REVIEWED_SOURCE_TITLES[url];
   if (!title) return null;
   const hostname = new URL(url).hostname.replace(/^www\./, '');
-  const publishers: Readonly<Record<string, string>> = {
-    'rspca.org.uk': 'RSPCA',
-    'dogstrust.org.uk': 'Dogs Trust',
-    'avsab.org': 'AVSAB',
-  };
-  const publisher = publishers[hostname];
+  const publisher = SOURCE_PUBLISHERS[hostname];
   return publisher ? { url, title, publisher } : null;
 }

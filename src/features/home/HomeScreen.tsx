@@ -164,12 +164,12 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
             <Ionicons name="sunny" size={tokens.size.iconSm} color={tokens.colors.home.sun} accessibilityElementsHidden />
           </View>
           <Text style={styles.dogMeta}>{dog.name}{age ? ` · ${age.label}` : ` · ${breedLabel}`}</Text>
-          {age ? <MotionPressable testID="home-development-phase" accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
+          {age ? <View style={styles.dogPhaseRow}><Text style={styles.dogPhaseLabel}>Ungefärlig fas</Text><MotionPressable testID="home-development-phase" accessibilityRole="button" accessibilityLabel={`Visa utveckling för ${dog.name}`}
             accessibilityHint="Öppnar ålder och ungefärlig utvecklingsfas."
             onPress={onOpenDevelopment} style={({ pressed }) => [styles.dogPhaseAction, pressed && styles.headingPressed]}>
-            <Text style={styles.dogPhase}>Ungefärlig fas: {age.stage}</Text>
+            <View style={styles.dogPhasePill}><Text style={styles.dogPhase}>{age.stage.toLocaleLowerCase('sv-SE')}</Text>
             <Ionicons name="chevron-forward" size={tokens.size.iconSm - tokens.spacing.xs} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
-          </MotionPressable> : null}
+          </View></MotionPressable></View> : null}
         </View>
       </View>
       <MotionPressable style={({ pressed }) => [styles.dogPortrait, pressed && styles.portraitPressed]}
@@ -515,7 +515,10 @@ const styles = StyleSheet.create({
   greetingTitle: { ...tokens.typography.heading, color: tokens.colors.home.text, fontWeight: '600' },
   dogMeta: { ...tokens.typography.caption, color: tokens.colors.home.text, fontWeight: '700' },
   dogAge: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
-  dogPhaseAction: { minHeight: tokens.size.touchMin, maxWidth: '100%', alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs / 2, borderWidth: tokens.size.stroke, borderColor: tokens.colors.home.greenStrong, borderRadius: tokens.radius.md, backgroundColor: tokens.colors.home.card },
+  dogPhaseRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs },
+  dogPhaseLabel: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted, flexShrink: 1 },
+  dogPhaseAction: { minHeight: tokens.size.touchMin, minWidth: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  dogPhasePill: { minHeight: tokens.size.chipMd, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, borderWidth: tokens.size.stroke, borderColor: tokens.colors.home.greenStrong, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.card },
   dogPhase: { ...tokens.typography.caption, color: tokens.colors.home.greenStrong, fontWeight: '700', flexShrink: 1, flexWrap: 'wrap' },
   dogPortrait: { position: 'absolute', top: 0, right: 0, zIndex: 1, width: portraitSize, height: portraitSize, borderRadius: tokens.radius.full },
   portraitPressed: { opacity: 0.84, transform: [{ scale: 0.98 }] },

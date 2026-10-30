@@ -704,3 +704,25 @@ Plan v5 Critic/Architect APPROVE, Dog Expert PASS WITH CONDITIONS utan kvarvaran
 PostgreSQL-provet använde en disposable lokal PostgreSQL med syntetiska tabeller/roller och rollback; körloggen saknar exakta kommandon, tampermetod och minorversion. Inget live Supabase/RLS, faktisk FAQ-import/publicering, trusted-role guard, native VoiceOver/TalkBack, Dynamic Type på enhet eller TestFlight verifierades. Veterinärsignoff görs inte anspråk på. Se [tasken](../tasks/dev/KNOWLEDGE-FAQ-CATALOG-01.md) och [verifieringen](../design/evidence/knowledge-faq-catalog-v1/VERIFICATION.md).
 
 Administrativt closeout v6: Critic PROCEED för denna historikrad som post-completion-tillägg; v5:s produktacceptans är oförändrad.
+
+## BUILD-PUBLIC-TESTFLIGHT-01 — public TestFlight, 2026-10-29
+
+Lokalt implementerat och verifierat på `fix/mvp-build-feedback`, bas `be2efa60ad6cdbbd6bf209194425b2fd03d1679e`; Frozen Reviewer PASS utan fynd. Ordinarie TestFlight-workflow använder public/false och tydligt public-namn. Signering, buildnummer och distributionsval är oförändrade. Riktig content guard och full check PASS (100/100 testfiler). Ingen signerad build eller faktisk distribution verifierad. Kontoraderingsproblemet är fortsatt separat öppet.
+
+## 2026-10-29 — UI-MVP-BUILD-FEEDBACK-01, lokal checkpoint
+
+Bas601f17d, planv2, branchfix/mvp-build-feedback. Eriks sju iPhone-punkter implementerade: mål och bevarad numrerad träningsinstruktion, hela ansiktet i låg banner, scroll utan indikator, soptunna på höger rubrikrad, separat åldersbåge, kompakta titellänkar utan successbrus och liten gemen faslänk. Inga spar-/raderingsguards eller backend ändrades. Architect APPROVEv2, innehållsråd PASS (AI, ej veterinär), UI Critic REVIEW utan avgränsade blockerare, oberoende QA PASS och Frozen Reviewer PASS utan fynd.
+
+`pnpm check`101/101, public iOS-export, syntetisk RN Web375/430/667/CSS140, diff/path-/köaudit PASS. Evidens och §14-checklista: docs/design/evidence/ui-mvp-build-feedback-01/VERIFICATION.md. Native/livebackend/signerad release och hela rev02-paneler förblir NOT TESTABLE. Nästa steg är commit, sedan separat endpointkoppling till faktiska URL-sluggar swift-api och bright-task; konto-unknown förblir skyddad.
+
+## 2026-10-29 — UI-SOURCE-PUBLISHER-01, senaste etikettbeslut
+
+Bas81cbfc1; planv1 L. Erik ändrade till endast utgivarnamn i källraden. Delade ContentSources visar Avsab/RSPCA/Dogs Trust/Blue Cross för exakta kända värdar och ärlig värdfallback annars; full granskad sidtitel kvarstår i hjälpmedelsnamn. URL,44pt-mål, swipeguard, länkfel och ingen öppnad-status bevaras. UI Critic PROCEED/REVIEW och oberoende Reviewer PASS; riktat13/13, RNWeb source-only, fullcheck101/101 och diff/pathauditPASS. Evidens: docs/design/evidence/ui-source-publisher-01. Ingen native/liveverifiering. Nästa commit och separat endpointkoppling.
+
+## 2026-10-29 — EDGE-FUNCTION-SLUGS-01, lokal URL-koppling
+
+Bas52961e5, plan v1 risk H, branch fix/mvp-build-feedback. Eriks slutliga besked skiljer visningsnamn från faktiska URL-slugs: appen anropar swift-api och synkverktyget accepterar endast bright-task på det separat pinnade projektet. Config mappar slugs till befintliga index.ts-filer i originalmapparna. Handlers, JWT/tokenkontroll, fångad Bearer/bodyless POST, kvittens- och unknown-/retry-skydd är oförändrade. Tidigare okänd kontoradering är fortsatt blocked. Ingen backend-, miljövariabel-, sync- eller raderingsåtgärd utfördes.
+
+Architect APPROVE, Security initial/final PASS, oberoende QA egen fullcheck PASS och Frozen Reviewer PASS utan fynd. Riktad Node2/2 filer, Python8/8 (inklusive verklig TOMLparsning/entrypointfiler och URL-negativfall), pnpm check101/101, public iOS-export samt diff/path-/köaudit PASS. Officiellt stöd för relativa entrypoints/CLI>=1.215 länkas i tasken. Gateway JWT, deployad kodparitet, livekonto/synk och native förblir NOT TESTABLE. GitHub-miljöns ARTICLE_SYNC_URL behöver sluta på /bright-task; befintligt projektref-lås kvarstår.
+
+Samlad lokalt committad bas före denna slice: 601f17d public-workflow, 81cbfc1 UI-feedback, 52961e5 korta utgivarlänkar. Nästa: commit/push av denna lokala routingfix och gör ändringarna reviewbara för Main; runtimeposten stängs först med verkligt bevis.

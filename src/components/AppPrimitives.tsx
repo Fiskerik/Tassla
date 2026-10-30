@@ -153,7 +153,7 @@ export function InfoModal({ visible, title, children, onClose, onDismiss }: {
       <Animated.View testID="center-modal-info" style={[styles.modalCard, { transform: [{ translateX: swipe.translateX }] }]}>
         <ModalSwipeHandle panHandlers={swipe.panHandlers} />
         <Text ref={headingRef} accessible accessibilityRole="header" style={styles.modalTitle}>{title}</Text>
-        <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>{children}</ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll} contentContainerStyle={styles.modalContent}>{children}</ScrollView>
         <QuietButton title="Stäng information" onPress={onClose} />
       </Animated.View>
     </View>
@@ -261,7 +261,7 @@ export function TimePickerField({ label, value, onChangeText, disabled = false }
               onChangeText={setDraft} placeholder="HH:MM" placeholderTextColor={tokens.colors.textSecondary}
               returnKeyType="done" style={styles.timeModalInput} value={draft} />
             <Text style={styles.timeModalCaption}>Eller välj en tid</Text>
-            <ScrollView testID="time-picker-options" style={styles.timeModalList} keyboardShouldPersistTaps="handled">
+            <ScrollView showsVerticalScrollIndicator={false} testID="time-picker-options" style={styles.timeModalList} keyboardShouldPersistTaps="handled">
               {times.map((time) => <Pressable key={time} accessibilityRole="button" accessibilityLabel={`Välj ${time}`}
                 accessibilityState={{ selected: draft === time }} onPress={() => setDraft(time)}
                 style={({ pressed }) => [styles.timeOption, draft === time && styles.timeOptionSelected, pressed && styles.pressed]}>

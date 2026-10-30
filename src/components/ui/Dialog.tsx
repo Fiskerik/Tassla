@@ -11,7 +11,7 @@ export function Dialog({ visible, title, children, onRequestClose, onConfirm, co
     <View style={styles.backdrop}>
       <Animated.View accessibilityRole="alert" accessibilityLabel={title} style={[styles.dialog, { transform: [{ translateX: swipe.translateX }] }]}>
         <ModalSwipeHandle panHandlers={swipe.panHandlers} />
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <Text accessibilityRole="header" style={styles.title}>{title}</Text>
           {children}
           <View style={[styles.actions, compactActions && styles.compactActions]}>

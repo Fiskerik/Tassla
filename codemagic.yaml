@@ -1,6 +1,6 @@
 workflows:
   tassla-ios:
-    name: Tassla iOS — manual TestFlight build
+    name: Tassla iOS — public TestFlight build
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
@@ -18,8 +18,8 @@ workflows:
         XCODE_SCHEME: Tassla
         EXPO_NO_DOTENV: "1"
         CI: "1"
-        EXPO_PUBLIC_TASSLA_REVIEW_CONTENT: "true"
-        TASSLA_BUILD_CHANNEL: "review"
+        EXPO_PUBLIC_TASSLA_REVIEW_CONTENT: "false"
+        TASSLA_BUILD_CHANNEL: "public"
         APP_STORE_APPLE_ID: "6819067309"
     scripts:
       - name: Install locked dependencies

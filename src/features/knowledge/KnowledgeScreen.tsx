@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { HomeContent } from '../../data/app-data';
@@ -19,6 +19,7 @@ import { FAQScreen } from './FAQScreen';
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID } from './review-content';
 import { knowledgeImageForGuide, editorialImageForGuide, knowledgeImageFocusForGuide } from './editorial-image-assignment';
 import { KnowledgeImage } from './KnowledgeImage';
+import { ContentSources } from './ContentSources';
 
 type ContentState = 'loading' | 'ready' | 'error';
 type KnowledgeTab = 'För dig' | 'Checklistor' | 'FAQ';
@@ -111,7 +112,7 @@ export function KnowledgeScreen({
     if (!url) return;
     try {
       await Linking.openURL(url);
-      setSourceMessage('Källan öppnades.');
+      setSourceMessage('');
     } catch {
       setSourceMessage('Källan kunde inte öppnas just nu. Du kan försöka igen.');
     }
@@ -268,15 +269,7 @@ export function KnowledgeScreen({
           })}
         </View>
         {selectedItem.sources.length > 0 ? <View style={styles.articleReferences} testID="article-references">
-          {selectedItem.sources.map((source, index) => {
-            const safeUrl = getSafeContentSourceUrl(source);
-            if (!safeUrl) return <Text key={`${selectedItem.id}:${index}`} style={styles.sourceFallback}>{`${index + 1}) ${source}`}</Text>;
-            return <Pressable key={`${selectedItem.id}:${index}`} accessibilityRole="link"
-              accessibilityLabel={`Öppna källa ${index + 1}: ${new URL(safeUrl).hostname}`}
-              style={styles.sourceReference} onPress={() => { void openSource(source); }}>
-              <Text style={styles.sourceReferenceText}>{index + 1})</Text>
-            </Pressable>;
-          })}
+          <ContentSources sources={selectedItem.sources} onOpenSource={(source) => { void openSource(source); }} />
         </View> : null}
         {sourceMessage !== '' && <Text accessibilityLiveRegion="polite" style={styles.sourceMessage}>{sourceMessage}</Text>}
         </View>
@@ -378,9 +371,6 @@ const styles = StyleSheet.create({
   bodyList: { marginTop: tokens.spacing.sm, alignItems: 'flex-start' },
   bodyListItem: { ...tokens.typography.body, color: tokens.colors.textPrimary, marginTop: tokens.spacing.sm },
   articleReferences: { marginTop: tokens.spacing.md, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 0 },
-  sourceReference: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  sourceReferenceText: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
-  sourceFallback: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginRight: tokens.spacing.sm },
   sourceMessage: { ...tokens.typography.caption, color: tokens.colors.textSecondary, marginTop: tokens.spacing.xs },
   relatedSection: { marginTop: tokens.spacing.xl, gap: tokens.spacing.sm },
   relatedHeading: { ...tokens.typography.heading, color: tokens.colors.primary, textAlign: 'left' },

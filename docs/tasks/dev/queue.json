@@ -13680,6 +13680,298 @@
         }
       ],
       "next_step": "Stängt efter QA PASS och Frozen Reviewer PASS. Commit 2486b0b8a8322526c8d075b0a15f10df8fc2e0dd pushad till origin/knowledge/panel7-visual-alignment; ej mergad och ingen TestFlight-build verifierad."
+    },
+    {
+      "id": "BUILD-PUBLIC-TESTFLIGHT-01",
+      "title": "Ordinarie Codemagic TestFlight-flöde använder public-innehåll",
+      "mvp_requirement": "Eriks uttryckliga kanalbyte 2026-10-29; docs/dev/review-content-builds.md",
+      "plan": "docs/tasks/dev/BUILD-PUBLIC-TESTFLIGHT-01.md v1",
+      "write_paths": [
+        "codemagic.yaml",
+        "docs/dev/review-content-builds.md",
+        "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+        "docs/tasks/dev/BUILD-PUBLIC-TESTFLIGHT-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Standardworkflow-ID bevarat; namn och miljövärden använder public utan review-fixtures.",
+        "YAML-paritet utanför tre värden och verklig guard/metadata verifieras för båda workflows.",
+        "Kontoraderingsrapport skiljs från kanaländring; ingen backend eller build startas.",
+        "Riktad QA, full check och oberoende Reviewer före slutcheckpoint."
+      ],
+      "checks": [
+        "PyYAML parse/paritet och verklig content-build guard",
+        "node --experimental-strip-types --test tests/content-release-guard.test.mjs",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "risk": "L: befintliga byggvariabler och visningsnamn; signering och distribution ändras inte.",
+      "status": "done",
+      "history": [
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Implementation klar. PyYAML-paritet exakt tre värden, båda workflows verkliga guard public/false, guard-test och full pnpm check 100/100 PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "L-risk riktad QA PASS: endast avsedda YAML-värden ändrade, metadata och befintliga guards verifierade; full check PASS. Oberoende slutreview av komplett dokumenterad diff återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS: exakt tre YAML-värden, oförändrad pipeline/distribution; samtliga åtta paths inom plan; PyYAML/guard/fullcheck och diffcheck PASS. Ingen hosted build eller kontoradering verifierad."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS: exakt tre YAML-värden, oförändrad pipeline/distribution; samtliga åtta paths inom plan; PyYAML/guard/fullcheck och diffcheck PASS. Ingen hosted build eller kontoradering verifierad."
+    },
+    {
+      "id": "UI-MVP-BUILD-FEEDBACK-01",
+      "title": "Rätta Main-byggets läsning, källänkar, åldersbåge och kontrollplacering",
+      "mvp_requirement": "Eriks sju iPhone-punkter 2026-10-29",
+      "plan": "docs/tasks/dev/UI-MVP-BUILD-FEEDBACK-01.md v2",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/Dialog.tsx",
+        "src/components/AppPrimitives.tsx",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/theme/tokens.ts",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/README.md",
+        "src/features/knowledge/ContentSources.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "src/features/knowledge/FAQScreen.tsx",
+        "src/features/knowledge/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/training-step-presentation.ts",
+        "src/features/training/README.md",
+        "src/features/home/README.md",
+        "tests/training-step-presentation.test.mjs",
+        "tests/content-delivery.test.mjs",
+        "tests/checklist-ui.test.mjs",
+        "tests/knowledge-faq-content.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tests/development-screen-model.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-mvp-build-feedback.py",
+        "docs/design/evidence/ui-mvp-build-feedback-01",
+        "docs/design-rules.md",
+        "docs/tasks/dev/UI-MVP-BUILD-FEEDBACK-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/ui-modal-centering.test.mjs"
+      ],
+      "acceptance": [
+        "Mål/steglista utan textförlust eller ändrad progression; okänt innehåll behåller original.",
+        "Sidtitlar ersätter enbart sifferkällor utan successbrus; länkar och fel fungerar.",
+        "Synlig separat åldersbåge, kompakt faslänk och högerställd soptunna.",
+        "Modaler scrollar utan indikator; träningsbilder visar hela ansiktet.",
+        "Riktad RN Web i standard/kort/stor text, innehållstester, full check, UI Critic, QA och Reviewer."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/training-step-presentation.test.mjs",
+        "python tools/visual-check/verify-mvp-build-feedback.py",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "BUILD-PUBLIC-TESTFLIGHT-01"
+      ],
+      "risk": "M: läs-/innehållspresentation och delad modal/källvy; ingen server eller sparsemantik ändras.",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1, UI Critic BRIEF från öppnade panel2/panel6-bilder sparad; exakt-text-källskydd, befintliga API och safe URL/scrollguard bevaras."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementera ägarens sex UI-punkter på branch med färdig config-checkpoint601f17d. Kontoraderingsendpoint/drift följs separat."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Planv2 APPROVE; pnpmcheck101/101 och public iOS-export PASS. RN Web verify-mvp-build-feedback.py PASS375/430/667/140; stabila bilder/results.json i taskens evidens. Innehållsråd PASS, inga runtime/native/backendpåståenden."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA PASS: egen pnpmcheck101/101, öppnade kompositer/screens och separat visuell/beteendegranskning inom scope. Native/live/fullpanels NOT TESTABLE; slutreview återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd på slutdiff; oberoende QA PASS och faktiska lokala kontroller sparade i task/MASTER-LOG. Nästa: commitcheckpoint och separat URL-slugkoppling; native/live och helpaneler ej verifierade."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd på slutdiff; oberoende QA PASS och faktiska lokala kontroller sparade i task/MASTER-LOG. Nästa: commitcheckpoint och separat URL-slugkoppling; native/live och helpaneler ej verifierade."
+    },
+    {
+      "id": "UI-SOURCE-PUBLISHER-01",
+      "title": "Källänkar visar bara utgivaren enligt senaste ägarinstruktion",
+      "mvp_requirement": "Eriks direkta etikettbeslut2026-10-29",
+      "plan": "docs/tasks/dev/UI-SOURCE-PUBLISHER-01.md v1",
+      "write_paths": [
+        "src/features/knowledge/ContentSources.tsx",
+        "src/features/knowledge/source-links.ts",
+        "src/features/knowledge/README.md",
+        "src/features/training/README.md",
+        "tests/content-delivery.test.mjs",
+        "docs/design-rules.md",
+        "tools/visual-check/verify-mvp-build-feedback.py",
+        "docs/design/evidence/ui-source-publisher-01",
+        "docs/tasks/dev/UI-SOURCE-PUBLISHER-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Korta utgivarnamn, full tillgänglig titel, exakt tryggt länkmål och befintliga guards.",
+        "375px källbild, riktade kontroller, fullcheck, UI Critic och oberoende Reviewer."
+      ],
+      "checks": [
+        "CI=1 pnpm check",
+        "python tools/visual-check/verify-mvp-build-feedback.py",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "UI-MVP-BUILD-FEEDBACK-01"
+      ],
+      "risk": "L: enbart källänkens synliga etikett",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "UI Critic PROCEED planv1 efter BRIEF; underliggande delad arkitektur återanvänds från UI-feedbackv2 APPROVE, ingen strukturell ändring."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Implementera exakt beställd kort utgivaretikett; bibehåll tillgänglig fulltitel och skydd."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktad lokal QA13/13 och source-only RNWebPASS, fullcheck101/101. L kräver oberoende Reviewer, ingen separat QAagent."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Riktad QA och visuellt UI Critic REVIEW utan blockerare sparade; oberoende slutreview mottagen."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Oberoende Frozen Reviewer PASS på slutdiff/fullcheck101/101/bild/guards, ingen scope creep. Nästa commit och URL-slugkoppling."
+        }
+      ],
+      "next_step": "Oberoende Frozen Reviewer PASS på slutdiff/fullcheck101/101/bild/guards, ingen scope creep. Nästa commit och URL-slugkoppling."
+    },
+    {
+      "id": "EDGE-FUNCTION-SLUGS-01",
+      "title": "Koppla befintlig kontoradering/synk till URL-sluggar swift-api och bright-task",
+      "mvp_requirement": "Eriks korrigerade driftsättningsbesked2026-10-29",
+      "plan": "docs/tasks/dev/EDGE-FUNCTION-SLUGS-01.md v1",
+      "write_paths": [
+        "src/features/account/account-delete.ts",
+        "tools/sync_drive_articles.py",
+        "supabase/config.toml",
+        "tests/account-delete.test.mjs",
+        "tests/test_drive_articles.py",
+        "supabase/functions/delete-account/README.md",
+        "supabase/functions/README.md",
+        "src/features/account/README.md",
+        "docs/content/artiklar/README.md",
+        "docs/tasks/dev/ACCOUNT-DELETE-STATUS-01.md",
+        "docs/tasks/dev/EDGE-FUNCTION-SLUGS-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Exakta invoke-/runner-/configsluggar med bevarad auth, kvittens, projektpinning och pendingguard.",
+        "Real SDK syntetiskt anrop, PythonURLnegativtest och TOMLentrypointresolver, fullcheck och oberoende QA/Reviewer/Security.",
+        "Endast lokal checkpoint; ACCOUNT-DELETE-STATUS-01 förblir blocked tills verklig verifiering."
+      ],
+      "checks": [
+        "node --experimental-strip-types --test tests/account-delete.test.mjs tests/article-delivery.test.mjs",
+        "python -m unittest discover -s tests -p test_drive_articles.py",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [
+        "UI-SOURCE-PUBLISHER-01"
+      ],
+      "risk": "H: befintligt auth/raderingsanrops routing, inga nya ändamål eller guards",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE planv1 och Security initialPASS; exakt mapping till befintliga entrypoints, guards/ändamål oförändrade. Endast lokal implementation."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Ändra en invoke-slug, exakt runner-URL och configentrypoints; bevara alla handler-/pending-/JWTskydd."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Riktad SDK/handler2filer och Python8tester PASS; fullcheck101/101, public iOS-export/diff/pathaudit PASS. Security finalPASS utan fynd."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA egen pnpmcheck/diffPASS101/101, lokalacceptans/mapping/guards/scopePASS. Live/gateway/Deno/nativeNOTTESTABLE, gammal runtimepostblocked. Security finalPASS sparad."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
     }
   ]
 }

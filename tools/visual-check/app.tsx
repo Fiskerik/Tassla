@@ -46,6 +46,7 @@ import {isMainTabDestination,mainTabTransitionDirection,nextMainTabDestination} 
 import {workspaceSnapshotReadDecision} from '../../src/data/workspace-data';
 import {emptyTrainingProgression,latestHomeTrainingSummary,type PendingTrainingProgression,type TrainingProgressionAction,type TrainingProgressionWorkspace} from '../../src/features/training/training-progression';
 import recallDraft from '../../docs/content/recall-program-v1.json';
+import trainingBundle from '../../docs/content/mvp-content-bundle-v1.json';
 type FixtureLogMutation={kind:'add'|'update'|'delete'|'undo';id:string;mutationId:string;type:LogEventType;occurredAt:string;status:'pending'|'failed'|'unsure'|'saved';accidentKinds?:AccidentKind[]|null};
 window.__tasslaAccountDeleteCalls=0;
 const today=new URLSearchParams(location.search).get('today')||localDate();
@@ -120,7 +121,10 @@ const healthRoutePlans=[
 ];
 const canonicalArticleFixtures=driveArticles.map((a,index)=>({id:'drive-article-'+index,contentId:'drive-content-'+index,version:1,slug:a.slug,title:a.title,body:a.body,contentType:'article',sources:a.sources,isAiGenerated:a.is_ai_generated,recommended:index!==0}));
 const genericArticleFixture={id:'generic-guide',contentId:'generic-guide',version:1,slug:'synthetic-unassigned',title:'Syntetisk guide',body:'Syntetisk provtext för att granska läsbarhet och gemensam artikelstil.\n\n## Tydlig struktur\n\nProvet använder en befintlig dekorativ bild och samma tema som andra guider.',contentType:'guide',sources:[],isAiGenerated:false,recommended:false};
-const content=articleFixture?[...canonicalArticleFixtures,...(new URLSearchParams(location.search).get('unassignedArticle')==='true'?[genericArticleFixture]:[])]:placeholderContent;
+const sourceArticleFixture=trainingBundle.items.filter(item=>item.content_type==='article').slice(0,1).map(item=>{
+ const version=item.versions[0];return {id:version.id,contentId:item.id,slug:item.slug,version:version.version,title:version.title,body:version.body,contentType:'article',sources:[...trainingBundle.sources.map(source=>source.url),'https://example.org/editorial','docs/source.md'],isAiGenerated:true,recommended:true};
+});
+const content=new URLSearchParams(location.search).get('sourceFixture')==='true'?sourceArticleFixture:articleFixture?[...canonicalArticleFixtures,...(new URLSearchParams(location.search).get('unassignedArticle')==='true'?[genericArticleFixture]:[])]:placeholderContent;
 const initialProgram={id:'t1',content_id:'t1',version:1,title:'Vecka 11',body:'Trygghet och vardagsliv.',sources:[],completedStepIds:['s0'],completedAtByStepId:{},steps:['Hantering (tassar, öron, mun)','Miljöträning – nya ljud','Ensamhet – korta stunder','Inkallning – grunder','Möte med andra hundar'].map((title,i)=>({id:'s'+i,position:i,title,instruction:''}))};
 const publicTrainingFixture:PublishedTrainingProgram[]=[
  {...initialProgram,id:'fixture-training:trygg-start',content_id:'fixture-training:trygg-start',currentAgeBreedMatch:true,title:'Trygg vardagsstart',body:'',sources:[],completedStepIds:['trygg-1'],completedAtByStepId:{'trygg-1':'2026-10-13T08:00:00.000Z'},steps:[{id:'trygg-1',position:0,title:'Utforska i egen takt',instruction:''},{id:'trygg-2',position:1,title:'En lugn paus',instruction:''},{id:'trygg-3',position:2,title:'Vila nära',instruction:''}]},
@@ -128,6 +132,10 @@ const publicTrainingFixture:PublishedTrainingProgram[]=[
  {...initialProgram,id:'fixture-training:trygg-miljo',content_id:'fixture-training:trygg-miljo',currentAgeBreedMatch:true,title:'Trygg i nya miljöer',body:'',sources:[],completedStepIds:[],steps:[{id:'miljo-1',position:0,title:'Titta i lugn takt',instruction:''},{id:'miljo-2',position:1,title:'Ta en kort paus',instruction:''}]},
 ];
 function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTrainingProgram[]{
+ if(scenario==='feedback')return trainingBundle.items.filter(item=>item.content_type==='training_program').map(item=>{
+  const version=item.versions[0];
+  return {id:version.id,content_id:item.id,version:version.version,title:version.title,body:version.body,sources:[],is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:version.training_steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))};
+ });
  const source=reviewMode?[...REVIEW_TRAINING_PROGRAMS]:publicTrainingFixture;
  if(scenario==='recall-draft')return [{id:recallDraft.version_id,content_id:recallDraft.content_id,version:recallDraft.version,title:recallDraft.title,body:recallDraft.body,sources:recallDraft.sources,is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:recallDraft.steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))}];
  if(scenario==='structured')return source.map((program,index)=>index===0?{...program,completedStepIds:[],steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Öva lugnt och belöna frivillig kontakt.\n\n## Du behöver\nEn belöning.\n\n## Så gör ni\n1. Välj en lugn plats.\n2. Belöna när hunden kommer.'}:step)}:program);

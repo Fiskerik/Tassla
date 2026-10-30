@@ -119,7 +119,10 @@ export function AccountSettingsScreen({
     {analyticsError && <QuietButton title="Försök hämta valet igen" disabled={analyticsBusy || busy} onPress={() => { void onRetryAnalyticsConsent(); }} />}
 
     <View style={styles.deleteCard}>
-    <Text style={styles.deleteSectionTitle} accessibilityRole="header">Kontoradering</Text>
+    <View style={styles.deleteHeader}><Text style={[styles.deleteSectionTitle, styles.deleteTitle]} accessibilityRole="header">Kontoradering</Text>
+    <Button variant="icon" iconName="trash-outline" label="Radera konto" accessibilityLabel={busy ? 'Raderar konto…' : 'Radera konto'} loading={busy}
+      disabled={busy || !markerReady || markerState !== 'clear' || terminal || status === 'unavailable'} onPress={confirmDeletion} />
+    </View>
     {status === 'confirmed' && <MessageCard>Kontot är raderat. Vi loggar ut från den här enheten.</MessageCard>}
     {status === 'failed' && <MessageCard tone="error">Vi kunde inte bekräfta att kontot raderades. Kontrollera anslutningen eller kontakta support.</MessageCard>}
     {status === 'unavailable' && <MessageCard tone="error">Raderingen kunde inte startas säkert på den här enheten. Försök igen senare.</MessageCard>}
@@ -131,8 +134,7 @@ export function AccountSettingsScreen({
     {signOutFailed && status === 'confirmed' && <MessageCard tone="error">Kontot är raderat, men utloggningen på den här enheten misslyckades.</MessageCard>}
     {signOutFailed && status !== 'confirmed' && <MessageCard tone="error">Utloggningen på den här enheten misslyckades. Vi kunde inte bekräfta om kontot raderades.</MessageCard>}
 
-    <Button variant="icon" iconName="trash-outline" label="Radera konto" accessibilityLabel={busy ? 'Raderar konto…' : 'Radera konto'} loading={busy}
-      disabled={busy || !markerReady || markerState !== 'clear' || terminal || status === 'unavailable'} onPress={confirmDeletion} />
+
     {(status === 'confirmed' || localCleanupFailed || signOutFailed || status === 'unknown' || markerState !== 'clear' || status === 'unavailable')
       && <QuietButton title="Logga ut på den här enheten" disabled={busy} onPress={() => { void onSignOutLocally(); }} />}
     </View>
@@ -140,6 +142,8 @@ export function AccountSettingsScreen({
 }
 
 const styles = StyleSheet.create({
+  deleteHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: tokens.spacing.sm },
+  deleteTitle: { flex: 1, minWidth: 0 },
   intro: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   hero: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.md, padding: tokens.layout.cardPadding, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.support.account.bg, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, marginTop: tokens.spacing.sm, marginBottom: tokens.spacing.md },
   icon: { width: tokens.size.chipLg, height: tokens.size.chipLg, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.surface, alignItems: 'center', justifyContent: 'center' },

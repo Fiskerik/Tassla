@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Crypto from 'expo-crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -10,7 +10,8 @@ import { CHECKLIST_TEMPLATES } from './checklist-content';
 import { addChecklistCustomItem, cacheChecklistOverview, cacheChecklistPreference, cacheChecklistTemplateState, checklistCatalogReadCacheScope, checklistOverviewSnapshot, checklistTemplateSnapshot, deleteChecklistCustomItem, fetchChecklistOverview, fetchChecklistState, fetchPublishedChecklistCatalog, setChecklistItem, setChecklistPreference, updateChecklistCustomItem, type PublishedChecklistCatalog } from './checklist-data';
 import { checklistPercent, chooseChecklistPhase, normalizeCustomChecklistTitle, type ChecklistContext, type ChecklistCustomItem, type ChecklistTemplate } from './checklist-model';
 import { classifyPendingChecklistOperation, freezePendingChecklistMemory, type PendingChecklistMemory, type PendingChecklistOperation } from './checklist-intent';
-import { getContentSourceMetadata, getSafeContentSourceUrl } from './source-links';
+import { getSafeContentSourceUrl } from './source-links';
+import { ContentSources } from './ContentSources';
 import { checklistPhaseVisualFor } from './checklist-phase-visuals';
 import { KnowledgeImage } from './KnowledgeImage';
 import { tokens } from '../../theme/tokens';
@@ -97,7 +98,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
     if (!url) return;
     try {
       await Linking.openURL(url);
-      setSourceMessage('Källan öppnades.');
+      setSourceMessage('');
     } catch {
       setSourceMessage('Källan kunde inte öppnas just nu. Du kan försöka igen.');
     }
@@ -584,7 +585,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
   const preferenceUncertain = uncertain && pendingOperation?.kind === 'preference' && !activeTemplate;
   const inlineContextStatus = !activeTemplate && (state === 'error' || Boolean(failedContext) || preferenceUncertain);
   const closeContextSheet = () => { if (!busy && !uncertain) setContextSheetOpen(false); };
-  const sourceLinks = (activeTemplate?.sources ?? []).filter((source) => getContentSourceMetadata(source) !== null);
+  const sourceLinks = activeTemplate?.sources ?? [];
   const phaseVisual = activeTemplate ? checklistPhaseVisualFor(activeTemplate.phase) : null;
   function renderTemplateCard(template: ChecklistTemplate, isRecommended: boolean, summary = summaries[template.id] ?? { done: 0, total: template.items.length }) {
     return <Card key={template.id} selected={isRecommended} onPress={uncertain || busy ? undefined : () => openTemplate(template)} accessibilityLabel={`Öppna ${template.title}${isRecommended ? ', föreslagen fas' : ''}`}>
@@ -652,18 +653,7 @@ export function PuppyChecklistScreen({ client, dogId, ageWeeks, cacheScope, onBa
         </> : <Text style={styles.meta}>{state === 'error' ? 'Checklistan kunde inte hämtas. Inga bockar visas som sparade.' : 'Läser in checklistan…'}</Text>}
       </Card>
       {sourceLinks.length > 0 ? <View style={styles.references}>
-        <View style={styles.referenceLinks}>
-        {sourceLinks.map((source, index) => {
-          const metadata = getContentSourceMetadata(source);
-          if (!metadata) return null;
-          const referenceNumber = index + 1;
-          return <Pressable key={source} accessibilityRole="link"
-            accessibilityLabel={`Öppna referens ${referenceNumber}: ${metadata.title} (${metadata.publisher})`}
-            style={styles.referenceLink} onPress={() => { void openSource(source); }}>
-            <Text style={styles.referenceNumber}>{referenceNumber})</Text>
-          </Pressable>;
-        })}
-        </View>
+        <ContentSources sources={sourceLinks} onOpenSource={(source) => { void openSource(source); }} />
         {sourceMessage ? <Text accessibilityLiveRegion="polite" style={styles.meta}>{sourceMessage}</Text> : null}
       </View> : null}
     </> : null}
@@ -741,9 +731,6 @@ const styles = StyleSheet.create({
   completeLabel: { ...tokens.typography.label, color: tokens.colors.success, marginTop: tokens.spacing.sm },
   phaseImageFrame: { alignSelf: 'stretch', height: 88, overflow: 'hidden', borderRadius: tokens.radius.md, marginBottom: tokens.spacing.sm },
   references: { marginTop: tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, flexWrap: 'wrap' },
-  referenceLinks: { flexDirection: 'row', alignItems: 'center', gap: 0 },
-  referenceLink: { minWidth: tokens.size.touchMin, minHeight: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
-  referenceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.primary, textDecorationLine: 'underline' },
   customRow: { gap: tokens.spacing.xs },
   formFieldRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   formFieldStack: { gap: tokens.spacing.xs },
