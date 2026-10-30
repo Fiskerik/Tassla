@@ -14189,6 +14189,72 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS no findings; own QA and visual review done, local evidence and native/live limits recorded."
+    },
+    {
+      "id": "ACCOUNT-LOCAL-UNLOCK-01",
+      "title": "Konto: manuellt verifierad upplåsning av lokal raderingsspärr",
+      "mvp_requirement": "Eriks uttryckliga cache/upplåsningsbegäran2026-10-30",
+      "plan": "docs/tasks/dev/ACCOUNT-LOCAL-UNLOCK-01.md v2",
+      "risk_class": "H",
+      "write_paths": [
+        "src/features/account/account-delete.ts",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/account-delete.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/native.jsx",
+        "tools/visual-check/verify-account-local-unlock.py",
+        "docs/design/evidence/account-local-unlock-01",
+        "docs/tasks/dev/ACCOUNT-LOCAL-UNLOCK-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Online same-owner verification and exact-key deletion with clear readback",
+        "No auto delete or global cache clear; guards preserved",
+        "Root and screen unlock only on verified success"
+      ],
+      "checks": [
+        "pnpm check",
+        "installed Supabase auth integration",
+        "workspace lease and storage race tests",
+        "RNWeb UI flow",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-PINNED-SESSION-01"
+      ],
+      "status": "review",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 and Security plan PASS received; exact owner/getUser/current/readback and shared lease. UI BRIEF before appearance edits."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root single writer resumes verified base05c2b56 and implements scoped helper/root path; UI awaits BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE v2; final Security PASS including latest cleanup/fixture; UICritic REVIEW two FIXED. 102/102 plus ten RNWeb and public iOS export PASS; scoped API/root tests, no live deletion."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own102/102, targeted actual SDK/root tests, ten RNWeb scenarios and viewed support composite/667/140/failure PASS. All paths v2; native/liveNT."
+        }
+      ],
+      "next_step": "Independent QA own102/102, targeted actual SDK/root tests, ten RNWeb scenarios and viewed support composite/667/140/failure PASS. All paths v2; native/liveNT."
     }
   ]
 }

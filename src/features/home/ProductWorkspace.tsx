@@ -158,7 +158,7 @@ import { NotificationSettingsScreen } from '../notifications/NotificationSetting
 import { AccountSettingsScreen } from '../account/AccountSettingsScreen';
 import { BetaInfoScreen } from '../account/BetaInfoScreen';
 import { MoreScreen } from '../more/MoreScreen';
-import { requestAccountDeletion, type AccountDeleteResult } from '../account/account-delete';
+import { requestAccountDeletion, resetAccountDeletionMarker, type AccountDeleteResult, type AccountDeletionUnlockResult } from '../account/account-delete';
 import { createAnalyticsService } from '../../analytics/analytics-service';
 import { deleteFirstUseTipStatus, deleteNotificationPreferences } from '../../notifications/notification-storage';
 import { cleanupStalePassportFiles } from '../passport/passport-export';
@@ -3348,11 +3348,35 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     dailyMutationStore.update(ownerScope, pending, expectedOwnerGeneration);
   }
 
+  async function handleAccountDeletionReset(): Promise<AccountDeletionUnlockResult> {
+    const capturedSession = session;
+    const ownerId = capturedSession?.user.id;
+    const generation = accountGeneration;
+    if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy
+      || accountDeletionInvalidated.current || accountDeleteStatus === 'confirmed') return 'unavailable';
+    const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation);
+    if (!isCurrent()) return 'unavailable';
+    accountDeleteInFlight.current = true;
+    setAccountDeleteBusy(true);
+    try {
+      const result = await resetAccountDeletionMarker(client, { ownerId, accessToken: capturedSession.access_token }, isCurrent);
+      if (!isCurrent() || result !== 'ready') return 'unavailable';
+      setAccountDeleteStatus('idle');
+      setAccountDeleteCleanupFailed(false);
+      setAccountDeleteSignOutFailed(false);
+      return 'ready';
+    } finally {
+      accountDeleteInFlight.current = false;
+      if (isCurrent()) setAccountDeleteBusy(false);
+    }
+  }
+
   async function handleAccountDeletion(): Promise<AccountDeleteResult> {
     const capturedSession = session;
     const ownerId = capturedSession?.user.id;
     const generation = accountGeneration;
-    if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy) return { status: 'unavailable' };
+    if (!ownerId || !capturedSession.access_token || accountDeleteInFlight.current || accountDeleteBusy
+      || accountDeletionInvalidated.current || accountDeleteStatus === 'confirmed') return { status: 'unavailable' };
     const isCurrent = () => mounted.current && isCurrentAccount(ownerId, generation);
     if (!isCurrent()) return { status: 'unavailable' };
     const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current.size > 0
@@ -3895,7 +3919,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       analyticsConsent={analyticsConsent} analyticsBusy={analyticsBusy} analyticsError={analyticsError}
       onSetAnalyticsConsent={saveAnalyticsConsent}
       onRetryAnalyticsConsent={retryAnalyticsConsent}
-      onDeleteAccount={handleAccountDeletion} onSignOutLocally={signOutDeletedLocally} />;
+      onDeleteAccount={handleAccountDeletion} onResetDeletionLock={handleAccountDeletionReset} onSignOutLocally={signOutDeletedLocally} />;
     if (page === 'beta-info') return <BetaInfoScreen onBack={() => setPage('account-settings')} />;
     if (page === 'notification-settings') return <NotificationSettingsScreen
       key={JSON.stringify(notificationPreferences)} onBack={() => setPage('more')} preferences={notificationPreferences} birthDate={dog.birth_date}

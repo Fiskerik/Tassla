@@ -36,6 +36,30 @@ async function clearPendingMarker(ownerId: string): Promise<void> {
   await SecureStore.deleteItemAsync(pendingKey(ownerId));
 }
 
+export type AccountDeletionUnlockResult = 'ready' | 'unavailable';
+
+export async function resetAccountDeletionMarker(
+  client: SupabaseClient,
+  captured: CapturedAccountSession,
+  isCurrent: () => boolean,
+): Promise<AccountDeletionUnlockResult> {
+  if (!isCurrent() || !UUID_PATTERN.test(captured.ownerId) || !captured.accessToken
+    || captured.accessToken.length > 8192 || /\s/.test(captured.accessToken)) return 'unavailable';
+  try {
+    const { data, error } = await client.auth.getUser(captured.accessToken);
+    const verifiedOwner = data?.user?.id;
+    if (error || !verifiedOwner || !UUID_PATTERN.test(verifiedOwner)
+      || verifiedOwner.toLowerCase() !== captured.ownerId.toLowerCase() || !isCurrent()) return 'unavailable';
+    // An issued cleanup stays scoped to its captured owner even if the session changes while storage awaits.
+    await clearPendingMarker(captured.ownerId);
+    if (!isCurrent()) return 'unavailable';
+    const marker = await readAccountDeletionMarker(captured.ownerId);
+    return isCurrent() && marker === 'clear' ? 'ready' : 'unavailable';
+  } catch {
+    return 'unavailable';
+  }
+}
+
 function isConfirmedReceipt(value: unknown): boolean {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const receipt = value as Record<string, unknown>;

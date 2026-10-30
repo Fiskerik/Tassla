@@ -683,3 +683,174 @@ test('callback screen delegates exchange to AuthProvider and confirmed server de
   assert.match(workspace, /setAccountDeleteStatus\('confirmed'\)/);
   assert.match(workspace, /signOutCurrentAccountLocally\(ownerId, generation\)/);
 });
+
+const markerFor = (id) => `tassla.account-deletion.v1.${id}`;
+const capturedUnlock = { ownerId: verifiedId, accessToken: bearer };
+function userResponse(id = verifiedId, status = 200) {
+  return new Response(JSON.stringify(status === 200 ? { id, app_metadata: {}, user_metadata: {} } : { message: 'synthetic auth failure' }),
+    { status, headers: { 'content-type': 'application/json' } });
+}
+
+test('manual unlock uses installed SDK online verification and clears only captured owner marker', async () => {
+  const store = memorySecureStore();
+  const api = await loadClientDeletionModule(store);
+  const entries = [[markerFor(verifiedId), 'pending'], [markerFor(suppliedOtherId), 'pending'], ['auth-session', 'keep'], ['routine-draft', 'keep']];
+  for (const [key, value] of entries) store.values.set(key, value);
+  const seen = [];
+  const client = clientWithFetch(async (input, init = {}) => {
+    seen.push({ url: String(input), method: init.method ?? 'GET', token: new Headers(init.headers).get('authorization') });
+    return userResponse();
+  });
+  try {
+    assert.equal(await api.resetAccountDeletionMarker(client, capturedUnlock, () => true), 'ready');
+    assert.deepEqual(seen, [{ url: 'https://local.invalid/auth/v1/user', method: 'GET', token: `Bearer ${bearer}` }]);
+    assert.deepEqual([...store.values], entries.slice(1));
+    assert.equal(await api.resetAccountDeletionMarker(client, capturedUnlock, () => true), 'ready');
+  } finally { await client.auth.dispose(); }
+});
+
+test('manual unlock refuses malformed, offline, unauthorized, missing or different online owners', async (t) => {
+  for (const failure of ['offline', 'unauthorized', 'missing', 'different']) {
+    await t.test(failure, async () => {
+      const store = memorySecureStore(); store.values.set(markerFor(verifiedId), 'pending');
+      const api = await loadClientDeletionModule(store);
+      const client = clientWithFetch(async () => {
+        if (failure === 'offline') throw new Error('synthetic offline');
+        return failure === 'unauthorized' ? userResponse(undefined, 401)
+          : failure === 'missing' ? new Response('{}', { headers: { 'content-type': 'application/json' } }) : userResponse(suppliedOtherId);
+      });
+      try {
+        assert.equal(await api.resetAccountDeletionMarker(client, capturedUnlock, () => true), 'unavailable');
+        assert.equal(store.values.get(markerFor(verifiedId)), 'pending');
+      } finally { await client.auth.dispose(); }
+    });
+  }
+  const api = await loadClientDeletionModule(memorySecureStore());
+  const neverClient = clientWithFetch(async () => { assert.fail('invalid/stale capture must not fetch'); });
+  try {
+    for (const capture of [{ ...capturedUnlock, ownerId: 'invalid' }, { ...capturedUnlock, accessToken: 'has space' }, { ...capturedUnlock, accessToken: '' }]) {
+      assert.equal(await api.resetAccountDeletionMarker(neverClient, capture, () => true), 'unavailable');
+    }
+    assert.equal(await api.resetAccountDeletionMarker(neverClient, capturedUnlock, () => false), 'unavailable');
+  } finally { await neverClient.auth.dispose(); }
+});
+
+test('unlock stays unavailable on storage failure or stale lifetime without restoring a cleared marker', async (t) => {
+  for (const phase of ['verification', 'delete', 'readback', 'delete-error', 'read-error', 'still-pending']) {
+    await t.test(phase, async () => {
+      let current = true;
+      const store = memorySecureStore(); store.values.set(markerFor(verifiedId), 'pending'); store.values.set(markerFor(suppliedOtherId), 'other');
+      const originalDelete = store.deleteItemAsync;
+      store.deleteItemAsync = async (key) => {
+        if (phase === 'delete-error') throw new Error('synthetic delete failure');
+        if (phase !== 'still-pending') await originalDelete(key);
+        if (phase === 'delete') current = false;
+      };
+      const originalRead = store.getItemAsync;
+      store.getItemAsync = async (key) => {
+        if (phase === 'read-error') throw new Error('synthetic read failure');
+        if (phase === 'readback') current = false;
+        return originalRead(key);
+      };
+      store.setItemAsync = async () => { assert.fail('manual unlock must never restore or replace a marker'); };
+      const api = await loadClientDeletionModule(store);
+      const client = clientWithFetch(async () => { if (phase === 'verification') current = false; return userResponse(); });
+      try {
+        assert.equal(await api.resetAccountDeletionMarker(client, capturedUnlock, () => current), 'unavailable');
+        assert.equal(store.values.get(markerFor(suppliedOtherId)), 'other');
+        assert.equal(store.values.has(markerFor(verifiedId)), ['verification', 'delete-error', 'still-pending'].includes(phase));
+      } finally { await client.auth.dispose(); }
+    });
+  }
+});
+
+async function actualWorkspaceAccountHandlers(bindings) {
+  const source = await readFile(new URL('../src/features/home/ProductWorkspace.tsx', import.meta.url), 'utf8');
+  const ast = ts.createSourceFile('ProductWorkspace.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const names = ['handleAccountDeletionReset', 'handleAccountDeletion'];
+  const functions = [];
+  function visit(node) {
+    if (ts.isFunctionDeclaration(node) && names.includes(node.name?.text)) functions.push(node.getText(ast));
+    ts.forEachChild(node, visit);
+  }
+  visit(ast); assert.equal(functions.length, names.length);
+  const compiled = ts.transpileModule(functions.join('\n'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
+  return new Function(...Object.keys(bindings), compiled + '\nreturn { handleAccountDeletionReset, handleAccountDeletion };')(...Object.values(bindings));
+}
+function workspaceUnlockBindings(client, resetAccountDeletionMarker) {
+  const updates = [];
+  const generation = { current: 1 };
+  return { updates, generation, bindings: {
+    client, resetAccountDeletionMarker, session: { user: { id: verifiedId }, access_token: bearer }, accountGeneration: 1,
+    mounted: { current: true }, isCurrentAccount: (owner, value) => owner === verifiedId && value === generation.current,
+    accountDeleteInFlight: { current: false }, accountDeleteBusy: false, accountDeleteStatus: 'unknown', accountDeletionInvalidated: { current: false },
+    setAccountDeleteBusy: (value) => updates.push(['busy', value]), setAccountDeleteStatus: (value) => updates.push(['status', value]),
+    setAccountDeleteCleanupFailed: (value) => updates.push(['cleanup', value]), setAccountDeleteSignOutFailed: (value) => updates.push(['signout', value]),
+  } };
+}
+
+test('actual workspace reset handlers share synchronous deletion lease and unlock all local UI flags only after verified readback', async () => {
+  const store = memorySecureStore(); store.values.set(markerFor(verifiedId), 'pending');
+  const api = await loadClientDeletionModule(store);
+  let release; let requests = 0;
+  const client = clientWithFetch(async () => { requests++; await new Promise((resolve) => { release = resolve; }); return userResponse(); });
+  const context = workspaceUnlockBindings(client, api.resetAccountDeletionMarker);
+  const handlers = await actualWorkspaceAccountHandlers(context.bindings);
+  try {
+    const reset = handlers.handleAccountDeletionReset();
+    assert.equal(context.bindings.accountDeleteInFlight.current, true);
+    assert.equal(await handlers.handleAccountDeletionReset(), 'unavailable');
+    assert.deepEqual(await handlers.handleAccountDeletion(), { status: 'unavailable' });
+    while (!release) await new Promise((resolve) => setTimeout(resolve, 0));
+    release(); assert.equal(await reset, 'ready');
+    assert.equal(requests, 1); assert.equal(context.bindings.accountDeleteInFlight.current, false);
+    assert.deepEqual(context.updates, [['busy', true], ['status', 'idle'], ['cleanup', false], ['signout', false], ['busy', false]]);
+  } finally { await client.auth.dispose(); }
+});
+
+test('actual workspace refuses confirmed/invalidation and never unlocks after failed verification or a same-owner generation change', async (t) => {
+  for (const phase of ['confirmed', 'invalidated', 'offline', 'generation', 'storage']) {
+    await t.test(phase, async () => {
+      const store = memorySecureStore(); store.values.set(markerFor(verifiedId), 'pending');
+      if (phase === 'storage') store.deleteItemAsync = async () => { throw new Error('synthetic storage failure'); };
+      const api = await loadClientDeletionModule(store);
+      let context; let requests = 0;
+      const client = clientWithFetch(async () => { requests++; if (phase === 'offline') throw new Error('synthetic offline'); if (phase === 'generation') context.generation.current++; return userResponse(); });
+      context = workspaceUnlockBindings(client, api.resetAccountDeletionMarker);
+      if (phase === 'confirmed') context.bindings.accountDeleteStatus = 'confirmed';
+      if (phase === 'invalidated') context.bindings.accountDeletionInvalidated.current = true;
+      const handlers = await actualWorkspaceAccountHandlers(context.bindings);
+      try {
+        assert.equal(await handlers.handleAccountDeletionReset(), 'unavailable');
+        assert.equal(context.updates.some(([name]) => ['status', 'cleanup', 'signout'].includes(name)), false);
+        assert.equal(context.bindings.accountDeleteInFlight.current, false);
+        assert.equal(store.values.get(markerFor(verifiedId)), 'pending');
+        if (phase === 'confirmed' || phase === 'invalidated') assert.equal(requests, 0);
+      } finally { await client.auth.dispose(); }
+    });
+  }
+});
+
+test('workspace keeps the shared lease through an already-issued owner cleanup after generation changes', async () => {
+  const store = memorySecureStore(); store.values.set(markerFor(verifiedId), 'pending'); store.values.set(markerFor(suppliedOtherId), 'other');
+  let release;
+  const originalDelete = store.deleteItemAsync;
+  store.deleteItemAsync = async (key) => { await new Promise((resolve) => { release = resolve; }); await originalDelete(key); };
+  const api = await loadClientDeletionModule(store);
+  const client = clientWithFetch(async () => userResponse());
+  const context = workspaceUnlockBindings(client, api.resetAccountDeletionMarker);
+  const handlers = await actualWorkspaceAccountHandlers(context.bindings);
+  try {
+    const reset = handlers.handleAccountDeletionReset();
+    while (!release) await new Promise((resolve) => setTimeout(resolve, 0));
+    context.generation.current++;
+    assert.equal(context.bindings.accountDeleteInFlight.current, true);
+    assert.equal(await handlers.handleAccountDeletionReset(), 'unavailable');
+    assert.deepEqual(await handlers.handleAccountDeletion(), { status: 'unavailable' });
+    release(); assert.equal(await reset, 'unavailable');
+    assert.equal(context.bindings.accountDeleteInFlight.current, false);
+    assert.deepEqual(context.updates, [['busy', true]]);
+    assert.equal(store.values.has(markerFor(verifiedId)), false);
+    assert.equal(store.values.get(markerFor(suppliedOtherId)), 'other');
+  } finally { await client.auth.dispose(); }
+});

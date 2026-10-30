@@ -1,0 +1,16 @@
+{
+  "results": [
+    "375x844: persisted marker read locks trash; manual unlock enables normal separate confirmation; no delete",
+    "430x844: persisted marker read locks trash; manual unlock enables normal separate confirmation; no delete",
+    "375x667: persisted marker read locks trash; manual unlock enables normal separate confirmation; no delete",
+    "375x844-text140: persisted marker read locks trash; manual unlock enables normal separate confirmation; no delete",
+    "Unknown root status and screen marker both return to ready after success",
+    "A later synthetic unknown deletion hides the old ready message and locks again",
+    "Failed check retains lock and offers another manual check",
+    "Pending verification keeps both actions disabled and completes once",
+    "Confirmed deletion cannot be unlocked",
+    "Default fixture remains clear; scenarios isolated per page"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RNWeb marker and callback; actualSDK/root tests separate, no live account deletion or device SecureStore"
+}
