@@ -20,10 +20,12 @@ import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
 import { homeTrainingJourneyDisplay, type HomeTrainingProgressionSummary, type PendingTrainingProgression } from '../training/training-progression';
 
+import type { HomeDailyTrainingOption } from './daily-training-options';
+
 type Destination = 'log' | 'training' | 'knowledge' | 'health' | 'planned-health';
 type LoadState = 'loading' | 'ready' | 'error';
 const HOME_DAILY_PREVIEW_LIMIT = 3;
-export type HomeDailyTrainingOption = { programId: string; versionId: string; stepId: string; programTitle: string; stepTitle: string };
+export type { HomeDailyTrainingOption } from './daily-training-options';
 export type HomeDailyFixtureItem = {
   id: string;
   label: string;
@@ -38,7 +40,7 @@ export type HomeDailyFixtureItem = {
 
 export function HomeScreen({ dog, breed, content, contentState, events, logState = 'loading', logPendingOrUnknown = false, trainingState = 'loading', nextStep, reviewTrainingStep = false, today: todayValue,
   ownedDogs = [dog], onSelectDog, onAddDog, openDogSwitcherInitially = false, onDogSwitcherInitiallyOpened,
-  dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [],
+  dailyFixture, dailyState = 'hidden', dailyDateKey = '', dailyScopeKey, dailyActivities = [], routineTemplates = [], routineDaySkips = [], dailyTrainingOptions = [], dailyTrainingOptionsState = 'ready',
   dailyRefreshing = false, dailyRefreshError = false,
   dailyMutationBusy = false, dailyMutationKey = '', dailyMutationMessage = '', dailyMutationError = false, onRetryDaily,
   routineRecovery = null, onRoutineRecoveryChange,
@@ -81,6 +83,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   routineTemplates?: readonly DailyRoutine[];
   routineDaySkips?: readonly DailyRoutineDaySkip[];
   dailyTrainingOptions?: readonly HomeDailyTrainingOption[];
+  dailyTrainingOptionsState?: 'ready' | 'error';
   dailyMutationBusy?: boolean;
   dailyMutationKey?: string;
   dailyMutationMessage?: string;
@@ -351,7 +354,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
     <DailyActivityManagerSheet key={`${dailyScopeKey ?? ''}:${dailyDateKey}:${focusRoutineId ?? 'all'}:${managerVisible}`}
       visible={managerVisible} dailyScopeKey={dailyScopeKey} onClose={() => setManagerVisible(false)} focusRoutineId={focusRoutineId}
       routineRecovery={routineRecovery} onRoutineRecoveryChange={onRoutineRecoveryChange}
-      activities={dailyActivities} routines={routineTemplates} routineDaySkips={routineDaySkips} trainingOptions={dailyTrainingOptions}
+      activities={dailyActivities} routines={routineTemplates} routineDaySkips={routineDaySkips} trainingOptions={dailyTrainingOptions} trainingOptionsState={dailyTrainingOptionsState}
       busy={dailyMutationBusy} mutationMessage={dailyMutationMessage} mutationError={dailyMutationError}
       onRetryMutation={onRetryDailyMutation} onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine}
       onDeleteRoutine={onDeleteRoutine} onAddRoutineToDay={onAddRoutineToDay} onRemoveRoutineFromDay={onRemoveRoutineFromDay}

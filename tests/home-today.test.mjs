@@ -6,6 +6,7 @@ import { registerHooks } from 'node:module';
 const hook = registerHooks({ resolve(specifier, context, nextResolve) { return specifier.startsWith('.') && !/\.[a-z0-9]+$/i.test(specifier) ? nextResolve(`${specifier}.ts`, context) : nextResolve(specifier); } });
 const homeToday = await import('../src/features/home/home-today.ts');
 hook.deregister();
+const sharedButtonSource = await readFile(new URL('../src/components/ui/Button.tsx', import.meta.url), 'utf8');
 const routineManagerSource = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
 
 const { homeAgeInWeeks, homeTodaySources, homeWeekStrip } = homeToday;
@@ -96,8 +97,8 @@ test('Home today sources use local-day events and performed health while keeping
 
 test('routine manager keeps the compact icon actions in one row with full accessible labels', () => {
   assert.match(routineManagerSource, /routineActions: \{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end'/);
-  assert.match(routineManagerSource, /routineIconActionDay: \{ borderColor: tokens\.colors\.selectedSurface/);
-  assert.match(routineManagerSource, /routineIconActionDanger: \{ borderColor: tokens\.colors\.danger/);
+  assert.match(sharedButtonSource, /icon: \{ width: tokens\.size\.touchMin, height: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(sharedButtonSource, /destructiveIcon: \{ backgroundColor: tokens\.colors\.surface, borderColor: tokens\.colors\.danger/);
   assert.match(routineManagerSource, /<IconOnlyButton icon=\{selected \? 'remove-outline' : 'add-outline'\}/);
   assert.match(routineManagerSource, /<IconOnlyButton icon="trash-outline" accessibilityLabel=\{`Ta bort rutin/);
   assert.match(routineManagerSource, /minHeight: tokens\.size\.touchMin/);

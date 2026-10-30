@@ -23,7 +23,7 @@ type WriteStatus = { status: 'saved' | 'failed' | 'unknown' } | void;
 type RangeStatus = 'loading' | 'ready' | 'partial' | 'error';
 
 export function DailyChecklistScreen({ dateKey, state, activities, refreshing, refreshError, mutationBusy, mutationKey, mutationMessage,
-  mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions,
+  mutationError, onBack, onRetry, onRetryRange, onRetryMutation, onOpenTrainingStep, onSetRoutineCompletion, routines, routineDaySkips, trainingOptions, trainingOptionsState = 'ready',
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay, onAddTrainingToDay, onRemoveTrainingFromDay,
   onGoTraining, filter, onChangeFilter, rangeState, rangeActivities, upcomingRoutines = [], onOpenHistoricalTrainingStep,
   onOpenUpcomingRoutine, onOpenPlannedHealth, openManagerInitially = false, dailyScopeKey, routineRecovery = null, onRoutineRecoveryChange }: {
@@ -48,6 +48,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
   routines: readonly DailyRoutine[];
   routineDaySkips: readonly DailyRoutineDaySkip[];
   trainingOptions: readonly HomeDailyTrainingOption[];
+  trainingOptionsState?: 'ready' | 'error';
   filter: ChecklistFilter;
   onChangeFilter: (filter: ChecklistFilter) => void;
   rangeState: RangeStatus;
@@ -233,7 +234,7 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
       dailyScopeKey={dailyScopeKey} routineRecovery={routineRecovery} onRoutineRecoveryChange={onRoutineRecoveryChange}
       editFocusedRoutineOnOpen={editFocusedRoutineOnOpen} upcomingRoutineOnly={routineOnlyContext}
       activities={activities} routines={routineOnlyContext && focusedUpcomingRoutine ? [focusedUpcomingRoutine] : showingUpcoming ? upcomingRoutines : routines}
-      routineDaySkips={routineDaySkips} trainingOptions={trainingOptions}
+      routineDaySkips={routineDaySkips} trainingOptions={trainingOptions} trainingOptionsState={trainingOptionsState}
       busy={mutationBusy} mutationMessage={mutationMessage} mutationError={mutationError} onRetryMutation={onRetryMutation}
       onCreateRoutine={onCreateRoutine} onUpdateRoutine={onUpdateRoutine} onDeleteRoutine={onDeleteRoutine}
       onAddRoutineToDay={onAddRoutineToDay} onRemoveRoutineFromDay={onRemoveRoutineFromDay}

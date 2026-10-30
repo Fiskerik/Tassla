@@ -1,3 +1,4 @@
+import { buildDailyTrainingOptions } from './daily-training-options';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Alert, AppState, BackHandler } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -140,7 +141,7 @@ import { selectNextHomeTraining } from './home-training-suggestion';
 import { DevelopmentScreen } from './DevelopmentScreen';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
-import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, nextSelectableTrainingStep, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
+import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
 import { activeMainTabDestination, isMainTabDestination, logViewScrollKeys, mainTabTransitionDirection, nextMainTabDestination, productRouteScrollKeys, profileInsightsOriginMatches, type InsightsOrigin } from './main-navigation';
 import { AppBar, BottomNav, Dialog, MainSwipeNavigation } from '../../components/ui';
 import { ScreenTransition } from '../../components/ui/Motion';
@@ -1770,14 +1771,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     || page === 'development' && !developmentScopeIsCurrent
     || page === 'knowledge' && !developmentGuideScopeIsCurrent
     ? 'home' : page;
-  const selectedTrainingKeys = new Set(dailySnapshotForView?.trainingSelections.map((row) => `${row.program_version_id}:${row.step_id}`) ?? []);
-  const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey
-    ? (dailyTrainingForView?.programs ?? []).filter((program) => !program.id.startsWith('review-v1:training:')).flatMap((program) => {
-      const step = nextSelectableTrainingStep(program);
-      if (!step || selectedTrainingKeys.has(`${program.id}:${step.id}`)) return [];
-      return [{ programId: program.content_id, versionId: program.id, stepId: step.id, programTitle: program.title, stepTitle: step.title }];
-    })
-    : [];
   const publishedGuides = visibleContent.filter((item) => item.contentType !== 'training_program');
   const hasReviewTraining = reviewContentEnabled && visibleTrainingState === 'ready'
     && training.programs.some((program) => program.id.startsWith('review-v1:training:'));
@@ -1804,6 +1797,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const progressionPendingByVersion = Object.fromEntries(Object.entries(pendingTrainingProgressions)
     .filter(([key]) => key.startsWith(progressionPendingPrefix))
     .map(([key, value]) => [key.slice(progressionPendingPrefix.length), value]));
+  const dailyTrainingOptionsState = dailyTrainingForView?.progressionState === 'ready' && Object.keys(progressionPendingByVersion).length === 0 ? 'ready' : 'error';
+  const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey && dailyTrainingForView
+    ? buildDailyTrainingOptions(dog.id, dailyTrainingForView.programs, dailyTrainingForView.progression,
+      dailyTrainingOptionsState, dailySnapshotForView?.trainingSelections ?? []) : [];
   const latestJourneyPending = trainingProgressionSummary
     ? progressionPendingByVersion[trainingProgressionSummary.journey.program_version_id] ?? null
     : null;
@@ -3668,7 +3665,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         void completeRoutineAndMeasure(row, itemId, completed);
       }}
       routines={dailySnapshotForView?.routines ?? []} routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
-      trainingOptions={dailyTrainingOptions}
+      trainingOptions={dailyTrainingOptions} trainingOptionsState={dailyTrainingOptionsState}
       onCreateRoutine={(input: DailyRoutineCreateInput) => {
         return createRoutineForToday(input);
       }}
@@ -3743,7 +3740,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       dailyActivities={dailyActivities}
       routineTemplates={dailySnapshotForView?.routines ?? []}
       routineDaySkips={dailySnapshotForView?.routineDaySkips ?? []}
-      dailyTrainingOptions={dailyTrainingOptions}
+      dailyTrainingOptions={dailyTrainingOptions} dailyTrainingOptionsState={dailyTrainingOptionsState}
       dailyMutationBusy={dailyMutationIsBusy}
       dailyMutationKey={dailyMessageKey}
       dailyMutationMessage={dailyMutationMessageForView}

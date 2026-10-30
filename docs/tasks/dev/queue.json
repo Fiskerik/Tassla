@@ -14036,6 +14036,92 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/Architect och verklig PG/fullcheck101/101 sparade. Lokalt klart, liveapp behöver nya migrationen. Nästa commit/UXslice."
+    },
+    {
+      "id": "ACTIVITY-MANAGER-FLOW-01",
+      "title": "Enkel rutinhantering och verifierat pågående träningsval",
+      "mvp_requirement": "Eriks beställda omdesign2026-10-30",
+      "plan": "docs/tasks/dev/ACTIVITY-MANAGER-FLOW-01.md v2",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/README.md",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/daily-training-options.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/theme/tokens.ts",
+        "supabase/migrations/202610300002_daily_active_training_selection.sql",
+        "supabase/tests/daily-active-training-selection.sql",
+        "tools/verify-daily-training-selection-sql.mjs",
+        "tests/daily-training-options.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/home-first-day.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-activity-manager-flow.py",
+        "docs/design/evidence/activity-manager-flow-01",
+        "docs/design-rules.md",
+        "docs/tasks/dev/ACTIVITY-MANAGER-FLOW-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/home-today.test.mjs"
+      ],
+      "acceptance": [
+        "Stabil centrerad modal, kompakt rutinöversikt/detalj och tydligt skapa/redigera/spara-flöde.",
+        "Faktiskt aktivt träningssteg eller behörigt nästa förslag; inga gissningar/automatisk progression.",
+        "Verklig SQL-inträdeskontroll och negativa fall, modell/browser/fullcheck och oberoende review, ärliga native/livegränser."
+      ],
+      "checks": [
+        "node tools/verify-daily-training-selection-sql.mjs",
+        "node --experimental-strip-types --test tests/daily-training-options.test.mjs",
+        "python tools/visual-check/verify-activity-manager-flow.py",
+        "CI=1 pnpm check",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "ROUTINE-SAVE-REPAIR-01"
+      ],
+      "risk": "H: dagsvals-trigger anpassas till verklig versionsbunden resa, bevarad ägargräns",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1, Security plan PASS, UI Critic PROCEED/BRIEF. Exakt aktivt steg, bevarad idempotens/legacy och lika modalram; inga nya ändamål."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root ensam skriver stabil manager/form och ren selector med smal faktisk SQL-inträdesgren."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v2 implementation; actual PostgreSQL17.5 integration PASS, nine RNWeb journeys PASS, public iOS export PASS; visual corrections rerendered, final check log recorded in task."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: own 102/102 full check, actual PostgreSQL17.5 SQL probe, nine RNWeb flows and viewed scoped screenshots; all52 paths in v2 scope. Native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS without findings; independent QA PASS; task stores actual52path audit and all bounded evidence."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS without findings; independent QA PASS; task stores actual52path audit and all bounded evidence."
     }
   ]
 }
