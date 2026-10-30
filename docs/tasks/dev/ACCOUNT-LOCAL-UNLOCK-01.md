@@ -1,5 +1,5 @@
 # ACCOUNT-LOCAL-UNLOCK-01 — verifiera kontot och lås upp nytt raderingsförsök
-Status implementing · plan v2 · risk H (auth/lokal raderingsmarkör) · bas 05c2b56 · branch fix/routines-training-flow · root ensam writer.
+Status done · plan v2 · risk H (auth/lokal raderingsmarkör) · bas 05c2b56 · branch fix/routines-training-flow · root ensam writer.
 
 Mandat: Eriks nya uttryckliga instruktion 2026-10-30 att rensa cache eller motsvarande för att testa radera konto när det är låst. Detta godkänner manuell återställning av just lokal spärr, inte generell cache-/sessionsrensning, automatisk omradering eller faktisk radering härifrån. Äldre support-only-instruktion är ersatt i detta avgränsade fall. ACCOUNT-DELETE-STATUS-01 är fortsatt blockerad för verkligt serverutfall.
 
@@ -45,3 +45,6 @@ Slutlig Security PASS kvarstår inklusive sista copyguards, syntetisk fixture oc
 Oberoende QA PASS: egen fullcheck102/102 och riktad account-delete, samtliga10browserresor med /tmp-evidens. Första Chromiumstart under defaultrestriktion misslyckades; explicit networkretryPASS. Egenvisning av komposit1189×1055 och667/140/fel/upplåst visar supportkonsekvens/räckbarhet. Samtliga26produkt/test/evidens/task/köpaths i v2-scope; nya slutloggar finns redan bland tillåtna paths. Native/liveNT, inga verkliga raderingspåståenden. Produktdiff fryst för oberoende Reviewer.
 
 Frozen Reviewer PASS utan fynd. Faktiska SDK-/komponent-API:er, sharedlease, root+screenstate och v2-scope kontrollerade. Produkt, tester och skärmevidens är frysta; återstår hållbar commit, slutlogg med faktiska commit-ID:n och push/PR. Ingen signerad build, live-migration eller verklig kontoradering har körts.
+
+## Hållbar checkpoint
+Produkt/test/evidens committat i `affeb1a3b77484793b881f38c3485b5adac89ce0`. Pre-commit-hook körde full check och staged whitespace med lyckat resultat. Alla tillämpliga lokala kriterier och oberoende granskningar har passerat. Slutloggen stängs i separat dokumentationscommit; ingen ytterligare produktändring. Nästa: push av arbetsbranch och PR, därefter ägarens migrationer/nytt bygge och verkligt raderingsprov. Den aktuella telefonens cache har inte rensats härifrån.
