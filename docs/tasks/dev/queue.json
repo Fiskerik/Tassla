@@ -13972,6 +13972,70 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
+    },
+    {
+      "id": "ROUTINE-SAVE-REPAIR-01",
+      "title": "Rätta PostgreSQL-validering som blockerar giltiga rutinsparningar",
+      "mvp_requirement": "Eriks reproducerade rutin-sparfel 2026-10-30",
+      "plan": "docs/tasks/dev/ROUTINE-SAVE-REPAIR-01.md v1",
+      "write_paths": [
+        "supabase/migrations/202610300001_routine_checklist_validation_fix.sql",
+        "supabase/tests/routine-checklist-validation.sql",
+        "tools/verify-routine-save-sql.mjs",
+        "src/features/home/README.md",
+        "docs/tasks/dev/ROUTINE-SAVE-REPAIR-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Samma create-v2 RPC ger42883 före och korrekt sparning efter ny smal migration.",
+        "Valideringsgränser, idempotens, repeat/replace, ägarisolering och ACL bevaras med verklig lokal SQL.",
+        "Full check och oberoende QA/Reviewer/Security, inga livepåståenden."
+      ],
+      "checks": [
+        "node tools/verify-routine-save-sql.mjs",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "risk": "H: smal framåtriktad SQL-valideringsrättning",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 och Security initial PASS: separat objekttypkontroll/nyckelräkning, oförändrade bounds/ACL/RPC/RLS, faktiska RPC-regressioner."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Smal ny migrationsfix och faktisk lokal PostgreSQL-probe; historiska migreringar orörda."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Faktisk PostgreSQL17.5-repro+fix/ACL/owner/bounds PASS, fullcheck101/101 och scope/diffPASS, Security finalPASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA egen PG-probe och pnpmcheck101/101 PASS, scope6/9 och diffPASS. Live/telefonNT. Slutreview återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd; QA/Security/Architect och verklig PG/fullcheck101/101 sparade. Lokalt klart, liveapp behöver nya migrationen. Nästa commit/UXslice."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/Architect och verklig PG/fullcheck101/101 sparade. Lokalt klart, liveapp behöver nya migrationen. Nästa commit/UXslice."
     }
   ]
 }

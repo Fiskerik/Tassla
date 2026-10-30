@@ -79,3 +79,9 @@ Hundprofilens ägarverifierade raderingscallback går via `ProductWorkspace` til
 Statuskontroll använder endast RLS-filtrerade `fetchOwnedDogs`; den skickar inget ägar-ID. Den kan bekräfta att vald profil saknas utan att skicka en ny delete-begäran. RN Web-fixturen täcker dialog, okänt svar, statusläsning, sista hund och stor text men inte native VoiceOver/TalkBack, live RLS eller samtidig skrivning mot databas.
 
 Ägarjustering 2026-10-29: Utvecklingsfotot och den kronologiska åldersbågen ligger i separata ytor, med grön förfluten ålder mot en jämn kortbakgrund och neutral kontrasterande bana. Hem visar statiska etiketten Ungefärlig fas bredvid en kompakt valp/unghund/vuxen-länk med 44 pt träffyta. Datum- och fasberäkning är oförändrad.
+
+## Rätta rutinsparning (2026-10-30)
+
+`202610300001_routine_checklist_validation_fix.sql` rättar en valideringsfunktion som anropade en PostgreSQL-funktion som inte finns. Både skapa och redigera använder samma helper. Den framåtriktade migrationen måste appliceras i rätt Supabase-miljö; en ny appbuild löser inte det gamla databasfelet ensam. Inga RLS-, RPC- eller ikonregler ändras.
+
+`node tools/verify-routine-save-sql.mjs` kör faktiska create/replace-RPC:er och negativa ägarfall i en engångsdatabas via PGlite. Verktyget följer repoets befintliga SQL-probemönster; installera `@electric-sql/pglite@0.3.14` i en tillfällig `/tmp/tassla-sql-tools`-katalog (eller ange `TASSLA_SQL_TOOLS`). Ingen appdependency tillkommer. Det visar baseline42883 före fix, korrekt efter fix, idempotens, gränsvärden, repeat/revisioner och ägarisolering. `supabase/tests/routine-checklist-validation.sql` är motsvarande rollback-probe för en avsedd utvecklingsdatabas, aldrig automatiskt produktion.
