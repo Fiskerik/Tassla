@@ -1453,3 +1453,6 @@ Från Main8620e72 på vanlig branch fix/routines-training-flow, inga worktrees. 
 
 ### 2026-10-30 — ACTIVITY-MANAGER-FLOW-01
 Lokalt klar, commit `fix: simplify daily routine and training planning` på fix/routines-training-flow (bas da4ac54). Stabil centrerad manager, kompakta rutinrader/detalj/form och fast sparafooter. Faktiskt pågående träningssteg väljs utan progression. SQL002 anpassar befintlig dagsvalsguard till aktiv resa; båda nya migreringar kräver separat applicering i Supabase. ArchitectAPPROVEv2/SecurityPASS/UICriticREVIEWFIXED/oberoendeQAPASS/FrozenReviewerPASS.102/102, faktiskPG17.5 och9RNWebflöden samt publiciOSexportPASS. Native/liveNT. Taskplanen innehåller exakt scope/bevis och §14. Nästa: fast träningsbild och stängning efter bekräftat pass.
+
+### 2026-10-30 — TRAINING-PINNED-SESSION-01
+Lokalt klar på fix/routines-training-flow, bas0acd741, commit `fix: keep exercise context visible and close after saved sessions`. Fast faktisk titel+foto, scrollande instruktion, sparat pass stänger modal och visar kompakt kort på programsidan. Separat målfråga endast vid aktuell behörighet; inga automatiska delmål. ArchitectAPPROVE/UICriticREVIEWFIXED/oberoendeQA ochReviewerPASS.102/102, nioRNWebflöden och publiciOSexportPASS. Native/liveNT. Scope/checklista i task. Nästa: manuell kontospärr-upplåsning enligt senaste ägarinstruktion.

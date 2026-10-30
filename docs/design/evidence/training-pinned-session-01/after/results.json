@@ -1,0 +1,15 @@
+{
+  "results": [
+    "375x844: fixed photo/title under scroll, saved-only close/card, explicit separate milestone",
+    "430x844: fixed photo/title under scroll, saved-only close/card, explicit separate milestone",
+    "375x667: fixed photo/title under scroll, saved-only close/card, explicit separate milestone",
+    "375x844-text140: fixed photo/title under scroll, saved-only close/card, explicit separate milestone",
+    "Vi fortsätter öva: save closes, no milestone offer, dismiss works",
+    "Vi avslutade tidigare: save closes, no milestone offer, dismiss works",
+    "Pending retains modal until saved receipt",
+    "Failed: modal and feedback retained, no success",
+    "Unknown keeps modal; same-operation retry saved closes and shows exact step card"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RNWeb; CSS140 not native DynamicType; no live database"
+}
