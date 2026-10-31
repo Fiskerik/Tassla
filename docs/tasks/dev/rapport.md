@@ -1482,3 +1482,8 @@ Sex befintliga foton13551755→812436byte; ExpoImage57.0.5 används i befintliga
 
 ## 2026-10-31 — NATIVE-READINESS-01
 Varm statiskt konfigurerad splash, rootlayout/watchdog och vakenhet enbart för öppen aktiv träningsinstruktion. Expo splash57.0.10/keepawake57.0.2. Architect/Critic/Security/UIcritic scoped, oberoende QA egen fullcheck894pass/1skip, livstidsprov och publiciOS JS-export PASS. Android standardfade nollställd; reducerad rörelse på fysisk enhet ej verifierad. Opaque ikon har liten färgskillnad mot bakgrunden, enhetsutseende och fysisk sleep NT. FrozenReviewer/commit nästa; därefter ursprungliga steg1–4.
+
+## 2026-10-31 — DEVELOPMENT-CONTENT-01, granskat men ej committat
+Bas283b81d. Faktisk publicerad katalog i Utveckling med ålders-/explicitkontext, rekommenderade artiklar/guider och scope-/abort-/clientguard; inga draftfallbacks. Architect/Critic/UICritic, oberoende QA och frozen kodreview PASS inom scope, fullcheck896pass/1skip och synthetic browser9 + visionssubset60PASS. Bilder tydligt syntetiska; fullpanel2/livepublicering/RLS/native ej godkända. Public iOS-export och git-hook kräver paketregister som svarar HTTP503; retry pågår, gamla exporter räknas inte som aktuellt PASS. Home→Checklist återställer59px efterlayout i både tidigare/currentbundle; initialt omedelbart visionsprov läste för tidigt. Nästa: invänta register, slutlig export/commit; därefter steg2–4 och överväg @expo/ui enligt roadmap.
+
+DEVELOPMENT-CONTENT-01 återupptagen: registry svarar igen och slutlig public iOS JS-export PASS. Frozen kodreview/oberoendeQA, 9 syntetiska katalogfall och60 visionskontroller PASS inom scope. Git-hook körs utan undantag före commit. Livekatalog/RLS/native och fullpanelavvikelser öppna. Nästa steg2–4.

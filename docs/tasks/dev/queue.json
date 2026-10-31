@@ -14518,6 +14518,116 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS no findings; actual SDK/native APIs, root release, foreground/instruction/tag lifetime and all13paths verified. QA fullcheck and JS export PASS. Commit next; device NT."
+    },
+    {
+      "id": "DEVELOPMENT-CONTENT-01",
+      "title": "Publicerat fas- och läsinnehåll i Utveckling",
+      "plan": "docs/tasks/dev/DEVELOPMENT-CONTENT-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks beställning steg1–4, MVP-COMPLETION-261031 steg1",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/DevelopmentCatalogScreen.tsx",
+        "src/features/home/development-content.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "tests/development-screen-model.test.mjs",
+        "tests/development-content.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/verify-development-content.py",
+        "docs/design/evidence/development-content-01",
+        "docs/tasks/dev/DEVELOPMENT-CONTENT-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "tools/visual-check/development-content-fixture.tsx"
+      ],
+      "acceptance": [
+        "Actual published catalog and explicit chronological/context choice without invented milestones",
+        "Only explicitly recommended published articles/guides and preserved exact navigation",
+        "Independent error/retry and stale-lifetime protection"
+      ],
+      "checks": [
+        "pnpm check",
+        "development catalog lifecycle and rendering",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "NATIVE-READINESS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "ArchitectAPPROVE with client-identity synchronous guard and captured accountgeneration; CriticPROCEED; exact reviewed published data only, no inferred homecoming."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root singlewriter, implement guarded catalog lifecycle and pure content selection; visual edits await UIcritic BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic v2, UIcritic supplemental and independent QA PASS scoped; fullcheck896pass/1skip, synthetic browser9 PASS. Public iOS export is retrying after registry503, broad checklist scroll finding under investigation. Reviewer next after clear evidence."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck, scoped paths and synthetic actual catalog browser9 PASS, panel2 composition/density differences remain open, live/native NT. Frozen code review while export and scroll investigation continue."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Local implementation and independent QA/frozen code review PASS; public iOS export and required commit hook blocked by reproducible npm registry HTTP503 during pnpm supply-chain metadata verification. No hooks or policy bypass. Save binary diff/untracked checkpoint; continue independent goal work."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Registry recovered; unchanged reviewed implementation, final public iOS JS export PASS, resume existing validated v2 task."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect APPROVE/Critic PROCEED v2 unchanged; no source changes since frozen review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Existing reviewed implementation preserved; final iOS JS export PASS after registry recovery."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Existing fullcheck896pass/1skip, synthetic9 and vision60 PASS; final iOS export PASS; independent QA already PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS and supplemental visual review; frozen code unchanged, native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS for unchanged code, registry recovered and final iOS JS export PASS; fullpanel/live/native limits remain open. Commit now."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS for unchanged code, registry recovered and final iOS JS export PASS; fullpanel/live/native limits remain open. Commit now."
     }
   ]
 }

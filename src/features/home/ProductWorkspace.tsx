@@ -138,7 +138,8 @@ import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCach
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { selectNextHomeTraining } from './home-training-suggestion';
-import { DevelopmentScreen } from './DevelopmentScreen';
+import { DevelopmentCatalogScreen } from './DevelopmentCatalogScreen';
+import { recommendedDevelopmentReading } from './development-content';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
 import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
@@ -3814,12 +3815,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
-    if (page === 'development') return <DevelopmentScreen
+    if (page === 'development' && session?.user.id) return <DevelopmentCatalogScreen
+      key={currentSelectionKey}
+      client={client}
+      ownerId={session.user.id}
+      accountGeneration={accountGeneration}
+      isCurrentAccount={isCurrentAccount}
       dogName={dog.name}
       birthDate={dog.birth_date}
       today={homeToday}
-      guides={age === null ? [] : visibleContent.filter((item) => item.contentType === 'guide')}
-      guidesState={age === null ? 'ready' : visibleContentState}
+      guides={recommendedDevelopmentReading(visibleContent)}
+      guidesState={visibleContentState}
       onBack={() => {
         setDevelopmentFocus(null);
         setPage('home');

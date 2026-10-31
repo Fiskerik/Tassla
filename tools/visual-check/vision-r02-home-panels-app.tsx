@@ -1,3 +1,5 @@
+import phaseBundle from '../../docs/content/knowledge-phase-checklists-v1.json';
+import { CHECKLIST_TEMPLATES } from '../../src/features/knowledge/checklist-content';
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ScrollView, View, Text } from 'react-native';
@@ -28,6 +30,12 @@ import type { InsightsLoadState } from '../../src/features/puppy-log/InsightsScr
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { localDate } from '../../src/features/onboarding/dog';
 
+// Synthetic published-shaped data for visual comparison; production reads the validated catalog.
+const phaseVisualFixture = CHECKLIST_TEMPLATES.map((template) => {
+  const item = phaseBundle.templates.find((entry) => entry.template_id === template.id);
+  return item ? { ...template, title: item.title, intro: item.body, items: item.items.map(({ key, title }) => ({ key, title })),
+    sources: item.sources.map((id) => phaseBundle.sources.find((source) => source.id === id)?.url).filter((url): url is string => Boolean(url)) } : template;
+});
 const params = new URLSearchParams(location.search);
 const scenario = params.get('homeScenario') ?? 'ready';
 const requestedDevelopmentGuidesState = params.get('developmentGuidesState');
@@ -522,6 +530,8 @@ const rangeActivities = reviewMode && params.get('rangeEmpty') !== 'true'
             today={today}
             guides={reviewMode ? developmentGuides : []}
             guidesState={developmentGuidesState}
+            phaseTemplates={phaseVisualFixture}
+            phaseState="ready"
             onBack={() => { setDevelopmentGuideId(null); setNavigation('home'); }}
             onOpenGuide={(id) => { setDevelopmentGuideId(id); setNavigation('knowledge'); }}
             onRetryGuides={() => { window.__developmentGuideRetryCalls = (window.__developmentGuideRetryCalls ?? 0) + 1; }}

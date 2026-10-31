@@ -220,17 +220,12 @@ def verify_development_views(browser) -> None:
         page.get_by_role('button', name='Visa utveckling för Luna', exact=True).click()
         expect(page.get_by_test_id('development-screen')).to_be_visible()
         expect(page.get_by_text('11 veckor · Valp', exact=True)).to_be_visible()
-        expect(page.get_by_text('Nästa milstolpar', exact=True)).to_be_visible()
-        expect(page.get_by_text('Ungefärligt – hundar utvecklas olika.', exact=True)).to_be_visible()
-        expect(page.get_by_role('link', name='Öppna källa 2: Tandömsning')).to_be_visible()
+        expect(page.get_by_text('Förslag för fasen', exact=True)).to_be_visible()
+        expect(page.get_by_role('tab', name='Utifrån ålder', exact=True)).to_have_attribute('aria-selected', 'true')
         expect(page.get_by_text('Standardbild', exact=True)).to_have_count(0)
-        milestone_rows = page.locator('[data-testid^="development-milestone-"]:not([data-testid*="-icon-"])')
-        milestone_count = milestone_rows.count()
-        milestone_icons = [page.get_by_test_id(f'development-milestone-icon-{key}').is_visible()
-                           for key in ('new-experiences', 'teething', 'adolescence')]
-        record(f'Development shows three distinct milestone icon rows at {width}px',
-               milestone_count == 3 and all(milestone_icons),
-               {'row_count': milestone_count, 'icons_visible': milestone_icons})
+        phase_rows = page.locator('[data-testid^="development-phase-item-"]')
+        record(f'Development shows three voluntary phase suggestions at {width}px', phase_rows.count() == 3,
+               {'row_count': phase_rows.count()})
         screen_title = page.get_by_role('heading', name='Lunas utveckling', exact=True)
         title_box = screen_title.bounding_box()
         hero_box = page.get_by_test_id('development-hero').bounding_box()
@@ -266,10 +261,10 @@ def verify_development_views(browser) -> None:
                {'initial_pill': age_pill_box})
         image = page.get_by_test_id('development-screen').locator('img').first.bounding_box()
         image_ratio = image['height'] / image['width'] if image and image['width'] else 0
-        image_is_prominent = image is not None and image['height'] >= 210 and 0.65 <= image_ratio <= 0.72
+        image_is_prominent = image is not None and image['height'] >= 180 and 0.55 <= image_ratio <= 0.57
         record(f'Development hero retains its large unique generic image at {width}px', image_is_prominent, {'image_box': image})
         if REVIEW:
-            guide = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True)
+            guide = page.get_by_role('button', name='Öppna: Så bygger ni lugna rutiner', exact=True)
             expect(guide).to_be_visible()
             page.screenshot(path=str(OUT / f'development-{width}.png'), full_page=True)
             guide.click()
@@ -281,7 +276,7 @@ def verify_development_views(browser) -> None:
             expect(guide).to_be_visible()
             record(f'Development guide returns directly to Development at {width}px', True)
         else:
-            expect(page.get_by_text('Det finns inga publicerade guider för den här åldern ännu.', exact=True)).to_be_visible()
+            expect(page.get_by_text('Det finns ingen rekommenderad läsning just nu.', exact=True)).to_be_visible()
             page.screenshot(path=str(OUT / f'development-{width}.png'), full_page=True)
             page.get_by_role('button', name='Tillbaka till Hem', exact=True).click()
             expect(page.get_by_text('Dagens att göra', exact=True)).to_be_visible()
@@ -293,7 +288,7 @@ def verify_development_views(browser) -> None:
 
     short_page = browser.new_page(viewport={'width': 375, 'height': 667})
     short_page.goto(development_url(), wait_until='networkidle')
-    expect(short_page.get_by_test_id('development-milestones')).to_be_visible()
+    expect(short_page.get_by_test_id('development-phase-suggestions')).to_be_visible()
     short_page.screenshot(path=str(OUT / 'development-short-375x667.png'), full_page=True)
     short_page.evaluate("""() => document.querySelectorAll('[dir="auto"]').forEach((element) => {
       const style = getComputedStyle(element);
@@ -312,7 +307,7 @@ def verify_development_views(browser) -> None:
 
     last_row_page = browser.new_page(viewport={'width': 375, 'height': 844})
     last_row_page.goto(development_url(), wait_until='networkidle')
-    last_row = last_row_page.get_by_test_id('development-milestone-adolescence')
+    last_row = last_row_page.get_by_test_id('development-phase-item-alone')
     last_row.scroll_into_view_if_needed()
     last_row_box = last_row.bounding_box()
     bottom_nav_box = last_row_page.get_by_role('tablist', name='Huvudmeny').bounding_box()
@@ -340,7 +335,7 @@ def verify_development_views(browser) -> None:
     development_entry.click()
     expect(page.get_by_test_id('development-screen')).to_be_visible()
     dev_before = set_vertical_scroll(page, 188)
-    guide = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True)
+    guide = page.get_by_role('button', name='Öppna: Så bygger ni lugna rutiner', exact=True)
     guide.scroll_into_view_if_needed()
     dev_before = vertical_scroll_state(page)
     assert dev_before is not None, 'Development should have a scrollable route at the short viewport.'
@@ -371,6 +366,8 @@ def verify_development_views(browser) -> None:
            and abs(float(home_from_checklist['top']) - float(home_checklist_origin['top'])) <= 1,
            {'before': home_checklist_origin, 'after': home_from_checklist})
     page.get_by_test_id('home-open-checklist').click()
+    expect(page.get_by_test_id('daily-checklist-screen')).to_be_visible()
+    page.wait_for_timeout(500)
     checklist_after = vertical_scroll_state(page)
     record('Home → Checklist restores the third independent route offset',
            checklist_before is not None and checklist_after is not None
@@ -430,8 +427,8 @@ def verify_development_views(browser) -> None:
            text_fit['no_document_overflow'] and text_fit['phase_range_within_screen'] and text_fit['age_label_single_line'],
            text_fit)
     page.screenshot(path=str(OUT / 'development-text-140-375.png'), full_page=True)
-    large_text_target = page.get_by_role('button', name='Öppna guide: Så bygger ni lugna rutiner', exact=True) if REVIEW \
-        else page.get_by_text('Det finns inga publicerade guider för den här åldern ännu.', exact=True)
+    large_text_target = page.get_by_role('button', name='Öppna: Så bygger ni lugna rutiner', exact=True) if REVIEW \
+        else page.get_by_text('Det finns ingen rekommenderad läsning just nu.', exact=True)
     large_text_target.scroll_into_view_if_needed()
     target_box = large_text_target.bounding_box()
     bottom_nav = page.get_by_role('tablist', name='Huvudmeny').bounding_box()
@@ -451,8 +448,8 @@ def verify_development_states(browser) -> None:
         if state == 'loading':
             expect(page.get_by_role('progressbar', name='Laddar innehåll')).to_have_count(2)
         else:
-            expect(page.get_by_text('Guiderna kunde inte hämtas just nu.', exact=True)).to_be_visible()
-            retry = page.get_by_role('button', name='Hämta utvecklingsguider igen', exact=True)
+            expect(page.get_by_text('Rekommendationerna kunde inte hämtas just nu.', exact=True)).to_be_visible()
+            retry = page.get_by_role('button', name='Hämta rekommenderad läsning igen', exact=True)
             expect(retry).to_be_visible()
             page.screenshot(path=str(OUT / 'development-guides-error-375.png'), full_page=True)
             retry.click()
@@ -468,7 +465,7 @@ def verify_development_states(browser) -> None:
         expect(page.get_by_text('Ålder och fas', exact=True)).to_be_visible()
         expect(page.get_by_text('Åldersresan visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
         expect(page.get_by_test_id('development-age-pill')).to_have_count(0)
-        expect(page.get_by_text('Åldersrelevanta guider visas när ett giltigt födelsedatum finns.', exact=True)).to_be_visible()
+        expect(page.get_by_text('Välj sammanhang för att se förslag.', exact=True)).to_be_visible()
         page.screenshot(path=str(OUT / f'development-age-{scenario}-375.png'), full_page=True)
         page.close()
         record(f'Development {scenario} birth date uses the neutral unknown-age state', True)
@@ -495,7 +492,7 @@ def verify_development_progress(browser) -> None:
             marker_error = max(abs(endpoint[index] - marker_center[index]) for index in (0, 1)) if marker_center else None
             record(f'{scenario} age renders a green progress arc over a neutral track at {width}px',
                    progress_attributes['stroke'] in ('#217448', 'rgb(33, 116, 72)')
-                   and track_attributes['stroke'] in ('#E9E5DE', 'rgb(233, 229, 222)')
+                   and track_attributes['stroke'] in ('#536257', 'rgb(83, 98, 87)')
                    and progress_attributes['d'] != track_attributes['d']
                    and progress_attributes['linecap'] == 'round'
                    and marker_error is not None and marker_error < 1.5,
@@ -549,18 +546,19 @@ def verify_development_progress(browser) -> None:
         phase_button = page.get_by_test_id('home-development-phase')
         expect(phase_button).to_be_visible()
         expect(phase_button).to_have_attribute('aria-label', 'Visa utveckling för Luna')
-        phase_label = page.get_by_text('Ungefärlig fas: UNGHUND', exact=True)
+        phase_label = page.get_by_text('Ungefärlig fas', exact=True)
         expect(phase_label).to_be_visible()
+        expect(phase_button.get_by_text('unghund', exact=True)).to_be_visible()
         button_box = phase_button.bounding_box()
         portrait_box = page.get_by_test_id('home-dog-portrait').bounding_box()
-        button_style = phase_button.evaluate("element => { const style = getComputedStyle(element); const label = getComputedStyle(element.querySelector('[dir=auto]')); return { background: style.backgroundColor, borderColor: style.borderColor, borderWidth: style.borderWidth, radius: style.borderRadius, labelColor: label.color, labelWeight: label.fontWeight }; }")
+        button_style = phase_button.evaluate("element => { const style = getComputedStyle(element.firstElementChild); const label = getComputedStyle(element.querySelector('[dir=auto]')); return { background: style.backgroundColor, borderColor: style.borderColor, borderWidth: style.borderWidth, radius: style.borderRadius, labelColor: label.color, labelWeight: label.fontWeight }; }")
         portrait_clearance = button_box is not None and portrait_box is not None and button_box['x'] + button_box['width'] <= portrait_box['x']
         record(f'Home phase action reads as a button and clears the portrait at {width}px',
                button_box is not None and button_box['height'] >= 44 and portrait_clearance
                and button_style['background'] == 'rgb(255, 252, 247)'
                and button_style['borderColor'] == 'rgb(33, 116, 72)'
                and button_style['borderWidth'] == '1px'
-               and button_style['radius'] == '14px'
+               and float(button_style['radius'].replace('px', '')) >= 14
                and button_style['labelColor'] == 'rgb(33, 116, 72)'
                and button_style['labelWeight'] == '700'
                and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),

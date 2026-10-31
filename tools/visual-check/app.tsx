@@ -1,3 +1,5 @@
+import phaseBundle from '../../docs/content/knowledge-phase-checklists-v1.json';
+import { CHECKLIST_TEMPLATES } from '../../src/features/knowledge/checklist-content';
 import {DailyActivityItem} from '../../src/components/ui/DailyActivityItem';
 import {ChecklistItem} from '../../src/components/ui/ChecklistItem';
 import type {HomeDailyTrainingOption} from '../../src/features/home/HomeScreen';
@@ -54,6 +56,12 @@ import recallDraft from '../../docs/content/recall-program-v1.json';
 import trainingBundle from '../../docs/content/mvp-content-bundle-v1.json';
 type FixtureLogMutation={kind:'add'|'update'|'delete'|'undo';id:string;mutationId:string;type:LogEventType;occurredAt:string;status:'pending'|'failed'|'unsure'|'saved';accidentKinds?:AccidentKind[]|null};
 window.__tasslaAccountDeleteCalls=0;window.__tasslaAccountUnlockCalls=0;
+// Synthetic published-shaped data for visual comparison; production reads the validated catalog.
+const phaseVisualFixture = CHECKLIST_TEMPLATES.map((template) => {
+  const item = phaseBundle.templates.find((entry) => entry.template_id === template.id);
+  return item ? { ...template, title: item.title, intro: item.body, items: item.items.map(({ key, title }) => ({ key, title })),
+    sources: item.sources.map((id) => phaseBundle.sources.find((source) => source.id === id)?.url).filter((url): url is string => Boolean(url)) } : template;
+});
 const today=new URLSearchParams(location.search).get('today')||localDate();
 const healthRouteRoundTrip=new URLSearchParams(location.search).get('healthRouteRoundTrip')==='true';
 function shiftFixtureDate(dateKey:string,days:number){const date=new Date(`${dateKey}T00:00:00Z`);date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10);}
@@ -339,7 +347,7 @@ function App(){
  function loadMoreLog(){if(logLoadingMore||!logHasMore)return;setLogLoadingMore(true);setLogLoadMoreError(false);window.setTimeout(()=>{setLogLoadingMore(false);if((logScenario==='split-day-error'||insightsPaged)&&logLoadAttempt===0){setLogLoadAttempt(1);setLogLoadMoreError(true);return;}setLogEvents(rows=>[...rows,...(insightsPaged?[logEvent('insights-older',shiftFixtureDate(today,-1),8*60,'food')]:logSplitContinuation).filter(next=>!rows.some(row=>row.id===next.id))]);setLogHasMore(false);},650);}
  const scenarioStep=homeScenario==='review-training'?process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true'?homeDenseFixture.trainingStep:undefined:homeScenario==='ready'?homeDenseFixture.trainingStep:undefined;
  const empty=state==='empty';const records=empty?[]:history;
- const main=['home','log','training','knowledge'].includes(page)?page:['checklist','progress','home-training-detail','workspace-retention'].includes(page)?'home':'more';
+ const main=['home','log','training','knowledge'].includes(page)?page:['development','checklist','progress','home-training-detail','workspace-retention'].includes(page)?'home':'more';
  const previousPageForTransition=useRef(page);
  const navigateMainTab=(destination)=>{const enteringKnowledge=page!=='knowledge'&&destination==='knowledge';const leavingKnowledge=page==='knowledge'&&destination!=='knowledge';if(enteringKnowledge||leavingKnowledge){setFocused(null);setKnowledgeDetailOpen(false);}previousPageForTransition.current=page;setPage(destination);};
  const go=(p)=>{const destination=p==='profile'?'passport':p==='notification-settings'?'more':p==='planned-health'?'planned':p;if(isMainTabDestination(destination))navigateMainTab(destination);else{previousPageForTransition.current=page;setPage(destination);}};
@@ -480,7 +488,7 @@ function App(){
  {page==='auth-callback'?<AuthCallbackView mode={params.get('callbackScenario')==='error'?'error':params.get('callbackScenario')==='preview'?'preview':'pending'} pendingMessage={params.get('callbackScenario')==='returned'?'Vi slutför inloggningen…':'Vänta medan länken öppnas…'} onReturn={()=>go('home')}/>:null}
  </>:<AppScreen scrollKey={page==='checklist'?'checklist-flow':page==='health'?'health-flow':page==='planned'&&healthFocus?'planned-health-health-source':page} preserveScrollKey={page==='checklist'||page==='home-training-detail'?'checklist-flow':page==='health'||(page==='planned'&&healthFocus)?'health-flow':undefined} footer={<BottomNav active={main} onChange={go}/>}><MainSwipeNavigation enabled={isMainTabDestination(page)&&!(page==='knowledge'&&knowledgeDetailOpen)} onSwipe={direction=>{const destination=nextMainTabDestination(page,direction);if(destination)navigateMainTab(destination);}}><ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance} duration={transitionDuration} opacityFrom={transitionOpacityFrom}>
  {page==='workspace-retention'?<WorkspaceRetentionFixture review={reviewFixtureEnabled}/>:null}
- {page==='development'?<DevelopmentScreen dogName={dog.name} birthDate={dog.birth_date} today={fixtureDate} guides={[]} guidesState="ready" onBack={()=>go('home')} onOpenGuide={()=>{}} onRetryGuides={()=>{}}/>:null}
+ {page==='development'?<DevelopmentScreen dogName={dog.name} birthDate={dog.birth_date} today={fixtureDate} guides={[]} guidesState="ready" phaseTemplates={phaseVisualFixture} phaseState="ready" onBack={()=>go('home')} onOpenGuide={()=>{}} onRetryGuides={()=>{}}/>:null}
  {page==='metrics-fixture'?<OnboardingMetricsChoice client={profileClient as never} ownerId="00000000-0000-4000-8000-000000000002" accountGeneration={1} isCurrentAccount={isFixtureAccountCurrent} hasReferral />:null}
  {page==='action-menu-contract'?<ActionMenuContractFixture/>:null}
  {page==='home'?<HomeScreen today={fixtureDate} dog={fixtureScopeChanged?fixtureDog:homeScenario==='stale-selection'?{...dog,id:'new-dog',name:'Milo'}:dog} breed={fixtureBreed}
