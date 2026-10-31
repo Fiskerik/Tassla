@@ -726,3 +726,32 @@ Bas52961e5, plan v1 risk H, branch fix/mvp-build-feedback. Eriks slutliga besked
 Architect APPROVE, Security initial/final PASS, oberoende QA egen fullcheck PASS och Frozen Reviewer PASS utan fynd. Riktad Node2/2 filer, Python8/8 (inklusive verklig TOMLparsning/entrypointfiler och URL-negativfall), pnpm check101/101, public iOS-export samt diff/path-/köaudit PASS. Officiellt stöd för relativa entrypoints/CLI>=1.215 länkas i tasken. Gateway JWT, deployad kodparitet, livekonto/synk och native förblir NOT TESTABLE. GitHub-miljöns ARTICLE_SYNC_URL behöver sluta på /bright-task; befintligt projektref-lås kvarstår.
 
 Samlad lokalt committad bas före denna slice: 601f17d public-workflow, 81cbfc1 UI-feedback, 52961e5 korta utgivarlänkar. Nästa: commit/push av denna lokala routingfix och gör ändringarna reviewbara för Main; runtimeposten stängs först med verkligt bevis.
+
+## 2026-10-30 — ROUTINE-SAVE-REPAIR-01
+
+Från Main8620e72 på vanlig branch fix/routines-training-flow, inga worktrees. Ny framåtriktad migration202610300001 rättar obefintlig jsonb_object_length i rutinvalidatorn med objekttypkontroll och jsonb_object_keys/count. Samma autentiserade create-v2 RPC ger42883 före och korrekt sparning efter i verklig lokal PostgreSQL17.5/PGlite0.3.14. Äldre migreringar, app/RPC/RLS/data orörda; alla regler och helper-ACL bevarade.
+
+`node tools/verify-routine-save-sql.mjs`, full pnpm check101/101, diff/path-/köaudit PASS. Faktisk skapa/retry/redigera/repeats/revision,50/160 vs51/161, ogiltiga former, annan ägares42501/RLS och ACL/settings verifierade med syntetiska rollback-fixtures. Architect APPROVEv1, Security initial/final PASS, oberoende QA egen PG/fullcheck PASS och Frozen Reviewer PASS utan fynd. Appen behöver även denna nya migration i rätt Supabase-miljö; ingen liveåtgärd utfördes och enskild produktionsorsak/telefon är NOT TESTABLE. Nästa: hållbar commit följd av separat omdesign av rutiner/träningsval, träningsmodal och uttrycklig lokal kontoupplåsning.
+
+### 2026-10-30 — ACTIVITY-MANAGER-FLOW-01
+Lokalt klar, commit `fix: simplify daily routine and training planning` på fix/routines-training-flow (bas da4ac54). Stabil centrerad manager, kompakta rutinrader/detalj/form och fast sparafooter. Faktiskt pågående träningssteg väljs utan progression. SQL002 anpassar befintlig dagsvalsguard till aktiv resa; båda nya migreringar kräver separat applicering i Supabase. ArchitectAPPROVEv2/SecurityPASS/UICriticREVIEWFIXED/oberoendeQAPASS/FrozenReviewerPASS.102/102, faktiskPG17.5 och9RNWebflöden samt publiciOSexportPASS. Native/liveNT. Taskplanen innehåller exakt scope/bevis och §14. Nästa: fast träningsbild och stängning efter bekräftat pass.
+
+### 2026-10-30 — TRAINING-PINNED-SESSION-01
+Lokalt klar på fix/routines-training-flow, bas0acd741, commit `fix: keep exercise context visible and close after saved sessions`. Fast faktisk titel+foto, scrollande instruktion, sparat pass stänger modal och visar kompakt kort på programsidan. Separat målfråga endast vid aktuell behörighet; inga automatiska delmål. ArchitectAPPROVE/UICriticREVIEWFIXED/oberoendeQA ochReviewerPASS.102/102, nioRNWebflöden och publiciOSexportPASS. Native/liveNT. Scope/checklista i task. Nästa: manuell kontospärr-upplåsning enligt senaste ägarinstruktion.
+
+### 2026-10-30 — Rutiner, träningsläsning och lokal kontoupplåsning
+
+Fyra avgränsade användarresor är lokalt färdiga på `fix/routines-training-flow`, från main `8620e72ec1bb78c34c26c1f2e90e046cba619c7f`:
+
+| Uppgift | Produktcommit | Resultat |
+|---|---|---|
+| ROUTINE-SAVE-REPAIR-01 | `da4ac547787d7b6acd0d0c9c3a38283a32110d94` | Rättad PostgreSQL-validering för giltiga rutinpunkter. |
+| ACTIVITY-MANAGER-FLOW-01 | `0acd741ac006a675061ae98a87e49e8d363cd811` | Stabil, kompakt rutinhantering och dagsval av faktiskt aktivt träningssteg. |
+| TRAINING-PINNED-SESSION-01 | `05c2b561e8c9128d53924d1c0a232f99ec67c22f` | Fast bild/rubrik; sparat pass stänger modalen och visar separat målval. |
+| ACCOUNT-LOCAL-UNLOCK-01 | `affeb1a3b77484793b881f38c3485b5adac89ce0` | Manuell onlinekontroll och upplåsning av exakt den inloggade ägarens lokala raderingsspärr. |
+
+Architect, relevanta Security-granskningar, UI Critic, oberoende QA och Reviewer har passerat inom respektive taskscope. Senaste full check:102/102 testfiler, typkontroller och lint PASS. De två SQL-proven har körts med faktiska migrationer i lokal PostgreSQL17.5/PGlite. Riktade RNWebresor:9 för manager,9 för träningspass och10 för konto; public iOS JavaScript-export PASS. Specifika bevis och §14-bedömningar finns i respektive task. Det är inte full panelacceptans eller verifierad TestFlight/live-Supabase.
+
+Nästa miljösteg: applicera `supabase/migrations/202610300001_routine_checklist_validation_fix.sql`, därefter `202610300002_daily_active_training_selection.sql` i avsedd Supabasemiljö. De har inte körts live av Codex. Kontoupplåsningen behöver en ny appbuild men ingen ny backendmigration. I det bygget: Mer → Konto → Kontrollera och lås upp, därefter separat vanlig raderingsbekräftelse. Telefonens SecureStore/native Alert/VoiceOver/Dynamic Type och verklig kontoradering återstår att prova. ACCOUNT-DELETE-STATUS-01 förblir blockerad för det verkliga serverutfallet.
+
+Detta är en snapshot före push; distanscommit och PR redovisas i överlämningen. Ingen main-merge, signerad distribution eller live-radering har utförts.

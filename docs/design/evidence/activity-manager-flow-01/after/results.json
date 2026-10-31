@@ -1,0 +1,15 @@
+{
+  "results": [
+    "375x844: stable tabs/frame, compact overview/detail/edit, actual step2 select/remove, no progression write, reachable footer",
+    "430x844: stable tabs/frame, compact overview/detail/edit, actual step2 select/remove, no progression write, reachable footer",
+    "375x667: stable tabs/frame, compact overview/detail/edit, actual step2 select/remove, no progression write, reachable footer",
+    "375x844-text140: stable tabs/frame, compact overview/detail/edit, actual step2 select/remove, no progression write, reachable footer",
+    "Create own two-item routine with icon, confirmed save and daily-list readback",
+    "failed: draft preserved, existing retry/conflict/dirty guards retained",
+    "unknown: draft preserved, existing retry/conflict/dirty guards retained",
+    "conflict: draft preserved, existing retry/conflict/dirty guards retained",
+    "Unknown progression gives no guessed training choice"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RN Web; CSS140 is not native Dynamic Type; SQL tested separately"
+}

@@ -13972,6 +13972,295 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/fullcheck101/101/publicexport och scopebevis sparade. Lokal routingklar; ACCOUNT-DELETE-STATUSblocked och live/native/deployedparity ej verifierade. Nästa commit/push."
+    },
+    {
+      "id": "ROUTINE-SAVE-REPAIR-01",
+      "title": "Rätta PostgreSQL-validering som blockerar giltiga rutinsparningar",
+      "mvp_requirement": "Eriks reproducerade rutin-sparfel 2026-10-30",
+      "plan": "docs/tasks/dev/ROUTINE-SAVE-REPAIR-01.md v1",
+      "write_paths": [
+        "supabase/migrations/202610300001_routine_checklist_validation_fix.sql",
+        "supabase/tests/routine-checklist-validation.sql",
+        "tools/verify-routine-save-sql.mjs",
+        "src/features/home/README.md",
+        "docs/tasks/dev/ROUTINE-SAVE-REPAIR-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Samma create-v2 RPC ger42883 före och korrekt sparning efter ny smal migration.",
+        "Valideringsgränser, idempotens, repeat/replace, ägarisolering och ACL bevaras med verklig lokal SQL.",
+        "Full check och oberoende QA/Reviewer/Security, inga livepåståenden."
+      ],
+      "checks": [
+        "node tools/verify-routine-save-sql.mjs",
+        "CI=1 pnpm check",
+        "git diff --check",
+        "python tools/dev_flow.py validate"
+      ],
+      "depends_on": [],
+      "risk": "H: smal framåtriktad SQL-valideringsrättning",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 och Security initial PASS: separat objekttypkontroll/nyckelräkning, oförändrade bounds/ACL/RPC/RLS, faktiska RPC-regressioner."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Smal ny migrationsfix och faktisk lokal PostgreSQL-probe; historiska migreringar orörda."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Faktisk PostgreSQL17.5-repro+fix/ACL/owner/bounds PASS, fullcheck101/101 och scope/diffPASS, Security finalPASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Oberoende QA egen PG-probe och pnpmcheck101/101 PASS, scope6/9 och diffPASS. Live/telefonNT. Slutreview återstår."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS utan fynd; QA/Security/Architect och verklig PG/fullcheck101/101 sparade. Lokalt klart, liveapp behöver nya migrationen. Nästa commit/UXslice."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS utan fynd; QA/Security/Architect och verklig PG/fullcheck101/101 sparade. Lokalt klart, liveapp behöver nya migrationen. Nästa commit/UXslice."
+    },
+    {
+      "id": "ACTIVITY-MANAGER-FLOW-01",
+      "title": "Enkel rutinhantering och verifierat pågående träningsval",
+      "mvp_requirement": "Eriks beställda omdesign2026-10-30",
+      "plan": "docs/tasks/dev/ACTIVITY-MANAGER-FLOW-01.md v2",
+      "write_paths": [
+        "src/components/ui/BottomSheet.tsx",
+        "src/components/ui/README.md",
+        "src/features/home/DailyActivityManagerSheet.tsx",
+        "src/features/home/daily-training-options.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/theme/tokens.ts",
+        "supabase/migrations/202610300002_daily_active_training_selection.sql",
+        "supabase/tests/daily-active-training-selection.sql",
+        "tools/verify-daily-training-selection-sql.mjs",
+        "tests/daily-training-options.test.mjs",
+        "tests/daily-activity-ui.test.mjs",
+        "tests/daily-routine-checklist-icons.test.mjs",
+        "tests/daily-checklist-screen.test.mjs",
+        "tests/home-first-day.test.mjs",
+        "tests/ui-modal-centering.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-activity-manager-flow.py",
+        "docs/design/evidence/activity-manager-flow-01",
+        "docs/design-rules.md",
+        "docs/tasks/dev/ACTIVITY-MANAGER-FLOW-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "tests/home-today.test.mjs"
+      ],
+      "acceptance": [
+        "Stabil centrerad modal, kompakt rutinöversikt/detalj och tydligt skapa/redigera/spara-flöde.",
+        "Faktiskt aktivt träningssteg eller behörigt nästa förslag; inga gissningar/automatisk progression.",
+        "Verklig SQL-inträdeskontroll och negativa fall, modell/browser/fullcheck och oberoende review, ärliga native/livegränser."
+      ],
+      "checks": [
+        "node tools/verify-daily-training-selection-sql.mjs",
+        "node --experimental-strip-types --test tests/daily-training-options.test.mjs",
+        "python tools/visual-check/verify-activity-manager-flow.py",
+        "CI=1 pnpm check",
+        "git diff --check"
+      ],
+      "depends_on": [
+        "ROUTINE-SAVE-REPAIR-01"
+      ],
+      "risk": "H: dagsvals-trigger anpassas till verklig versionsbunden resa, bevarad ägargräns",
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1, Security plan PASS, UI Critic PROCEED/BRIEF. Exakt aktivt steg, bevarad idempotens/legacy och lika modalram; inga nya ändamål."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root ensam skriver stabil manager/form och ren selector med smal faktisk SQL-inträdesgren."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v2 implementation; actual PostgreSQL17.5 integration PASS, nine RNWeb journeys PASS, public iOS export PASS; visual corrections rerendered, final check log recorded in task."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS: own 102/102 full check, actual PostgreSQL17.5 SQL probe, nine RNWeb flows and viewed scoped screenshots; all52 paths in v2 scope. Native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS without findings; independent QA PASS; task stores actual52path audit and all bounded evidence."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS without findings; independent QA PASS; task stores actual52path audit and all bounded evidence."
+    },
+    {
+      "id": "TRAINING-PINNED-SESSION-01",
+      "title": "Träning: fast bild och separat bekräftelse efter sparat pass",
+      "mvp_requirement": "Eriks UI-feedback2026-10-30",
+      "plan": "docs/tasks/dev/TRAINING-PINNED-SESSION-01.md v1",
+      "risk_class": "M",
+      "write_paths": [
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/verify-training-session-flow.py",
+        "docs/design/evidence/training-pinned-session-01",
+        "docs/tasks/dev/TRAINING-PINNED-SESSION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Fixed photo/title and scrollable instructions",
+        "Confirmed session closes modal; explicit milestone path",
+        "Preserve unknown/retry and no auto progress"
+      ],
+      "checks": [
+        "pnpm check",
+        "RNWeb training session flow",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "ACTIVITY-MANAGER-FLOW-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1, UI Critic BRIEF PROCEED; exact saved-operation target and current canConfirm guards required."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root single writer, real BottomSheet.headerContent API; fixed actual title removes duplicated generic heading."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE, UICritic REVIEW FIXED; 102/102 plus nine RNWeb and public iOS export PASS; native/liveNT."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent own102/102, nine RNWeb journeys and viewed images PASS; exact retry/current step/saved-only guards and scope verified. Native/liveNT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; own QA and visual review done, local evidence and native/live limits recorded."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; own QA and visual review done, local evidence and native/live limits recorded."
+    },
+    {
+      "id": "ACCOUNT-LOCAL-UNLOCK-01",
+      "title": "Konto: manuellt verifierad upplåsning av lokal raderingsspärr",
+      "mvp_requirement": "Eriks uttryckliga cache/upplåsningsbegäran2026-10-30",
+      "plan": "docs/tasks/dev/ACCOUNT-LOCAL-UNLOCK-01.md v2",
+      "risk_class": "H",
+      "write_paths": [
+        "src/features/account/account-delete.ts",
+        "src/features/account/AccountSettingsScreen.tsx",
+        "src/features/account/README.md",
+        "src/features/home/ProductWorkspace.tsx",
+        "tests/account-delete.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/native.jsx",
+        "tools/visual-check/verify-account-local-unlock.py",
+        "docs/design/evidence/account-local-unlock-01",
+        "docs/tasks/dev/ACCOUNT-LOCAL-UNLOCK-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md"
+      ],
+      "acceptance": [
+        "Online same-owner verification and exact-key deletion with clear readback",
+        "No auto delete or global cache clear; guards preserved",
+        "Root and screen unlock only on verified success"
+      ],
+      "checks": [
+        "pnpm check",
+        "installed Supabase auth integration",
+        "workspace lease and storage race tests",
+        "RNWeb UI flow",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-PINNED-SESSION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 and Security plan PASS received; exact owner/getUser/current/readback and shared lease. UI BRIEF before appearance edits."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root single writer resumes verified base05c2b56 and implements scoped helper/root path; UI awaits BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect APPROVE v2; final Security PASS including latest cleanup/fixture; UICritic REVIEW two FIXED. 102/102 plus ten RNWeb and public iOS export PASS; scoped API/root tests, no live deletion."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own102/102, targeted actual SDK/root tests, ten RNWeb scenarios and viewed support composite/667/140/failure PASS. All paths v2; native/liveNT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; product checkpoint affeb1a3b77484793b881f38c3485b5adac89ce0 and full hooks pass. Final docs only; native/live remain NT."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; product checkpoint affeb1a3b77484793b881f38c3485b5adac89ce0 and full hooks pass. Final docs only; native/live remain NT."
     }
   ]
 }

@@ -1,0 +1,50 @@
+# ACCOUNT-LOCAL-UNLOCK-01 — verifiera kontot och lås upp nytt raderingsförsök
+Status done · plan v2 · risk H (auth/lokal raderingsmarkör) · bas 05c2b56 · branch fix/routines-training-flow · root ensam writer.
+
+Mandat: Eriks nya uttryckliga instruktion 2026-10-30 att rensa cache eller motsvarande för att testa radera konto när det är låst. Detta godkänner manuell återställning av just lokal spärr, inte generell cache-/sessionsrensning, automatisk omradering eller faktisk radering härifrån. Äldre support-only-instruktion är ersatt i detta avgränsade fall. ACCOUNT-DELETE-STATUS-01 är fortsatt blockerad för verkligt serverutfall.
+
+UI: befintlig kontovy/destruktivsektion med soptunna till höger. Vid pending/unknown eller oläsbar markör erbjuds en tydlig Kontrollerar och lås upp-knapp (slutcopy Kontrollera och lås upp). Kort förklaring: tidigare försök saknar bekräftelse; ny radering kräver separat bekräftelse. Loading/failed/success är begripliga, ingen evig låsning efter kontrollfel. Confirmed ger aldrig reset. Efter lyckad kontroll/rensning blir soptunnan användbar med vanliga dubbla raderabekräftelsen; ingen ny delete-request skickas av upplåsningen.
+
+Dataflöde: nytt litet resetAccountDeletionMarker(client,captured,isCurrent) i befintlig account-delete.ts. Validera UUID/token/current → verklig client.auth.getUser(captured.accessToken) online → errorfri verifierad UUID matchar samma ägare/current generation → remove exakt tassla.account-deletion.v1.<captured-owner> → färsk readback clear + aktuell generation → ready. Fel/offline/401/avsaknad/mismatch/storage/readback/stale ger unavailable. Saknad markör kan bli ready efter verifieringen. Root delar synkron accountDeleteInFlight-lease med delete, behåller lease till finally och förbjuder confirmed/accountDeletionInvalidated/busy. Framgång uppdaterar root accountDeleteStatus idle och gammalt cleanup/signoutfel samt skärmens markerState clear/ready; ingen annan draft/session/consent/notis/cache/invalidation återställs. Skärmens egen async state måste vara mount/ownerscopad och dubbeltappguardad. Begäran till swift-api/receipt/JWT/okäntutfall/dubbla bekräftelser/ofärdiga skrivguards behålls.
+
+Security-förhandsbesked: getUser bevisar konto vid kontrollögonblicket, inte att en äldre okänd serveroperation avslutats. Om ägar-/generationsbyte sker under redan utfärdad SecureStore-delete/readback får bara den tidigare auktoriserade exakta ägarnyckeln påverkas; returnera unavailable och ändra ingen ny UI. Återställ inte markören, vilket kan skriva över nyare begäran. Shared lease släpps först finally, inte på kontobyte. AppFlow ägar+generationskey och workspace dogkey kontrollerade. Ingen ny persondatatyp/ändamål, vendor eller lagringsyta; samma authverifiering och befintlig ägarnyckel. Teknisk Security krävs, ingen ny rättslig beslutsfråga.
+
+Acceptans: installerad Supabase2.117.2 med syntetisk fetch kör verklig getUser GET/auth/v1/user och exakt capturedBearer, aldrig functions/delete under reset. Bara aktuellägarmarkör tas bort, isolerade övrigaägar-/cache-/authnycklar bevaras; dubbelklick/deleteöverlapp/confirmed förbjuds; mismatch/offline/stale före/under/efterlagring/readbackfel behåller låstUI. Faktiska extraherade workspacehandlers testas för rootidle/flags/sharedlease, UIfixture provar låst→kontroll→klar→reenabledtrash samt failed/pending/confirmed vid375/430/667/CSS140. Återaktiverad trash erbjuder ordinarie bekräftelse men inget verkligt konto raderas. pnpm check/diff/scope/publiciOSexport, Architect/Securityplan/final, UIcriticBRIEF/REVIEW, oberoendeQA/Reviewer. Live Supabase, fysiska telefonens SecureStore/VoiceOver/nativeDynamicType NT. Funktionen tillgänglig först i ny build.
+
+Skrivvägar:
+- src/features/account/account-delete.ts
+- src/features/account/AccountSettingsScreen.tsx
+- src/features/account/README.md
+- src/features/home/ProductWorkspace.tsx
+- tests/account-delete.test.mjs
+- tools/visual-check/app.tsx
+- tools/visual-check/native.jsx
+- tools/visual-check/verify-account-local-unlock.py
+- docs/design/evidence/account-local-unlock-01
+- docs/tasks/dev/ACCOUNT-LOCAL-UNLOCK-01.md
+- docs/tasks/dev/queue.json
+- docs/tasks/dev/rapport.md
+- docs/releases/HISTORY-2026.md
+- docs/decisions/MASTER-LOG.md
+
+Läst: AGENTS/workflow/design§14, consumerUX/iOSskills, befintligt konto/supportkontrakt, account-delete/requesthandler/AuthProvider isCurrentAccount/AppFlow remount och workspace deletion-handler. Rootwriter; Architect/Security6.1-sol medium (konfigurerad5.6saknas), UIcritic6.1-sol high, QA/ReviewerLunamedium. Äldre säkerhetsråd har sparats i planen och ska återgranskas mot faktisk kod.
+
+Architect APPROVEv1 och Security planPASS mottagna före avbrott. Båda kräver saved/current-only upplåsning, sharedreflease, confirmed/invalidationguard och oförändrat deleteprotokoll. Återupptaget på faktiskbas05c2b56, endast task/kö ändrade. UI Critic BRIEF återstartad efter avbrott; backendhelper kan implementeras inom granskat scope medan UI väntar på BRIEF.
+
+Plan v2 före fixtureändring: lägg till tools/visual-check/native.jsx, enbart syntetisk browserstorage för befintlig ägarnyckel, så start med pending-markör och idle-rootstatus kan provas (den rapporterade låsningen). Default inga markörer, inget nätverk/verkliglagring; ingen produktkod/scopeändamålsändring. Skärmstatus har ägarkeyade statevärden och generationsfence utan synkron setState-effect efter lintfynd. Ny planreview krävs för v2 fixturepath innan den ändras.
+
+Architect APPROVEv2 före nativefixtureändring: exakt syntetisk ägarnyckel seedas endast accountMarker=pending; defaulttom och pageisolering. UI Critic BRIEF PROCEED: kort låstcopy/en tydlig nästa handling, högersoptunna och befintlig varma/blå/rosa supportkomposition bevaras. SecurityfinalPASS på produktdiff och installeradSDK/roothandlertester, egen riktadtestrunPASS; fixture/fullcheck låg uttryckligen utanför dess besked. NioRNWebscenarierPASS, inklusive pendingmarkör+idle, låst/failed/unknown/pending/confirmed/standard,375/430/667/CSS140. NativeAlert ersätts bara i browser med befintlig callbackinstrumentering; båda vanliga bekräftelsestegen öppnas/avbryts, aldrig delete. PubliciOSexportPASS. Första fulllintfyndet om setState-effect rättat med ägarkeyad state/fence; första browserantagandet om DOMAlert rättat till verklig shimkontrakt. Ingen kontrollbypass. Ny fullcheck efter sista lease-test inväntas.
+
+## Slutlig implementation / cleanup
+Ägarkeyad marker/uppåsningsstate med mount-/ownerfence, samma sharedreflease somradering, endastready nollställer rootidle/cleanup/signout och screenmarker. Litenhelper med verklig SDKgetUser + freshreadback; bodylessswift-api/ofärdigawriteguards oförändrade. Nytttest fångar generationsbyte under redanutfärdad asynchronousdelete: exaktgamlaägarnyckel fårslutföras, leasehålls, ingenstaleUI/restore. Vid boundedcleanup doldes gammal redo-ack när senare radering blirunknown ocherror flyttadeskortnära handlingen; nytdynamiskt Kontrollerar kontot…-besked. Inga andra refaktorer behövdes. Fixturedefaulttom och exaktpendingkeyscenarier pageisolerade.
+Senaste full pnpm check102/102+type/lintPASS (/tmp/tassla-account-check.log), tioRNWebflödenPASS, nollpageerrors (after/results.json). Faktiskinstallerad SDK+extraherade rootfunktioner testade i tests/account-delete.test.mjs; inga deleteanrop under reset. Separata vanliga tvåAlertcallbacks verifieras med befintlig nativeAlertshim i browser. SenastepubliciOSexport påslutkod inväntas. NativeSecureStore/Alert/VoiceOver/DynamicType och liveSupabaseNT.
+§14 stödskärmsändring:1 Ja en framträdande upplåsningshandling i låstläge;2 Ja deladButton;3 Ja trashhöger/befintliga dubbla bekräftelser;4 ET Hemoförändrad;5 Ja375/430/667 ochscrollbilder;6 Ja tokens/deladButton/MessageCard;7 JaIonicons;8 Ja befintligblå/varm/rosa supportfördelning;9 Ja separataupplåsning/radering;10 Ja endastverifieradready;11 Ja ejgammalsuccessvidnyunknown;12 Ja kort begripligcopy;13 Ja befintlig kontohierarki;14 Ja låst/pending/failed/unknown/confirmed/ready;15 Ja44pt/semantik/CSS140, nativeNOTTESTABLE;16 komposition/färg/typografi/form/täthet inom befintligt supportkontrakt bedömsvia nya efterbilder/komposit, UIcriticREVIEWinv väntas; bildspråkET ingenfotodel;17 Ja Konto/Mer/back;18 ET ingenhundspecifikcopyny. Panel1-kompositen avser endast närmast varma språk, inte att Konto är en9e panel eller godkändHem.
+
+Slutlig Security PASS kvarstår inklusive sista copyguards, syntetisk fixture och generationsbytestest; inga fynd eller nytt persondatadelta. UI Critic slutREVIEW öppnade14 bilder+komposit, bådaBRIEFpunkterFIXED; §14.16 komposition/färg/typografi/form/täthetJa inom befintligt kontostöd, bildspråkET. Nya scrollbilder verifierar fel/knapp på667. Senaste publiciOSexportPASS (/tmp/tassla-account-ios.log). QA/Reviewer återstår; inget verkligt konto eller telefonlager har raderats.
+
+Oberoende QA PASS: egen fullcheck102/102 och riktad account-delete, samtliga10browserresor med /tmp-evidens. Första Chromiumstart under defaultrestriktion misslyckades; explicit networkretryPASS. Egenvisning av komposit1189×1055 och667/140/fel/upplåst visar supportkonsekvens/räckbarhet. Samtliga26produkt/test/evidens/task/köpaths i v2-scope; nya slutloggar finns redan bland tillåtna paths. Native/liveNT, inga verkliga raderingspåståenden. Produktdiff fryst för oberoende Reviewer.
+
+Frozen Reviewer PASS utan fynd. Faktiska SDK-/komponent-API:er, sharedlease, root+screenstate och v2-scope kontrollerade. Produkt, tester och skärmevidens är frysta; återstår hållbar commit, slutlogg med faktiska commit-ID:n och push/PR. Ingen signerad build, live-migration eller verklig kontoradering har körts.
+
+## Hållbar checkpoint
+Produkt/test/evidens committat i `affeb1a3b77484793b881f38c3485b5adac89ce0`. Pre-commit-hook körde full check och staged whitespace med lyckat resultat. Alla tillämpliga lokala kriterier och oberoende granskningar har passerat. Slutloggen stängs i separat dokumentationscommit; ingen ytterligare produktändring. Nästa: push av arbetsbranch och PR, därefter ägarens migrationer/nytt bygge och verkligt raderingsprov. Den aktuella telefonens cache har inte rensats härifrån.

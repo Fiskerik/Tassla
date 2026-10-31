@@ -1,3 +1,6 @@
+import type {HomeDailyTrainingOption} from '../../src/features/home/HomeScreen';
+import type {DailyTrainingSelection} from '../../src/features/home/daily-activity-data';
+import {buildDailyTrainingOptions} from '../../src/features/home/daily-training-options';
 import driveArticles from '../../docs/content/artiklar/drive-articles-v1.json';
 import React,{useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
@@ -48,7 +51,7 @@ import {emptyTrainingProgression,latestHomeTrainingSummary,type PendingTrainingP
 import recallDraft from '../../docs/content/recall-program-v1.json';
 import trainingBundle from '../../docs/content/mvp-content-bundle-v1.json';
 type FixtureLogMutation={kind:'add'|'update'|'delete'|'undo';id:string;mutationId:string;type:LogEventType;occurredAt:string;status:'pending'|'failed'|'unsure'|'saved';accidentKinds?:AccidentKind[]|null};
-window.__tasslaAccountDeleteCalls=0;
+window.__tasslaAccountDeleteCalls=0;window.__tasslaAccountUnlockCalls=0;
 const today=new URLSearchParams(location.search).get('today')||localDate();
 const healthRouteRoundTrip=new URLSearchParams(location.search).get('healthRouteRoundTrip')==='true';
 function shiftFixtureDate(dateKey:string,days:number){const date=new Date(`${dateKey}T00:00:00Z`);date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10);}
@@ -264,6 +267,8 @@ function App(){
  const [fixtureDate,setFixtureDate]=useState(today);
  const [fixtureChecklistPlanFocus,setFixtureChecklistPlanFocus]=useState(false);
  const [fixtureHistoricalFocus,setFixtureHistoricalFocus]=useState(false);
+ const [accountDeleteFixtureStatus,setAccountDeleteFixtureStatus]=useState<'idle'|'confirmed'|'failed'|'unknown'|'unavailable'|'blocked'>(['confirmed','failed','unknown','unavailable','blocked'].includes(state)?state as 'confirmed'|'failed'|'unknown'|'unavailable'|'blocked':'idle');
+ const [accountUnlockFixtureBusy,setAccountUnlockFixtureBusy]=useState(false);
  const [page,setPage]=useState(new URLSearchParams(location.search).get('screen')||'home');const [knowledgeDetailOpen,setKnowledgeDetailOpen]=useState(false);const [focusedChecklistStep,setFocusedChecklistStep]=useState<{programId:string;stepId:string}|null>(null);const [checklistFilter,setChecklistFilter]=useState<ChecklistFilter>(()=>{const requested=params.get('checklistFilter');return requested==='Denna vecka'||requested==='Alla'||requested==='Kommande'?requested:'Idag';});
  const [fixtureScopeChanged,setFixtureScopeChanged]=useState(false);const fixtureDog=fixtureScopeChanged?{...dog,id:'fixture-dog-b',name:'Milo'}:dog;
  const workspaceState=params.get('workspaceState')||'';
@@ -289,7 +294,8 @@ function App(){
  const [trainingProgramFocus,setTrainingProgramFocus]=useState<string|null>(null);
  const [progressionReadState,setProgressionReadState]=useState<'ready'|'error'>(()=>params.get('progressionRead')==='error'?'error':'ready');
  const pausedTraining:PausedTrainingProgress[]=trainingScenario==='paused'?[{versionId:'fixture-training:previous-version',title:'Vardagsro och hantering',versionNumber:1,completedCount:2}]:trainingScenario==='paused-unavailable'?[{versionId:'fixture-training:unavailable-version',title:null,versionNumber:null,completedCount:2}]:[];
- const [checklistTrainingSelections]=useState(()=>firstDayMode?[]:trainingPrograms.flatMap(program=>{
+ const activityManagerScenario=params.get('activityManager')==='true';
+ const [checklistTrainingSelections,setChecklistTrainingSelections]=useState(()=>firstDayMode||activityManagerScenario?[]:trainingPrograms.flatMap(program=>{
   const step=program.steps.find(candidate=>!program.completedStepIds.includes(candidate.id));
   return step?[{programId:program.id,stepId:step.id}]:[];
  }).slice(0,2));
@@ -317,13 +323,18 @@ function App(){
  const transitionDistance=mainTabToMainTab?tokens.motion.mainTabDistance:tokens.motion.distance;
  const transitionDuration=mainTabToMainTab?tokens.motion.mainTabEnter:tokens.motion.enter;
  const transitionOpacityFrom=mainTabToMainTab?tokens.motion.mainTabOpacityFrom:0;
- const fixtureActivities=fixtureDailyActivities(fixtureRoutines,fixtureRoutineDays,fixtureDate,!firstDayMode);
+ const fixtureActivities=fixtureDailyActivities(fixtureRoutines,fixtureRoutineDays,fixtureDate,!firstDayMode&&!activityManagerScenario);
  const routineChecklistActivities=fixtureActivities.filter(activity=>activity.kind==='routine');
  const trainingChecklistActivities=checklistTrainingSelections.flatMap(selection=>{
   const program=trainingPrograms.find(candidate=>candidate.id===selection.programId);
   const step=program?.steps.find(candidate=>candidate.id===selection.stepId);
-  return program&&step?[{id:`training:${program.id}:${step.id}`,label:step.title,kind:'training' as const,completed:program.completedStepIds.includes(step.id),programId:program.id,stepId:step.id,programTitle:program.title}]:[];
+  return program&&step?[{id:`training:${program.id}:${step.id}`,label:step.title,kind:'training' as const,completed:program.completedStepIds.includes(step.id),programId:program.id,stepId:step.id,programTitle:program.title,trainingSelection:activityManagerScenario?{id:`selection:${program.id}:${step.id}`,dog_id:dog.id,program_version_id:program.id,step_id:step.id,date_key:fixtureDate,time_zone:'Europe/Stockholm'}:undefined}]:[];
  });
+ const actualDailySelections=checklistTrainingSelections.map(row=>({id:`selection:${row.programId}:${row.stepId}`,dog_id:dog.id,program_version_id:row.programId,step_id:row.stepId,date_key:fixtureDate,time_zone:'Europe/Stockholm'}));
+ const activityTrainingOptions=activityManagerScenario?buildDailyTrainingOptions(dog.id,trainingPrograms,trainingProgression,progressionReadState,actualDailySelections):reviewTrainingOptions;
+ function selectActivityTraining(option:HomeDailyTrainingOption){setChecklistTrainingSelections(rows=>rows.some(row=>row.programId===option.versionId&&row.stepId===option.stepId)?rows:[...rows,{programId:option.versionId,stepId:option.stepId}]);}
+ function removeActivityTraining(row:DailyTrainingSelection){setChecklistTrainingSelections(rows=>rows.filter(item=>item.programId!==row.program_version_id||item.stepId!==row.step_id));}
+ Object.assign(window,{__activityChoiceIds:actualDailySelections.map(row=>`${row.program_version_id}:${row.step_id}`)});
  const checklistCandidates=[...routineChecklistActivities,...trainingChecklistActivities];
  const requestedChecklistCount=Number(params.get('checklistCount')??7);
  const checklistCount=Number.isFinite(requestedChecklistCount)?Math.max(0,Math.min(7,requestedChecklistCount)):7;
@@ -460,13 +471,13 @@ function App(){
   dailyFixture={reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'?homeReviewFixture:undefined}
   dailyState={state==='error'?'error':state==='loading'?'loading':'ready'} dailyRefreshing={workspaceState==='refreshing'} dailyRefreshError={workspaceState==='refresh-error'} dailyDateKey={fixtureDate} dailyScopeKey={`fixture:${fixtureDog.id}:${fixtureDate}`}
   dailyActivities={visibleRoutineActivities} routineTemplates={firstDayMode?fixtureRoutines:reviewFixtureEnabled&&state==='ready'?fixtureRoutines:[]} routineDaySkips={firstDayMode?fixtureRoutineSkips:reviewFixtureEnabled&&state==='ready'?fixtureRoutineSkips:[]}
-  dailyTrainingOptions={reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?reviewTrainingOptions:[]}
+  dailyTrainingOptions={activityManagerScenario?activityTrainingOptions:reviewFixtureEnabled&&state==='ready'&&['ready','product-daily'].includes(homeScenario)?reviewTrainingOptions:[]} dailyTrainingOptionsState={activityManagerScenario?progressionReadState:'ready'}
   dailyMutationBusy={dailyMutationMode==='pending'} dailyMutationKey={dailyMutationMode?'complete-routine:day-morning:00000000-0000-4000-8000-000000000001':''}
   dailyMutationMessage={firstDayMutationMessage}
   dailyMutationError={firstDayMutationError} onRetryDaily={()=>setDailyMutationMode('')} onRetryDailyMutation={['unknown','day-add-unknown'].includes(dailyMutationMode)?retryDailyFixtureMutation:undefined}
   onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
   onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onSetRoutineCompletion={setRoutineItemFixture}
-  onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGo={go}
+  onAddTrainingToDay={selectActivityTraining} onRemoveTrainingFromDay={removeActivityTraining} onGo={go}
   onOpenContent={id=>{setFocused(id);setKnowledgeDetailOpen(false);setPage('knowledge')}} onRetryContent={()=>{}} onOpenChecklist={()=>{setChecklistFilter('Idag');setPage('checklist')}}
   onOpenProgress={()=>setPage('progress')} onOpenDevelopment={homeScenario==='reflection-fallback'?()=>setPage('development'):undefined}/>:null}
  {page==='progress'?<DailyProgressScreen dogName={dog.name} dateKey={fixtureDate} state="ready" activities={visibleRoutineActivities}
@@ -485,8 +496,8 @@ function App(){
   onOpenHistoricalTrainingStep={(programId,stepId)=>{setFixtureHistoricalFocus(true);setFocusedChecklistStep({programId,stepId});setPage('home-training-detail')}}
   onOpenUpcomingRoutine={async routineId=>{const routine=fixtureRoutines.find(item=>item.id===routineId);return routine?{status:'ready',routine}:{status:'missing'};}} upcomingRoutines={fixtureRoutines}
   onOpenPlannedHealth={()=>{setFixtureChecklistPlanFocus(true);setPage('planned');}}
-  routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={firstDayMode?[]:reviewTrainingOptions} onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
-  onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onAddTrainingToDay={()=>{}} onRemoveTrainingFromDay={()=>{}} onGoTraining={()=>go('training')}/>:null}
+  routines={fixtureRoutines} routineDaySkips={fixtureRoutineSkips} trainingOptions={firstDayMode?[]:activityTrainingOptions} trainingOptionsState={activityManagerScenario?progressionReadState:'ready'} onCreateRoutine={firstDayMode?createRoutineForTodayFixture:createRoutineFixture} onUpdateRoutine={updateRoutineFixture} onDeleteRoutine={deleteRoutineFixture}
+  onAddRoutineToDay={addRoutineFixture} onRemoveRoutineFromDay={removeRoutineFixture} onAddTrainingToDay={selectActivityTraining} onRemoveTrainingFromDay={removeActivityTraining} onGoTraining={()=>go('training')}/>:null}
  {page==='checklist'&&params.get('checklistScopeReset')==='true'?<View style={{padding:16}}><Button label="Byt hund i testfixture" accessibilityLabel="Byt hund i testfixture" onPress={()=>{setFixtureScopeChanged(true);setChecklistFilter('Idag');setPage('home')}}/></View>:null}
  {page==='log'?<LogScreen mode="cloud" persistLayout={false} events={state==='empty'?[]:logEvents} view={fixtureLogView} onViewChange={(view,options)=>{window.__tasslaLogViewOptions=options??null;setFixtureLogView(view)}}
   insightsPeriod={fixtureInsightsPeriod} onInsightsPeriodChange={setFixtureInsightsPeriod} insightsState={logScenario==='insights'||insightsPaged||insightsMany?{status:'ready',data:{period:fixtureInsightsPeriod,timezone:'Europe/Stockholm',asOf:`${today}T21:59:59.000Z`,periodStartLocal:fixtureInsightsPeriod==='today'||fixtureInsightsPeriod==='since_first_log'?today:shiftFixtureDate(today,-6),periodEndExclusiveLocal:shiftFixtureDate(today,1),observedThroughLocal:today,firstLogDay:fixtureInsightsPeriod==='since_first_log'?today:null,bucket:fixtureInsightsPeriod==='since_first_log'?'month':'day',days:[{date:fixtureInsightsPeriod==='since_first_log'?today.slice(0,7):today,peeCount:1,poopCount:0,unclassifiedAccidentCount:0,sleepCount:0,awakeCount:0}]}}:undefined}
@@ -532,7 +543,7 @@ function App(){
  {page==='profile'?<DogProfileScreen dog={dog} breed="Golden retriever" onBack={()=>go('more')}/>:null}
  {page==='profile-edit'?<EditDogProfileScreen client={client as never} dog={dog} busy={state==='saving'} pending={state==='pending'} statusMessage={state==='pending'?'Ändringen väntar på en säker statuskontroll.':'Ändringarna är inte sparade.'} statusError={state==='error'||state==='pending'} conflict={state==='conflict'?{...dog,name:'Luna (senaste sparade)'}:undefined} attribution={state==='empty'?null:{code:'ABC123',name:'Solgläntans kennel'}} attributionState={state==='loading'?'loading':state==='error'?'error':'ready'} attributionBusy={state==='saving'} attributionMessage={state==='error'?'Kennelkopplingen kunde inte sparas.':''} attributionMessageError={state==='error'} onBack={()=>go('more')} onSave={async()=>true} onSaveAttribution={async()=>true} onRetryAttribution={()=>{}} onRetryStatus={()=>{}} onAcceptCurrent={()=>{}}/>:null}
  {page==='reminders'?<NotificationSettingsScreen birthDate={dog.birth_date} onBack={()=>go('more')} preferences={{version:1,enabled:state==='saved',trainingEnabled:state==='training',trainingMinutes:8*60+30}} saved={state==='saved'} busy={state==='saving'} statusMessage={state==='error'?'Valen kunde inte sparas säkert. Kontrollera status innan du försöker igen.':''} statusError={state==='error'} permissionState={state==='granted'?'granted':state==='denied'?'denied':'unknown'} onSave={async(preferences)=>{window.__tasslaReminderSavedPreferences=preferences;return true;}} onRequestPermission={async()=>state==='denied'?'denied':'granted'}/>:null}
- {page==='account'?<AccountSettingsScreen ownerId="00000000-0000-4000-8000-000000000002" onBack={()=>go('more')} onOpenInformation={()=>go('beta-info')} onDeleteAccount={async()=>{window.__tasslaAccountDeleteCalls+=1;return {status:state==='failed'?'failed':state==='unavailable'?'unavailable':state==='unknown'?'unknown':'confirmed'};}} onSignOutLocally={async()=>true} busy={state==='saving' || state==='saving-analytics'} status={['confirmed','failed','unknown','unavailable','blocked'].includes(state)?state as 'confirmed'|'failed'|'unknown'|'unavailable'|'blocked':'idle'} localCleanupFailed={state==='cleanup-failed'} signOutFailed={state==='signout-failed' || state==='cleanup-failed'} analyticsConsent={state==='analytics-loading'?null:state==='analytics-on'} analyticsBusy={state==='saving-analytics'} analyticsError={state==='analytics-error'} onSetAnalyticsConsent={async()=>true} onRetryAnalyticsConsent={async()=>{}}/>:null}
+ {page==='account'?<AccountSettingsScreen ownerId="00000000-0000-4000-8000-000000000002" onBack={()=>go('more')} onOpenInformation={()=>go('beta-info')} onDeleteAccount={async()=>{window.__tasslaAccountDeleteCalls+=1;const result=state==='failed'?'failed':state==='unavailable'?'unavailable':state==='unknown'||params.get('accountDeleteAfterUnlock')==='unknown'?'unknown':'confirmed';setAccountDeleteFixtureStatus(result);return {status:result};}} onResetDeletionLock={async()=>{window.__tasslaAccountUnlockCalls+=1;setAccountUnlockFixtureBusy(true);try{if(params.get('accountReset')==='pending')await new Promise(resolve=>setTimeout(resolve,650));if(params.get('accountReset')==='failed')return 'unavailable';await import('./native.jsx').then(storage=>storage.deleteItemAsync('tassla.account-deletion.v1.00000000-0000-4000-8000-000000000002'));setAccountDeleteFixtureStatus('idle');return 'ready';}finally{setAccountUnlockFixtureBusy(false);}}} onSignOutLocally={async()=>true} busy={accountUnlockFixtureBusy || state==='saving' || state==='saving-analytics'} status={accountDeleteFixtureStatus} localCleanupFailed={state==='cleanup-failed'} signOutFailed={state==='signout-failed' || state==='cleanup-failed'} analyticsConsent={state==='analytics-loading'?null:state==='analytics-on'} analyticsBusy={state==='saving-analytics'} analyticsError={state==='analytics-error'} onSetAnalyticsConsent={async()=>true} onRetryAnalyticsConsent={async()=>{}}/>:null}
  {page==='beta-info'?<BetaInfoScreen onBack={()=>go('account')}/>:null}
  {page==='more'?<MoreScreen onNavigate={destination=>setPage(destination)} signOutError={moreScenario==='signout-error'} signingOut={moreScenario==='signing-out'} onSignOut={()=>{}}/>:null}
  </ScreenTransition></MainSwipeNavigation></AppScreen>}

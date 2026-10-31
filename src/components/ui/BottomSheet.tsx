@@ -8,7 +8,7 @@ import { Button } from './Button';
 import { createSheetDrag } from './sheet-drag';
 import { ModalSwipeHandle, useModalSwipeDismiss } from './modal-swipe-dismiss';
 
-export function BottomSheet({ visible, title, children, onRequestClose, onPrimaryAction, primaryLabel = 'Klar', footer, keyboardAware = false, scrollContent = true }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onPrimaryAction?: () => void; primaryLabel?: string; footer?: ReactNode; keyboardAware?: boolean; scrollContent?: boolean }) {
+export function BottomSheet({ visible, title, children, onRequestClose, onPrimaryAction, primaryLabel = 'Klar', headerContent, footer, keyboardAware = false, scrollContent = true }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onPrimaryAction?: () => void; primaryLabel?: string; headerContent?: ReactNode; footer?: ReactNode; keyboardAware?: boolean; scrollContent?: boolean }) {
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
   const [translateY] = useState(() => new Animated.Value(0));
@@ -39,6 +39,7 @@ export function BottomSheet({ visible, title, children, onRequestClose, onPrimar
               </Pressable>
             </View>
           </View>
+          {headerContent}
           {scrollContent
             ? <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={[styles.scroll, keyboardAware && styles.keyboardAwareScroll]} contentContainerStyle={styles.content}>{children}</ScrollView>
             : <View style={styles.childScrollBody}>{children}</View>}

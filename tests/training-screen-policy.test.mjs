@@ -98,8 +98,8 @@ test('confirmed exercise status is concise, confirmation does not duplicate a su
   assert.match(screen, /styles\.confirmedMilestone\}>Klart<\/Text>/);
   assert.match(screen, /accessibilityLabel=\{`Ångra färdigmarkering för \$\{selectedStep\?\.title \?\? stepId\}`\}/);
   assert.match(screen, /styles\.undoLabel\}>Ångra<\/Text>/);
-  assert.match(screen, /setSuccessMessage\(action\.kind === 'confirm_step' \? '' : confirmation\)/);
-  assert.match(screen, /setSuccessMessage\(action\?\.kind === 'confirm_step' \? '' : progressionRetrySuccessMessage\(action\)\)/);
+  assert.match(screen, /setSuccessMessage\(action\.kind === 'confirm_step' \|\| action\.kind === 'record_session' \? '' : confirmation\)/);
+  assert.match(screen, /setSuccessMessage\(action\?\.kind === 'confirm_step' \|\| action\?\.kind === 'record_session' \? '' : progressionRetrySuccessMessage\(action\)\)/);
   assert.match(screen, /journeyActions: \{ flexDirection: 'column', alignItems: 'stretch'/);
   assert.match(screen, /accessibilityLabel="Fortsätt till nästa träningssteg"[\s\S]*?styles\.journeyNextText\}>Nästa<\/Text>/);
   assert.match(screen, /journeyPreviousAction: \{ minHeight: tokens\.size\.touchMin/);

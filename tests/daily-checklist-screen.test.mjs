@@ -66,10 +66,11 @@ test('Checklist local date label is calendar-based and does not shift across dev
 test('Manager keeps routine and training sections separate and hides all other content during a routine form', async () => {
   const manager = await readFile(new URL('../src/features/home/DailyActivityManagerSheet.tsx', import.meta.url), 'utf8');
   assert.match(manager, /items=\{\['Rutiner', 'Träning'\]\}/);
-  assert.match(manager, /editing \? <Text accessibilityRole="header" style=\{styles\.sectionTitle\}>/);
-  assert.match(manager, /\(editing \|\| !formActive\) && routinesForDisplay\.length > 0/);
-  assert.match(manager, /!formActive && managerSection === 'Träning'/);
-  assert.match(manager, /requestLeave\(\(\) => \{ setDraft\(null\); setManagerSection\('Rutiner'\); \}\)/);
-  assert.match(manager, /onPrimaryAction=\{activeDraft \? undefined : closeSheet\}/);
+  assert.match(manager, /headerContent=\{detailOpen/);
+  assert.match(manager, /creating && activeDraft \? <CreateRoutineForm/);
+  assert.match(manager, /focusedRoutine \? <RoutineTemplateRow/);
+  assert.match(manager, /managerSection === 'Rutiner'/);
+  assert.match(manager, /footer=\{<>\{message\}\{activeDraft \? <Button label="Spara rutin"/);
+  assert.doesNotMatch(manager, /onPrimaryAction=/);
   assert.match(manager, /requestLeave\(action: \(\) => void\)/);
 });

@@ -157,6 +157,10 @@ Tekniska driftord hör hemma i rapporter. Medicinsk säkerhetsinformation och sa
 
 Nya träningsinstruktioner ska ha ett kort neutralt mål och en numrerad Steg för steg-lista. Målet beskriver övningens avsikt, inte uppnådd färdighet. Befintligt innehåll får struktureras om endast med bevarade ord, villkor och säkerhetsråd; ändrade/okända versioner ska inte få ett mål från äldre text. Hänvisningar till andra programsteg ska vara entydiga även när instruktionen får egen numrering. Senaste ägarjusteringen samma dag: källor visar endast kort utgivarnamn (Avsab, RSPCA, Dogs Trust), med full granskad sidtitel kvar i hjälpmedelsnamnet och värdnamn för säker okänd källa. Öppnad-status visas inte rutinmässigt; verkliga länkfel ska kunna förstås. Dessa uttryckliga ägarbeslut ersätter äldre önskemål om enbart numeriska källmarkörer.
 
+### Ägarjustering 2026-10-30: planera rutiner och träning
+
+Rutiner och Träning i dagshanteringen har samma centrerade ram med fasta segment och footer, medan innehållet scrollar. Rutinöversikten är kompakt; redigering och radering finns i detalj. Formuläret har en primär sparaåtgärd och bevarad osparat-/unknown-hantering. Träningsval hämtar faktiskt aktuellt steg från sparad resa, annars nästa behöriga förslag; val för idag betyder inte utförd träning eller bekräftat delmål.
+
 ## 10. Tillstånd och tillgänglighet
 
 Varje del har ready/loading/empty/error och relevanta partial/pending/failed/unsure-lägen. Läsfel är inte noll aktiviteter. Konto-/hundbyte tömmer gamla data och ignorerar sena svar. Publicerings- och reviewgränser gäller vid både läsning och skrivning.

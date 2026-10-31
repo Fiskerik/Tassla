@@ -87,7 +87,7 @@ test('routine and training rows expose separate accessible actions and truthful 
 });
 
 test('routine home and delete actions are icon-only and confirm before removal', () => {
-  const routineRow = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function ActionButton'));
+  const routineRow = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function IconOnlyButton'));
   const actions = routineRow.slice(routineRow.indexOf('<View style={styles.routineActions}>'));
   assert.match(actions, /<IconOnlyButton icon=\{selected \? 'remove-outline' : 'add-outline'\}/);
   assert.match(actions, /accessibilityLabel=\{`\$\{selected \? 'Ta bort' : skippedDay \? 'Lägg tillbaka' : 'Lägg till'\} rutinen/);
@@ -97,7 +97,7 @@ test('routine home and delete actions are icon-only and confirm before removal',
   assert.match(actions, /Alert\.alert\('Ta bort rutin\?'/);
   assert.match(actions, /style: 'destructive', onPress: \(\) => \{ void onDelete\(\); \}/);
   assert.doesNotMatch(actions, /<ActionButton|<Text/);
-  assert.match(manager, /iconOnlyButton: \{ width: tokens\.size\.touchMin, minHeight: tokens\.size\.touchMin/);
+  assert.match(manager, /return <Button variant="icon" iconName=\{icon\}/);
 });
 
 test('routine checklist icons are selectable, saved in the model, and shown on Checklistor', () => {
@@ -127,7 +127,7 @@ test('routine checklist icons are selectable, saved in the model, and shown on C
 test('opening a routine focuses its own editor and keeps manage-all as a named compact action', () => {
   assert.match(manager, /const focusedRoutineOnly = Boolean\(focusRoutineId\)/);
   assert.match(manager, /const visibleRoutines = upcomingRoutineOnly \|\| focusedRoutineOnly \? routines\.filter\(\(routine\) => routine\.id === focusRoutineId\) : routines/);
-  assert.match(manager, /!upcomingRoutineOnly && !focusedRoutineOnly && !formActive && managerSection === 'Träning'/);
+  assert.match(manager, /const detailOpen = Boolean\(focusedRoutine\) \|\| formActive \|\| upcomingRoutineOnly \|\| focusedRoutineOnly/);
   assert.match(dailyChecklist, /accessibilityLabel="Hantera rutiner och aktiviteter" onPress=\{\(\) => openManager\(\)\}/);
   const manageActionStart = dailyChecklist.indexOf('accessibilityLabel="Hantera rutiner och aktiviteter"');
   const manageActionEnd = dailyChecklist.indexOf('</MotionPressable>', manageActionStart);
@@ -145,7 +145,7 @@ test('opening a routine focuses its own editor and keeps manage-all as a named c
   assert.doesNotMatch(manager, /ChecklistIconPickerTrigger[\s\S]{0,300}popover/);
   const createForm = manager.slice(manager.indexOf('function CreateRoutineForm'), manager.indexOf('function RepeatRuleControls'));
   assert.doesNotMatch(createForm, /label="Avbryt"/);
-  const editForm = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function ActionButton'));
+  const editForm = manager.slice(manager.indexOf('function RoutineTemplateRow'), manager.indexOf('function IconOnlyButton'));
   assert.doesNotMatch(editForm, /label="Avbryt"/);
 });
 
@@ -188,7 +188,7 @@ test('routine write failures unlock the editor while unknown writes retain exact
   assert.match(manager, /\{conflictForDraft \? <Button[\s\S]*Ersätt utkastet med senaste versionen/);
   assert.match(manager, /<Button variant="tertiary" label="Ersätt utkastet med senaste versionen"[\s\S]*onPress=\{replaceDraftWithLatestRoutine\}/);
   assert.match(manager, /routineEditDraftFromConflict\(draft, routineConflict, dailyScopeKey \?\? ''/);
-  assert.match(manager, /fieldsDisabled=\{unresolvedMutation \|\| savingDraft \|\| showDiscardConfirmation \|\| Boolean\(conflictForDraft\)\}/);
+  assert.match(manager, /const formDisabled = unresolvedMutation \|\| savingDraft \|\| showDiscardConfirmation \|\| Boolean\(conflictForDraft\)/);
   assert.match(manager, /savingDraft \|\| conflictForDraft\) return;/);
   assert.match(recoverySource, /sourceRoutine: latest/);
   assert.match(manager, /sourceRoutine: routine/);
