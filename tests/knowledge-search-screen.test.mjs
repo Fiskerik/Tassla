@@ -80,7 +80,7 @@ test('published guide versions retain explicit images and library cards use an e
     '61000000-0000-4000-8000-000000000002:1': 'knowledge-card-puppy-sheltie-window.jpg',
     '61000000-0000-4000-8000-000000000003:1': 'knowledge-card-puppy-cocker-coast.jpg',
     '61000000-0000-4000-8000-000000000004:1': 'knowledge-guide-handling.jpg',
-    '61000000-0000-4000-8000-000000000006:1': 'puppy-resting-carousel.png',
+    '61000000-0000-4000-8000-000000000006:1': 'puppy-resting-carousel.jpg',
     '61000000-0000-4000-8000-000000000007:1': 'knowledge-guide-weight.jpg',
     '61000000-0000-4000-8000-000000000008:1': 'knowledge-guide-vet.jpg',
   });

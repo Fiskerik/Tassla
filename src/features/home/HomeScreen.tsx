@@ -1,4 +1,5 @@
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Button, Card, DailyActivityItem, DestinationTile, Skeleton } from '../../components/ui';
@@ -184,7 +185,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
           setPortraitFrame((current) => current?.left === x && current.right === x + width ? current : { left: x, right: x + width });
         }}>
         <View style={styles.portraitPhotoClip}>
-          <Image source={require('../../../assets/images/home-dog-portrait-placeholder.png')}
+          <Image source={require('../../../assets/images/home-dog-portrait-placeholder.jpg')}
             style={styles.dogImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
         </View>
       </MotionPressable>

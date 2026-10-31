@@ -59,3 +59,7 @@ Checklistor och Vanliga frågor är fortsatt nåbara när guidurvalet är tomt e
 
 
 Checklisteöversikt och detalj saknar den extra Läs mer-yta som bara förklarade granskningsstatus. FAQ-svar, checklistinnehåll, faktiska mutations-/läsfel och den separata Utkast-vyns säkerhetsvarning är kvar.
+
+Bildleverans: `EditorialImage` använder expo-image57.0.5 med lokala bundlade assets, memory-disk-cache och transition0. Källidentitet nycklar både komponent och recyclingKey, så föregående motiv inte lever kvar under nästa rubrik. Ingen prefetch eller ny fjärrbildskälla. `KnowledgeImage` behåller sin exakta fokala frameberäkning och mappar färdig stretch till contentFit fill. Standard är dekorativ/tom alt, medan uttryckligt meningsbärande hjälpmedelsnamn i befintligt tomläge bevaras. Verifiering: pnpm check och tools/visual-check/verify-image-delivery.py; faktisk Expo-web används, nativecache/prestanda ej mätt.
+
+Nativegräns: expo-image använder SDWebImage/codecs på iOS och Glide/OkHttp på Android. Biblioteksmanifestet deklarerar INTERNET, ACCESS_NETWORK_STATE och READ_EXTERNAL_STORAGE endast till SDK32; inga nya runtimepermissionsanrop eller användarfoto-URL:er införs här. JS-export bevisar inte nativekompilering, slutligt sammanfogat manifest/privacyunderlag eller faktisk cachehastighet.

@@ -1476,3 +1476,6 @@ Detta är en snapshot före push; distanscommit och PR redovisas i överlämning
 
 ## 2026-10-31 — PREMIUM-FEEDBACK-01, före slutreview
 Vanlig branch feature/complete-mvp-journeys från main f0065da. Expo-haptics57.0.3 och bekräftad bock/livstid samt tryckrespons i fyra vardagsvyer; Next readback-race och utebliven failedtext rättade. Architect/Critic v5, Security och UICritic scopedPASS. Oberoende QA egen fullcheck887pass/1skip +24RNWeb och bildöppningPASS; publiciOSexportPASS. Scope59paths inom deklaration, diffcheckPASS. Fysisknative/liveNT och gamla fullpanelavvikelser öppna. FrozenReviewer nästa, sedan hållbar commit. Roadmap bevarar de fyra huvudresorna och senaste Expo/performancebeställning med framtidsbeslut separata.
+
+## 2026-10-31 — IMAGE-DELIVERY-01
+Sex befintliga foton13551755→812436byte; ExpoImage57.0.5 används i befintliga bilder med samma beräknade crop och källidentitet. Tre tidigare beskurna fasers ansikten/öron justerade. Architect/Critic/Security/UICritic och oberoendeQA/Reviewer PASS avgränsat, actual Expo-web delayedsource375/430, metadata, publiciOSexport och fullcheck PASS. Native enhet/cache/manifestaggregation, fullpanel rev02 fortsatt öppna. Nästa durable commit och startup/träningsvakenhet.

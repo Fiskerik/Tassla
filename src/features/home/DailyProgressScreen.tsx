@@ -1,4 +1,5 @@
-import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppBar, Button, Card, DailyActivityItem, Skeleton } from '../../components/ui';

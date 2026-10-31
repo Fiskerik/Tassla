@@ -93,3 +93,9 @@ För den införda sheetändringen: prova kort/långt/snabbt nedåtdrag från han
 ### UI-KNOWLEDGE-SEARCH — amendment v7, 2026-10-19
 
 Local implementation acceptance is separated from rendered/device acceptance because the repository has no installed react-native-web/react-dom renderer. Search must visibly name the active dog, distinguish no articles from no matches, and never carry prior-dog results across a scope switch. The local checkpoint uses helper/source tests and standard checks; 375/430 captures and §14 remain OPEN / NOT TESTABLE and are assigned to UI-NATIVE-ACCESSIBILITY-VERIFY. See phase plan v7.
+
+## Ägarens tillägg 2026-10-31 — Expo och prestanda
+
+Detta kompletterar äldre paketstatus, inte en SDKuppgradering. Haptik är nu lokalt installerad/verifierad i PREMIUM-FEEDBACK-01 commit9a11649 (fysisk känslaNT). Godkänt för genomförande: komprimera använda foton, expo-splash-screen varm start, expo-image bevarad fokus/cache och expo-keep-awake endast öppen träningsinstruktion; SDK57-kompatibla versioner verifieras per task. @expo/ui native DatePicker utvärderas separat med lokal datumsemantik och fungerande webbfallback.
+
+Efter MVP och separat beslut: widgets (integritet/kostnad/namn på låsskärm), store-review efter beta, updates (tjänst/kostnad/releasepolicy), foto (samtycke/lagring/radering/GDPR). Dessa aktiveras inte nu. Avstå blur, symbols, extra gradientpaket, Reanimated och Lottie. Roadmap MVP-COMPLETION-261031 bevarar de fyra användarresorna parallellt med denna leveransordning.

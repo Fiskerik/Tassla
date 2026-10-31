@@ -1,11 +1,12 @@
+import { EditorialImage as Image } from './EditorialImage';
 import type { ReactNode } from 'react';
-import { Image, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
+import { StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import { tokens } from '../../theme/tokens';
 import { MotionPressable } from './Motion';
 
 export type HeroCardVariant = 'overlay' | 'training-image-top';
 
-export function HeroCard({ title, meta, onPress, image = require('../../../assets/images/dog-welcome.png'), children, variant = 'overlay', selected = false }: {
+export function HeroCard({ title, meta, onPress, image = require('../../../assets/images/dog-welcome.jpg'), children, variant = 'overlay', selected = false }: {
   title: string; meta?: string; onPress?: () => void; image?: ImageSourcePropType; children?: ReactNode; variant?: HeroCardVariant; selected?: boolean;
 }) {
   const content = variant === 'training-image-top' ? <>

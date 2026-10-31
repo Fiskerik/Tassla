@@ -1,0 +1,12 @@
+{
+  "results": [
+    "375: all phase images loaded; delayed source clears old image, frame unchanged, decorative alt empty",
+    "430: all phase images loaded; delayed source clears old image, frame unchanged, decorative alt empty",
+    "home: actual existing screen rendered with Expo Image",
+    "knowledge: actual existing screen rendered with Expo Image",
+    "training: actual existing screen rendered with Expo Image",
+    "development: actual existing screen rendered with Expo Image"
+  ],
+  "page_errors": [],
+  "limits": "Actual Expo Image web, synthetic app data. Native cache and device performance not verified."
+}

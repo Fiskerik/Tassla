@@ -1,0 +1,92 @@
+[
+  {
+    "name": "dog-welcome",
+    "original_bytes": 2250922,
+    "original_dimensions": [
+      1536,
+      1024
+    ],
+    "original_sha256": "f0dc65564e8621bf6027878a0cda1801befa5a63d6a12e7cd32a3b9612981628",
+    "bytes": 146514,
+    "dimensions": [
+      1200,
+      800
+    ],
+    "quality": 86
+  },
+  {
+    "name": "dog-resting",
+    "original_bytes": 2286015,
+    "original_dimensions": [
+      1536,
+      1024
+    ],
+    "original_sha256": "0c4425800a0ff103fa3441bbebde3d15b1e3ba6b1cab77a2e56f12ed0a7859d5",
+    "bytes": 152043,
+    "dimensions": [
+      1200,
+      800
+    ],
+    "quality": 86
+  },
+  {
+    "name": "puppy-training",
+    "original_bytes": 2436213,
+    "original_dimensions": [
+      1536,
+      1024
+    ],
+    "original_sha256": "01193ed69d6e309d81cf3e03b7706cac210b1a457955dd3801c9c8c20148e5e1",
+    "bytes": 177038,
+    "dimensions": [
+      1200,
+      800
+    ],
+    "quality": 86
+  },
+  {
+    "name": "puppy-resting-carousel",
+    "original_bytes": 2141695,
+    "original_dimensions": [
+      1536,
+      1024
+    ],
+    "original_sha256": "b08db98bd1b49af2a606836ade96481759233e4e282ab53d619209b46466b203",
+    "bytes": 137421,
+    "dimensions": [
+      1200,
+      800
+    ],
+    "quality": 86
+  },
+  {
+    "name": "puppy-water",
+    "original_bytes": 2080329,
+    "original_dimensions": [
+      1536,
+      1024
+    ],
+    "original_sha256": "c4dcf506c14db6761e2abb0fec77891844323c39806b0031da3805fb3f2964c2",
+    "bytes": 147303,
+    "dimensions": [
+      1200,
+      800
+    ],
+    "quality": 86
+  },
+  {
+    "name": "home-dog-portrait-placeholder",
+    "original_bytes": 2356581,
+    "original_dimensions": [
+      1254,
+      1254
+    ],
+    "original_sha256": "3096317843ec185edde7fe39f3fb04f5d03c96881b3c1304cd1e6e0f21d628c2",
+    "bytes": 52117,
+    "dimensions": [
+      512,
+      512
+    ],
+    "quality": 86
+  }
+]

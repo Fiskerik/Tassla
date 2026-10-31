@@ -5,7 +5,7 @@ const root=path.resolve(__dirname, '../..');
 const output=process.env.TASSLA_UI_OUTPUT || '/tmp/tassla-preview/site';
 const toolRoot=process.env.TASSLA_UI_TOOLS;
 const entry=process.env.TASSLA_UI_ENTRY ? path.resolve(root,process.env.TASSLA_UI_ENTRY) : path.join(__dirname,'app.tsx');
-const defines={global:'globalThis',__DEV__:'true','process.env.NODE_ENV':'"development"'};
+const defines={global:'globalThis',__DEV__:'true','process.env.NODE_ENV':'"development"','process.env.EXPO_OS':'"web"'};
 defines['process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT']=process.env.TASSLA_UI_REVIEW==='true'?'"true"':'"false"';
 const reactNativeWeb=toolRoot+'/node_modules/react-native-web/dist/index.js';
 const reactNativeShim=path.join(output,'react-native-web-shim.js');

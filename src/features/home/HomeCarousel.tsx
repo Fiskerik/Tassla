@@ -1,5 +1,6 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useMemo } from 'react';
-import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View, type ImageSourcePropType } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View, type ImageSourcePropType } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Card, IconChip } from '../../components/ui';
 import { useReducedMotion } from '../../components/ui/Motion';
@@ -65,13 +66,13 @@ function buildCards({ dog, plans, selectedDatePlans, content, contentState, next
   const cards: CarouselCard[] = [];
   if (nextStep) cards.push({ key: 'training', title: nextStep, meta: `${ageLabel} · Nästa övning`, image: require('../../../assets/images/training-next-step-puppy-corgi-home.jpg'), onPress: () => reviewTraining ? onOpenContent(reviewTraining.id) : onGo('training') });
   cards.push({ key: 'knowledge', title: article?.title ?? 'Kunskap för er', meta: article ? `${ageLabel} · Läs ett tips för er` : contentState === 'error' ? 'Guider och checklistor för er' : `${ageLabel} · Guider och checklistor för er`, image: article ? editorialImageForGuide(article) : require('../../../assets/images/knowledge-featured-puppy-lagotto-forest.jpg'), onPress: () => article ? onOpenContent(article.id) : onGo('knowledge') });
-  if (process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true') cards.push({ key: 'checklists', title: 'Checklistor för valptiden', meta: `${ageLabel} · Listor för er fas`, image: require('../../../assets/images/puppy-training.png'), category: 'training', onPress: () => onOpenContent(CHECKLIST_DESTINATION_ID) });
-  cards.push({ key: 'faq', title: 'Vanliga frågor', meta: 'Svar sorterade efter fas', image: require('../../../assets/images/puppy-resting-carousel.png'), category: 'sleep', onPress: () => onOpenContent(FAQ_DESTINATION_ID) });
+  if (process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT === 'true') cards.push({ key: 'checklists', title: 'Checklistor för valptiden', meta: `${ageLabel} · Listor för er fas`, image: require('../../../assets/images/puppy-training.jpg'), category: 'training', onPress: () => onOpenContent(CHECKLIST_DESTINATION_ID) });
+  cards.push({ key: 'faq', title: 'Vanliga frågor', meta: 'Svar sorterade efter fas', image: require('../../../assets/images/puppy-resting-carousel.jpg'), category: 'sleep', onPress: () => onOpenContent(FAQ_DESTINATION_ID) });
   if (upcomingPlan && !selectedDatePlans.some((plan) => plan.id === upcomingPlan.id)) {
     const details = [`Kommer ${shortDate(upcomingPlan.due_on)}`];
     if (upcomingPlan.due_time) details.push(`Tid ${upcomingPlan.due_time.slice(0, 5)}`);
     if (upcomingPlan.reminder_minutes !== null) details.push(`Påminnelse ${formatMinutes(upcomingPlan.reminder_minutes)}`);
-    cards.push({ key: 'health', title: upcomingPlan.description || (upcomingPlan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'), meta: details.join(' · '), image: require('../../../assets/images/puppy-water.png'), onPress: () => onGo('health') });
+    cards.push({ key: 'health', title: upcomingPlan.description || (upcomingPlan.event_type === 'vaccination' ? 'Vaccination' : 'Veterinärbesök'), meta: details.join(' · '), image: require('../../../assets/images/puppy-water.jpg'), onPress: () => onGo('health') });
   }
   return cards;
 }

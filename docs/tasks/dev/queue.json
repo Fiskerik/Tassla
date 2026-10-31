@@ -14346,6 +14346,106 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS no findings; all59paths in scope, actualSDK/callers/lifetimes/Nextretry and opened composites verified. QA own24browser and887pass/1skip. Durable commit now; native/live and prior fullpanel gaps remain open."
+    },
+    {
+      "id": "IMAGE-DELIVERY-01",
+      "title": "Mindre lokala fotografier och Expo Image",
+      "plan": "docs/tasks/dev/IMAGE-DELIVERY-01.md v5",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks uttryckliga Expo/prestandabeställning2026-10-31",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/components/ui/EditorialImage.tsx",
+        "src/features/knowledge/KnowledgeImage.tsx",
+        "src/features/knowledge/checklist-phase-visuals.ts",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/knowledge/README.md",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/home/README.md",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/components/ui/HeroCard.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/editorial-image-delivery.test.mjs",
+        "assets/images/README.md",
+        "tools/visual-check/image-delivery.tsx",
+        "tools/visual-check/verify-image-delivery.py",
+        "docs/design/evidence/image-delivery-01",
+        "docs/tasks/dev/IMAGE-DELIVERY-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "assets/images/dog-welcome.png",
+        "assets/images/dog-welcome.jpg",
+        "assets/images/dog-resting.png",
+        "assets/images/dog-resting.jpg",
+        "assets/images/puppy-training.png",
+        "assets/images/puppy-training.jpg",
+        "assets/images/puppy-resting-carousel.png",
+        "assets/images/puppy-resting-carousel.jpg",
+        "assets/images/puppy-water.png",
+        "assets/images/puppy-water.jpg",
+        "assets/images/home-dog-portrait-placeholder.png",
+        "assets/images/home-dog-portrait-placeholder.jpg",
+        "app.json",
+        "tools/visual-check/build.cjs",
+        "tests/home-vision.test.mjs",
+        "docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json"
+      ],
+      "acceptance": [
+        "Measured photo reduction with unchanged focal layouts",
+        "Actual Expo57 image API and no old source on change",
+        "Relevant visual regression and full check"
+      ],
+      "checks": [
+        "pnpm check",
+        "actual image browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "PREMIUM-FEEDBACK-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 actualpublishedAPI, CriticPROCEED, userexplicitSDKapproval; preservecrop/accessibility/stablesource; actualdelayedloadbrowserrequired."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root singlewriter; compress sixusedopaquephotosfirst then approvedExpo57 Image adapter with transition0 and stableidentity."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic v5 APPROVE; Security PASS; UICritic scoped FIXED after three focal corrections; fullcheck889pass/1skip pre-final constant, actual SDK webv5 and public iOS v5 PASS. Independent QA v4 PASS and v5 supplement requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck and actualExpoWeb, metadata, source and imagery PASS for v4; v5 only cocker focal constant and independently verified UI. Supplemental QA requested; frozen Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v5 no findings, actualSDK, sixassets/quality/metadata, focal faces and delayedweb verified. IndependentQA and UIReviewPASS scoped; native/fullpanelNT. Commit next."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS v5 no findings, actualSDK, sixassets/quality/metadata, focal faces and delayedweb verified. IndependentQA and UIReviewPASS scoped; native/fullpanelNT. Commit next."
     }
   ]
 }

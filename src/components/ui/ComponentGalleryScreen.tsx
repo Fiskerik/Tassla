@@ -63,8 +63,8 @@ export function ComponentGalleryScreen({ onBack }: { onBack: () => void }) {
     <Card selected accessibilityLabel="Valt kort"><Text style={styles.body}>Valt kort</Text></Card>
     <HeroCard title="Veckans fokus" meta="3 av 5 genomförda" onPress={() => undefined} />
     <View style={styles.trainingTiles}>
-      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.png')} title="Trygg vardagsstart" meta="3 övningar" selected onPress={() => undefined} /></View>
-      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.png')} title="Kontakt i vardagen" meta="2 övningar" onPress={() => undefined} /></View>
+      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.jpg')} title="Trygg vardagsstart" meta="3 övningar" selected onPress={() => undefined} /></View>
+      <View style={styles.trainingCard}><HeroCard variant="training-image-top" image={require('../../../assets/images/puppy-training.jpg')} title="Kontakt i vardagen" meta="2 övningar" onPress={() => undefined} /></View>
     </View>
     <SectionHeader title="Hemaktiviteter och destinationer" />
     <DailyActivityItem label="Öva lugn hantering" detail="Tassar och öron" category="training" completed={activityChecked}

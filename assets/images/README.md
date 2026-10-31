@@ -3,9 +3,9 @@
 Två dekorativa AI-genererade foton, skapade 2026-10-04 med inbyggda imagegen-verktyget. De är inte foton av användarens hund och ska användas på välkomst-/innehållskort, inte som ett påstått profilfoto. Originalen sparas i Codex generated_images; kopiorna här följer projektet. Inga fjärrbilder eller användaruppgifter används.
 
 ## Prompter
-dog-welcome.png: photorealistic-natural, landscape 3:2 editorial photo of a calm healthy adult beagle beside a cream knitted blanket in a bright Scandinavian home, sage-green/warm beige background, natural window light, dog on right with left space for UI text. Correct anatomy; no people, text, logos or watermark. Decorative photo, not a real user pet or training instruction.
+dog-welcome.jpg: photorealistic-natural, landscape 3:2 editorial photo of a calm healthy adult beagle beside a cream knitted blanket in a bright Scandinavian home, sage-green/warm beige background, natural window light, dog on right with left space for UI text. Correct anatomy; no people, text, logos or watermark. Decorative photo, not a real user pet or training instruction.
 
-dog-resting.png: photorealistic-natural, landscape 3:2 editorial photo of a healthy beagle peacefully curled up asleep on an oatmeal cream blanket in a naturally lit Scandinavian home, centered for mobile crop, sage and cream palette, believable anatomy. No people, medicine, text, logos or watermark. Decorative photo, not medical advice or a real user pet.
+dog-resting.jpg: photorealistic-natural, landscape 3:2 editorial photo of a healthy beagle peacefully curled up asleep on an oatmeal cream blanket in a naturally lit Scandinavian home, centered for mobile crop, sage and cream palette, believable anatomy. No people, medicine, text, logos or watermark. Decorative photo, not medical advice or a real user pet.
 
 Visuellt granskade i verktygsresultatet. React Native Image kan använda filerna lokalt. Profilen ska använda neutral hundikon tills användaren själv väljer ett foto i ett separat godkänt uppladdningsflöde.
 
@@ -17,9 +17,9 @@ Visuellt granskade i verktygsresultatet. React Native Image kan använda filerna
 
 Originalgenererade med inbyggda imagegen-verktyget 2026-10-10; kopiorna här används lokalt. De är illustrationer i fotostil, inte användarens hund, verifierade händelser eller hälsoråd. Inga användarbilder eller BabyJourney-tillgångar användes.
 
-- `puppy-training.png` (2,4 MB): valp och ägare tränar lugnt sitt i solbelyst svensk äng, gräddvit/mörkgrön palett, liggande 3:2, ingen text eller logotyp. Dekor till Träning-kort.
-- `puppy-resting-carousel.png` (2,1 MB): sovande valp på beige filt i lugnt skandinaviskt hem, liggande 3:2, ingen text eller logotyp. Dekor till Kunskap-kort.
-- `puppy-water.png` (2,0 MB): valp dricker ur keramisk skål i solbelyst hem, liggande 3:2, ingen text eller logotyp. Allmän vardagsdekor till valfritt Hälsa-kort; kortets text anger faktisk plan, bilden visar inte sjukdom eller behandling.
+- `puppy-training.jpg`: valp och ägare tränar lugnt sitt i solbelyst svensk äng, gräddvit/mörkgrön palett, liggande 3:2, ingen text eller logotyp. Dekor till Träning-kort.
+- `puppy-resting-carousel.jpg`: sovande valp på beige filt i lugnt skandinaviskt hem, liggande 3:2, ingen text eller logotyp. Dekor till Kunskap-kort.
+- `puppy-water.jpg`: valp dricker ur keramisk skål i solbelyst hem, liggande 3:2, ingen text eller logotyp. Allmän vardagsdekor till valfritt Hälsa-kort; kortets text anger faktisk plan, bilden visar inte sjukdom eller behandling.
 - `dog-placeholder.png` (1,2 MB): enkel grön generisk hundsilhuett mot gräddvit bakgrund, kvadratisk och läsbar vid liten cirkulär beskärning. Platshållare för hundkort, inte varumärkeslogotyp eller hundfoto.
 
 Originalen ligger under `/workspace/generated_images/` i Codex-arbetsmiljön. Bilderna har visuellt granskats i verktygsresultatet. Den lokala iOS-bundlingen och mobilskärmdumpar ska granskas för slutlig beskärning och paketstorlek.
@@ -36,7 +36,7 @@ ImageMagick-kommandot för den spårade nedskalningen var `magick <original> -re
 
 ## VISION-R02-2: generisk Home-platshållare
 
-`home-dog-portrait-placeholder.png` är AI-genererad, fotoestetisk hundbildkonst skapad 2026-10-13. Den föreställer inte en identifierad verklig hund, är inte ett foto av Tassla-ägaren och får inte kopplas till hundens namn eller ras. Originalet är 1254×1254 px och ligger kvar i Codex generated_images på `/workspace/generated_images/exec-7d0e0642-b5b5-4a39-9f8b-6f3628fd50f9.png`. Bilden är en generisk dekorativ standardplatshållare i public och review Home; den samlar inte in, lagrar eller påstår personlig hundidentitet. Reviewramen märker den som AI-genererad standardbild. Den beskärs som `cover` i ett runt cirka 112×112 pt fönster; VoiceOver/TalkBack ignorerar den.
+`home-dog-portrait-placeholder.jpg` är AI-genererad, fotoestetisk hundbildkonst skapad 2026-10-13. Den föreställer inte en identifierad verklig hund, är inte ett foto av Tassla-ägaren och får inte kopplas till hundens namn eller ras. Originalet är 1254×1254 px och ligger kvar i Codex generated_images på `/workspace/generated_images/exec-7d0e0642-b5b5-4a39-9f8b-6f3628fd50f9.png`. Bilden är en generisk dekorativ standardplatshållare i public och review Home; den samlar inte in, lagrar eller påstår personlig hundidentitet. Reviewramen märker den som AI-genererad standardbild. Den beskärs som `cover` i ett runt cirka 112×112 pt fönster; VoiceOver/TalkBack ignorerar den.
 
 ## VISION-R02 panel 2: Utvecklingens standardbild
 
@@ -107,4 +107,19 @@ Skapade 2026-10-22 med ChatGPT `image_gen`. Inga uppladdade referensbilder eller
 
 ## Kunskapens faschecklistor
 
-`PuppyChecklistScreen` återanvänder befintliga lokala redaktionsbilder som smala, dekorativa banners i fasdetaljen. Den fasvisa bild- och fokalmappningen finns i `src/features/knowledge/checklist-phase-visuals.ts`: `dog-welcome.png` före hemkomst, `knowledge-featured-puppy-lagotto-forest.jpg` för första dagarna, `knowledge-card-puppy-sheltie-window.jpg` för 8–12 veckor, `knowledge-guide-handling.jpg` för 3–6 månader, `puppy-training.png` för 6–12 månader och `knowledge-card-puppy-cocker-coast.jpg` för över ett år. Varje banner ska visa hela hundens ansikte tydligt utan att skära av det; fokuspunkter verifieras i render vid 375/430 pt. Banners är dekorativa och dolda för VoiceOver/TalkBack; fasrubrik och checklistinnehåll bär betydelsen. Inga nya bildfiler eller personliga hundfoton har lagts till.
+`PuppyChecklistScreen` återanvänder befintliga lokala redaktionsbilder som smala, dekorativa banners i fasdetaljen. Den fasvisa bild- och fokalmappningen finns i `src/features/knowledge/checklist-phase-visuals.ts`: `dog-welcome.jpg` före hemkomst, `knowledge-featured-puppy-lagotto-forest.jpg` för första dagarna, `knowledge-card-puppy-sheltie-window.jpg` för 8–12 veckor, `knowledge-guide-handling.jpg` för 3–6 månader, `puppy-training.jpg` för 6–12 månader och `knowledge-card-puppy-cocker-coast.jpg` för över ett år. Varje banner ska visa hela hundens ansikte tydligt utan att skära av det; fokuspunkter verifieras i render vid 375/430 pt. Banners är dekorativa och dolda för VoiceOver/TalkBack; fasrubrik och checklistinnehåll bär betydelsen. Inga nya bildfiler eller personliga hundfoton har lagts till.
+
+## IMAGE-DELIVERY-01 — optimering 2026-10-31
+
+Sex använda fotografier konverterade utan beskärning med Pillow LANCZOS, JPEG kvalitet86/optimize/progressive. Inga EXIF/GPS/ICC/XMP/kommentarer kopieras. Originalen finns i gitbas9a11649 och tidigare genereringsspårning ovan gäller fortsatt; nya filer är samma motiv, inga personliga hundfoton. Originalens PNG-versioner finns i gitbasen; filnamnen ovan avser aktuella appkopior.
+
+| Fil | Original byte / mått | App byte / mått |
+|---|---|---|
+| dog-welcome.jpg | 2250922 / [1536, 1024] | 146514 / [1200, 800] |
+| dog-resting.jpg | 2286015 / [1536, 1024] | 152043 / [1200, 800] |
+| puppy-training.jpg | 2436213 / [1536, 1024] | 177038 / [1200, 800] |
+| puppy-resting-carousel.jpg | 2141695 / [1536, 1024] | 137421 / [1200, 800] |
+| puppy-water.jpg | 2080329 / [1536, 1024] | 147303 / [1200, 800] |
+| home-dog-portrait-placeholder.jpg | 2356581 / [1254, 1254] | 52117 / [512, 512] |
+
+Totalt13551755→812436byte (−94,0%). Fokusmetadata och källproportioner kvarstår, Hemporträttets befintliga skala1.08 kvarstår. Inget påstående om uppmätt native decodehastighet. Fulla originalhashar i docs/design/evidence/image-delivery-01/asset-measurements.json. Dog-placeholder-silhuett, transparent maskot och appikon är inte fotografier i denna optimering och är oförändrade.

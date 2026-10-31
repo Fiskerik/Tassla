@@ -1,5 +1,6 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useMemo, useState } from 'react';
-import { Alert, Image, Linking, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Path } from 'react-native-svg';
 import { AppBar, Button, Skeleton } from '../../components/ui';

@@ -1,6 +1,7 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, Animated, Image, Linking, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Linking, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, BottomSheet, Button, Card, Dialog, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
