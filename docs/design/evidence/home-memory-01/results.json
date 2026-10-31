@@ -1,0 +1,13 @@
+{
+  "results": [
+    "375x844 ready: verified milestone visible; source opens exact exercise where exercised",
+    "430x844 ready: verified milestone visible; source opens exact exercise where exercised",
+    "375x667 ready: verified milestone visible; source opens exact exercise where exercised",
+    "375x844 loading: verified milestone visible; source opens exact exercise where exercised",
+    "375x844 error: verified milestone visible; source opens exact exercise where exercised",
+    "Missing source step gives explicit unavailable state, not a different exercise",
+    "Empty history is neutral and opens Logga"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic saved data and RNWeb; live/RLS/native not verified."
+}

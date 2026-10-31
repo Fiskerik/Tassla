@@ -74,7 +74,9 @@ Hemmets rutinmallar och Kunskapens publicerade faschecklistor/egna punkter är o
 
 2026-10-24: Ägarbeställd presentationsstädning tar bort reviewrutor och Standardbild-badges på Hem/Utveckling/Framsteg/preview. Tillfälliga markeringar ersätts inte av tomma ytor. Bilder förblir generiska/dekorativa enligt manifest; namn, data, tillgängliga handlingar och fel/sparstatus är oförändrade. Ny evidens: `docs/design/evidence/vision-rev02/ui-copy-cleanup-2026-10-24/`.
 
-Hem visar den senast uppdaterade, hundscope:ade träningsresans sparade steg och två separata antal: loggade pass och delmål som ägaren uttryckligen bekräftat. Kortet länkar till exakt programversion när dess publicerade steg fortfarande går att läsa; saknad eller partiell data visas inte som sparade antal, och indragna instruktioner återanvänds inte. Detta är en separat registrering från dagens aktivitetslista och dess äldre `training_progress`-markeringar.
+Hem visar den senast uppdaterade, hundscope:ade träningsresans sparade steg och två separata antal: loggade pass och delmål som ägaren uttryckligen bekräftat. Kortet länkar till exakt programversion och steg när de publicerade instruktionerna fortfarande går att läsa; saknad eller partiell data visas inte som sparade antal, och indragna instruktioner återanvänds inte. Detta är en separat registrering från dagens aktivitetslista och dess äldre `training_progress`-markeringar.
+
+Historikkortet prioriterar ett faktiskt daterat, bekräftat delmål, därefter ett sparat träningspass eller en logghändelse. Ett träningsminne kan visas även när loggen laddar eller har fel. Åldersråd presenteras inte som historik. Navigering till träning använder samma hundscope, publicerade version och steg; en logghändelse öppnar Logga. Förslag på nästa steg utesluter pausade och osäkra versioner och öppnar det valda steget. En indragen destination ger en tydlig otillgänglighetsstatus, inte en annan övning. `tests/home-reflection.test.mjs`, `tests/home-training-suggestion.test.mjs` och `tools/visual-check/verify-home-memory.py` använder syntetiska data; live/RLS och native är separata verifieringar.
 
 ### Enskild hundradering och AppFlow
 

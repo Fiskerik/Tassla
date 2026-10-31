@@ -12,10 +12,9 @@ import { selectDailyProgress, type DailyProgressCoverage, type HomeDailyActivity
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge, localDate } from '../onboarding/dog';
 import type { LogEvent } from '../puppy-log/log-model';
-import { homeAgeInWeeks, homeAgeMarkerLabel, homeAgeStrip } from './home-today';
+import { homeAgeMarkerLabel, homeAgeStrip } from './home-today';
 import { homeGreetingAt } from './home-greeting';
 import { latestHomeReflection, type TrainingReflection } from './home-reflection';
-import { generalDevelopmentMilestones } from './development-milestones';
 import { DailyActivityManagerSheet } from './DailyActivityManagerSheet';
 import { DogProfileSwitcherSheet } from './DogProfileSwitcherSheet';
 import type { RoutineDraft, RoutineDraftConflict, RoutineDraftRecovery } from './daily-activity-recovery';
@@ -73,7 +72,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   trainingProgressionState?: 'ready' | 'error';
   pendingProgression?: PendingTrainingProgression | null;
   trainingReflection?: TrainingReflection | null;
-  nextTrainingSuggestion?: { programId: string; programTitle: string; stepTitle: string } | null;
+  nextTrainingSuggestion?: { programId: string; programTitle: string; stepId: string; stepTitle: string } | null;
   dailyFixture?: readonly HomeDailyFixtureItem[];
   dailyState?: 'hidden' | 'loading' | 'ready' | 'partial' | 'error';
   dailyRefreshing?: boolean;
@@ -93,7 +92,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   onOpenProgress?: () => void;
   onOpenDevelopment?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
-  onOpenTrainingJourney?: (programVersionId: string) => void;
+  onOpenTrainingJourney?: (programVersionId: string, stepId?: string) => void;
   onRetryProgression?: (programVersionId: string) => void;
   onRetryTrainingProgressionRead?: () => void;
   onRetryDaily?: () => void;
@@ -137,18 +136,15 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
     && !trainingJourneyDisplay.summary && !trainingJourneyDisplay.pending && onOpenTrainingJourney
     ? nextTrainingSuggestion : null;
   const compactJourney = trainingJourneyDisplay.summary && !trainingJourneyDisplay.pending
+    && trainingJourneyDisplay.summary.journey.state !== 'paused'
     && trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle && onOpenTrainingJourney
     ? trainingJourneyDisplay.summary : null;
   const showJustNowTraining = Boolean(nextStep && trainingState === 'ready' && !suggestedTraining);
   const reflection = logState === 'ready' && !logPendingOrUnknown ? latestHomeReflection(events, dog.id) : null;
-  const latestLogTime = reflection ? Date.parse(reflection.occurredAt) : -Infinity;
-  const showTrainingReflection = Boolean(trainingReflection && onOpenTrainingJourney && Date.parse(trainingReflection.occurredAt) > latestLogTime);
-  const fallbackMilestone = !reflection && !trainingReflection && logState === 'ready' && !logPendingOrUnknown
-    && trainingState === 'ready' && trainingProgressionState === 'ready' && !pendingProgression && onOpenDevelopment && dog.birth_date
-    ? generalDevelopmentMilestones(homeAgeInWeeks(dog.birth_date, today))[0] : null;
+  const showTrainingReflection = Boolean(trainingReflection && onOpenTrainingJourney);
   const reflectionMessage = showTrainingReflection && trainingReflection ? `${trainingReflection.kind === 'milestone' ? 'Bekräftat delmål' : 'Tränat'}: ${trainingReflection.label} · ${trainingReflection.date}` : logState === 'loading' ? 'Historiken hämtas.' : logState === 'error'
     ? 'Historiken kunde inte hämtas just nu.' : logPendingOrUnknown ? 'En ändring i loggen behöver kontrolleras.' : reflection
-      ? `Senast loggat: ${reflection.label} · ${reflection.date}` : fallbackMilestone ? `Förslag för den här åldern: ${fallbackMilestone.title}` : 'När ni loggar en händelse syns den här.';
+      ? `Senast loggat: ${reflection.label} · ${reflection.date}. Öppna Logga.` : 'Inget bekräftat att visa här just nu. Öppna Logga.';
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -213,7 +209,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
       </View>
     </Card>
 
-    {suggestedTraining ? <Card variant="home" onPress={() => onOpenTrainingJourney?.(suggestedTraining.programId)}
+    {suggestedTraining ? <Card variant="home" onPress={() => onOpenTrainingJourney?.(suggestedTraining.programId, suggestedTraining.stepId)}
       accessibilityLabel={`Visa träningen ${suggestedTraining.programTitle}, ${suggestedTraining.stepTitle}`}>
       <View style={styles.reflectionCard}>
         <View style={styles.cardHeadingRow}>
@@ -226,7 +222,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
     </Card> : null}
 
     {compactJourney ? <Card variant="home"
-      onPress={() => onOpenTrainingJourney?.(compactJourney.journey.program_version_id)}
+      onPress={() => onOpenTrainingJourney?.(compactJourney.journey.program_version_id, compactJourney.journey.active_step_id)}
       accessibilityLabel={`Fortsätt träningsresan: ${compactJourney.programTitle}, ${compactJourney.activeStepTitle}. ${loggedSessionsLabel(compactJourney.loggedSessions)}, ${milestonesLabel(compactJourney.confirmedMilestones)}.`}>
       <View style={styles.reflectionCard}>
         <View style={styles.cardHeadingRow}>
@@ -250,15 +246,18 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
         </View>
         {trainingJourneyDisplay.summary ? <>
           {trainingJourneyDisplay.summary.programTitle ? <Text style={styles.trainingJourneyProgram}>{trainingJourneyDisplay.summary.programTitle}</Text> : null}
-          {trainingJourneyDisplay.summary.activeStepTitle ? <Text style={styles.body}>Aktivt steg: {trainingJourneyDisplay.summary.activeStepTitle}</Text>
+          {trainingJourneyDisplay.summary.activeStepTitle && trainingJourneyDisplay.summary.journey.state !== 'paused' ? <Text style={styles.body}>Aktivt steg: {trainingJourneyDisplay.summary.activeStepTitle}</Text>
+            : trainingJourneyDisplay.summary.journey.state === 'paused' ? <Text style={styles.body}>Träningsresan är pausad.</Text>
             : <Text style={styles.emptyText}>Det sparade programmet eller steget är inte tillgängligt. Instruktioner visas inte.</Text>}
           <View style={styles.trainingJourneyCounts}>
             <Text style={styles.trainingJourneyCount}>{loggedSessionsLabel(trainingJourneyDisplay.summary.loggedSessions)}</Text>
             <Text style={styles.trainingJourneyCount}>{milestonesLabel(trainingJourneyDisplay.summary.confirmedMilestones)}</Text>
           </View>
-          {trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle ? <Button variant="secondary" label="Fortsätt träningsresan"
-            accessibilityLabel={`Fortsätt träningsresan: ${trainingJourneyDisplay.summary.programTitle}, ${trainingJourneyDisplay.summary.activeStepTitle}`}
-            onPress={() => onOpenTrainingJourney?.(trainingJourneyDisplay.summary!.journey.program_version_id)} /> : null}
+          {trainingJourneyDisplay.summary.programTitle && trainingJourneyDisplay.summary.activeStepTitle ? <Button variant="secondary"
+            label={trainingJourneyDisplay.summary.journey.state === 'paused' ? 'Öppna träningen' : 'Fortsätt träningsresan'}
+            accessibilityLabel={`${trainingJourneyDisplay.summary.journey.state === 'paused' ? 'Öppna träningen' : 'Fortsätt träningsresan'}: ${trainingJourneyDisplay.summary.programTitle}, ${trainingJourneyDisplay.summary.activeStepTitle}`}
+            onPress={() => onOpenTrainingJourney?.(trainingJourneyDisplay.summary!.journey.program_version_id,
+              trainingJourneyDisplay.summary!.journey.state === 'paused' ? undefined : trainingJourneyDisplay.summary!.journey.active_step_id)} /> : null}
         </> : trainingJourneyDisplay.readError && trainingState === 'ready' ? <>
           <Text style={styles.emptyText}>Träningsresan kunde inte hämtas. Inga framsteg visas som sparade.</Text>
           {onRetryTrainingProgressionRead ? <Button variant="tertiary" label="Kontrollera träningsresan igen"
@@ -274,14 +273,14 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
       </View>
     </Card> : null}
 
-    <Card variant="home" onPress={() => { if (showTrainingReflection && trainingReflection) onOpenTrainingJourney?.(trainingReflection.programVersionId); else if (fallbackMilestone) onOpenDevelopment?.(); else onGo('log'); }} accessibilityLabel={`${fallbackMilestone ? 'Utforska utvecklingen' : 'Titta vad ni redan har gjort'}. ${reflectionMessage} ${showTrainingReflection ? 'Öppna träningsresan.' : fallbackMilestone ? 'Öppna utveckling.' : 'Öppna Logga.'}`}>
+    <Card variant="home" onPress={() => { if (showTrainingReflection && trainingReflection) onOpenTrainingJourney?.(trainingReflection.programVersionId, trainingReflection.stepId); else onGo('log'); }} accessibilityLabel={`Titta vad ni redan har gjort. ${reflectionMessage} ${showTrainingReflection ? 'Öppna träningssteget.' : ''}`}>
       <View style={styles.reflectionCard} testID="home-reflection">
         <View style={styles.cardHeadingRow}>
           <Ionicons name="time-outline" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />
-          <Text style={styles.cardHeading}>{fallbackMilestone ? 'Utforska utvecklingen' : 'Titta vad ni redan har gjort'}</Text>
+          <Text style={styles.cardHeading}>Titta vad ni redan har gjort</Text>
           <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
         </View>
-        {logState === 'loading' ? <Skeleton shape="line" lines={1} /> : <Text style={styles.body}>{reflectionMessage}</Text>}
+        {logState === 'loading' && !showTrainingReflection ? <Skeleton shape="line" lines={1} /> : <Text style={styles.body}>{reflectionMessage}</Text>}
       </View>
     </Card>
 

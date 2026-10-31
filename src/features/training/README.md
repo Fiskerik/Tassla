@@ -18,6 +18,8 @@ The separate progression journey in a program detail is bound to one dog and one
 
 Exercise details use the shared centered `BottomSheet`. Its actual exercise title and low face-focused banner stay outside the body ScrollView through the real headerContent slot. Instructions, progress and actions scroll without a visible indicator; close guards and the drag/swipe handles remain unchanged. A confirmed record_session receipt, including exact-operation retry, closes the exercise and shows a compact Passet sparat card on that program. Failed/unknown outcomes retain the modal and feedback. Only planned feedback plus ready current progression, matching active step, canConfirmStep and no pending mutation offers explicit Markera klart; a saved session never confirms a milestone automatically. Focused Home/Checklist/history detail routes are unchanged. Verify with tools/visual-check/verify-training-session-flow.py; synthetic browser results do not establish live persistence or native accessibility.
 
+Home can open an exact published program version and step using scoped initial focus. The focused step must exist in the current program data; a removed step shows an unavailable message instead of opening another exercise. This navigation does not write training progress.
+
 `TrainingScreen.tsx` and `training-model.ts` are local preview fixtures only. They are not production references. Review fixtures are memory-only; a real fetch error never falls back to examples. A real published-content read and RLS verification need a development Supabase environment.
 
 ## TRAINING-TIMELINE-01 — history and progress in the program view

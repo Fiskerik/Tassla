@@ -50,7 +50,7 @@ function progressionRetrySuccessMessage(action: TrainingProgressionAction | unde
 }
 
 export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKey, error, onCompleteStep, onUnmarkStep, onContinue, onResetProgram, onRetry, onAddBirthDate, onOpenKnowledge, reviewMode = false, focusStep, historicalDetail, onCloseStep,
-  progression = emptyTrainingProgression(), progressionState = 'error', pendingProgressions = {}, onApplyProgression, onRetryProgression, initialProgramId, onInitialProgramFocusApplied }: {
+  progression = emptyTrainingProgression(), progressionState = 'error', pendingProgressions = {}, onApplyProgression, onRetryProgression, initialProgramId, initialStepId, onInitialProgramFocusApplied }: {
   ageWeeks: number | null; programs: readonly PublishedTrainingProgram[]; paused: readonly PausedTrainingProgress[]; busyStepKey: string | null; error: string;
   progression?: TrainingProgressionWorkspace;
   progressionState?: 'ready' | 'error';
@@ -58,6 +58,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   onApplyProgression?: (action: TrainingProgressionAction) => Promise<'saved' | 'failed' | 'unknown'>;
   onRetryProgression?: (programVersionId: string) => Promise<'saved' | 'failed' | 'unknown'>;
   initialProgramId?: string | null;
+  initialStepId?: string;
   onInitialProgramFocusApplied?: () => void;
   reviewMode?: boolean;
   focusStep?: { programId: string; stepId: string; returnPage: 'home' | 'checklist' | 'progress'; readOnly?: boolean; dateKey?: string; completed?: boolean };
@@ -69,7 +70,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   onAddBirthDate?: () => void; onOpenKnowledge?: () => void;
 }) {
   const [openProgramId, setOpenProgramId] = useState<string | null>(() => initialProgramId ?? null);
-  const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(null);
+  const [initialStepUnavailable, setInitialStepUnavailable] = useState(() => Boolean(initialStepId
+    && !programs.some((program) => program.id === initialProgramId && program.steps.some((step) => step.id === initialStepId))));
+  const [selection, setSelection] = useState<{ programId: string; stepId: string } | null>(() => {
+    const program = programs.find((entry) => entry.id === initialProgramId);
+    return program && initialStepId && program.steps.some((step) => step.id === initialStepId)
+      ? { programId: program.id, stepId: initialStepId } : null;
+  });
   const [selectedView, setSelectedView] = useState<'recommended' | 'all' | 'mine'>('recommended');
   const [legacyActivityOpen, setLegacyActivityOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -628,6 +635,10 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   </View>;
 
   return <View>
+    {initialStepUnavailable ? <View style={styles.emptyCard} accessibilityLiveRegion="polite">
+      <Text style={styles.body}>Övningen är inte längre tillgänglig.</Text>
+      <Button variant="tertiary" label="Stäng" accessibilityLabel="Stäng meddelandet om övningen" onPress={() => setInitialStepUnavailable(false)} />
+    </View> : null}
     {openProgram
       ? <AppBar mode="Back" title={openProgram.title} onAction={() => { setResetTarget(null); setOpenProgramId(null); }} variant="compact" />
       : <Text accessibilityRole="header" style={styles.screenTitle}>Träning</Text>}

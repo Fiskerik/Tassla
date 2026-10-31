@@ -324,7 +324,7 @@ function App(){
  const progressionOperationLog=useRef<{operationId:string;action:TrainingProgressionAction}[]>([]);
  const progressionUnknownTriggered=useRef(false);
  const progressionConfirmFailureUsed=useRef(false);
- const [trainingProgramFocus,setTrainingProgramFocus]=useState<string|null>(null);
+ const [trainingProgramFocus,setTrainingProgramFocus]=useState<{programId:string;stepId?:string}|null>(null);
  const [progressionReadState,setProgressionReadState]=useState<'ready'|'error'>(()=>params.get('progressionRead')==='error'?'error':'ready');
  const pausedTraining:PausedTrainingProgress[]=trainingScenario==='paused'?[{versionId:'fixture-training:previous-version',title:'Vardagsro och hantering',versionNumber:1,completedCount:2}]:trainingScenario==='paused-unavailable'?[{versionId:'fixture-training:unavailable-version',title:null,versionNumber:null,completedCount:2}]:[];
  const activityManagerScenario=params.get('activityManager')==='true';
@@ -496,9 +496,9 @@ function App(){
   plans={empty?[]:[...plans,homeDenseFixture.plan]} content={empty||homeScenario==='review-training'?[]:content} contentState={state==='empty'?'ready':state}
   logState={state==='empty'?'ready':state} logPendingOrUnknown={params.get('reflectionPending')==='unknown'} planState={state==='empty'?'ready':state} trainingState={homeScenario==='loading'?'loading':homeScenario==='error'?'error':'ready'}
   trainingProgression={progressionReadState==='ready'?latestHomeTrainingSummary(trainingProgression,trainingPrograms):null} trainingProgressionState={progressionReadState}
-  trainingReflection={homeScenario==='reflection-training'?{label:'Utforska i egen takt',date:'26 oktober',occurredAt:'2026-10-26T12:00:00Z',programVersionId:'fixture-training:trygg-start',kind:'milestone'}:null}
-  nextTrainingSuggestion={homeScenario==='next-step'?{programId:'fixture-training:trygg-start',programTitle:'Trygg vardagsstart',stepTitle:'Utforska i egen takt'}:null}
-  pendingProgression={params.get('suggestionPending')==='unknown'?{action:{kind:'start_or_resume',programVersionId:'fixture-training:trygg-start'},operationId:'fixture-unknown',status:'unknown'}:Object.values(pendingProgressions)[0]??null} onOpenTrainingJourney={versionId=>{setTrainingProgramFocus(versionId);setPage('training')}}
+  trainingReflection={['reflection-training','reflection-missing'].includes(homeScenario)?{label:'Utforska i egen takt',date:'26 oktober',occurredAt:'2026-10-26T12:00:00Z',programVersionId:'fixture-training:trygg-start',stepId:homeScenario==='reflection-missing'?'missing-step':'trygg-1',journeyId:'fixture-journey',rowId:'fixture-milestone',kind:'milestone'}:null}
+  nextTrainingSuggestion={homeScenario==='next-step'?{programId:'fixture-training:trygg-start',programTitle:'Trygg vardagsstart',stepId:'trygg-1',stepTitle:'Utforska i egen takt'}:null}
+  pendingProgression={params.get('suggestionPending')==='unknown'?{action:{kind:'start_or_resume',programVersionId:'fixture-training:trygg-start'},operationId:'fixture-unknown',status:'unknown'}:Object.values(pendingProgressions)[0]??null} onOpenTrainingJourney={(programId,stepId)=>{setTrainingProgramFocus({programId,stepId});setPage('training')}}
   onRetryProgression={retryProgressionFixture} onRetryTrainingProgressionRead={()=>setProgressionReadState('ready')}
   nextStep={scenarioStep} reviewTrainingStep={homeScenario==='review-training'&&reviewFixtureEnabled}
   dailyFixture={reviewFixtureEnabled&&homeScenario==='ready'&&state==='ready'?homeReviewFixture:undefined}
@@ -564,7 +564,7 @@ function App(){
   paused={pausedTraining} reviewMode={page==='training'&&reviewFixtureEnabled&&!progressionScenario} error={trainingError} busyStepKey={trainingBusyStepKey}
   progression={trainingProgression} progressionState={progressionReadState} pendingProgressions={pendingProgressions}
   onApplyProgression={applyProgressionFixture} onRetryProgression={retryProgressionFixture}
-  initialProgramId={trainingProgramFocus} onInitialProgramFocusApplied={()=>setTrainingProgramFocus(null)}
+  initialProgramId={trainingProgramFocus?.programId} initialStepId={trainingProgramFocus?.stepId} onInitialProgramFocusApplied={()=>setTrainingProgramFocus(null)}
   focusStep={page==='home-training-detail'&&focusedChecklistStep?{...focusedChecklistStep,returnPage:'checklist',readOnly:fixtureHistoricalFocus,dateKey:historicalActivity?.dateKey,completed:historicalActivity?.completed}:undefined}
   historicalDetail={fixtureHistoricalFocus&&historicalProgram&&historicalStep?{status:'ready',detail:{programVersionId:historicalProgram.id,programTitle:historicalProgram.title,stepId:historicalStep.id,stepTitle:historicalStep.title,instruction:historicalStep.instruction,sources:[...historicalProgram.sources],isAiGenerated:historicalProgram.is_ai_generated}}:undefined}
   onCloseStep={()=>{setFixtureHistoricalFocus(false);setPage('checklist')}}

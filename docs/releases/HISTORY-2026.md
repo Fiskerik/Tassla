@@ -775,3 +775,9 @@ NATIVE-READINESS-01 produktcommit: `283b81dbf573c40d75a45d1f5e2f25be004ffc77`, c
 
 ## 2026-10-31 — DEVELOPMENT-CONTENT-01 lokal leverans
 Bas283b81d på feature/complete-mvp-journeys. Utveckling läser den validerade publicerade faschecklistkatalogen med explicit kontext, visar frivilliga exakta råd och korta källor och rekommenderar enbart publicerade matchade artiklar/guider. Client/owner/generation/abort skyddar sena svar. Architect/Critic/DogExpert för befintliga råd, UICritic, oberoendeQA och Frozen Reviewer PASS inom scope. Fullcheck896pass/1skip, 9 syntetiska katalogfall,60 visionskontroller och efter återställd registry public iOS JS-export PASS. Fullpanel2 har fortfarande synliga kompositions-/täthetsavvikelser; verklig publicering/RLS/native NT. Commit-SHA noteras i nästa checkpoint.
+
+DEVELOPMENT-CONTENT-01 produktcommit: `85efaaa35753f44f712b4ec96c0fba403830d068`, commit-hook fullcheck/diffcheck PASS. Faktisk publicering/RLS/native/fullpanel2 fortfarande öppna.
+
+
+### HOME-MEMORY-01 — lokalt verifierat 2026-10-31
+Hem prioriterar verkligt daterade träningsdelmål och öppnar exakt träningssteg; loggladdning eller loggfel döljer inte verifierad träningshistorik. Tryggt tomläge, pausade/osäkra förslag filtreras. Syntetiska browserprov, pnpm check och public iOS JS-export godkända; verklig databas/RLS och native kvarstår. Commit identifieras i Git-historiken; ej därmed verifierat i TestFlight.

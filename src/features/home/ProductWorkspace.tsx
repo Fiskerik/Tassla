@@ -439,7 +439,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [pendingTrainingProgressions, setPendingTrainingProgressions] = useState<Record<string, PendingTrainingProgression>>({});
-  const [trainingProgramFocus, setTrainingProgramFocus] = useState<string | null>(null);
+  const [trainingProgramFocus, setTrainingProgramFocus] = useState<{ scope: string; programId: string; stepId?: string } | null>(null);
   const [dailySnapshot, setDailySnapshot] = useState<DailyActivitySnapshot | null>(null);
   const [dailyTrainingSnapshot, setDailyTrainingSnapshot] = useState<TrainingWorkspaceSnapshot | null>(null);
   const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
@@ -1791,13 +1791,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
-  const nextTrainingSuggestion = selectNextHomeTraining(training.programs);
   const trainingProgressionSummary = training.progressionState === 'ready'
     ? latestHomeTrainingSummary(training.progression, training.programs) : null;
   const progressionPendingPrefix = `${currentTrainingOwnerDogScope}:`;
   const progressionPendingByVersion = Object.fromEntries(Object.entries(pendingTrainingProgressions)
     .filter(([key]) => key.startsWith(progressionPendingPrefix))
     .map(([key, value]) => [key.slice(progressionPendingPrefix.length), value]));
+  const unavailableSuggestionVersions = new Set([
+    ...Object.keys(progressionPendingByVersion),
+    ...training.progression.journeys.filter((journey) => journey.state === 'paused').map((journey) => journey.program_version_id),
+    ...training.paused.map((entry) => entry.versionId),
+  ]);
+  const nextTrainingSuggestion = selectNextHomeTraining(training.programs, unavailableSuggestionVersions);
   const dailyTrainingOptionsState = dailyTrainingForView?.progressionState === 'ready' && Object.keys(progressionPendingByVersion).length === 0 ? 'ready' : 'error';
   const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey && dailyTrainingForView
     ? buildDailyTrainingOptions(dog.id, dailyTrainingForView.programs, dailyTrainingForView.progression,
@@ -3746,8 +3751,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingProgressionState={training.progressionState}
       pendingProgression={homeProgressionPending}
       nextTrainingSuggestion={nextTrainingSuggestion}
-      onOpenTrainingJourney={(programVersionId) => {
-        setTrainingProgramFocus(programVersionId);
+      onOpenTrainingJourney={(programVersionId, stepId) => {
+        setTrainingProgramFocus({ scope: currentSelectionKey, programId: programVersionId, stepId });
         navigateMainTab('training');
       }}
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
@@ -3864,7 +3869,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         progression={training.progression} progressionState={training.progressionState}
         pendingProgressions={progressionPendingByVersion} onApplyProgression={applyProgressionAction}
-        onRetryProgression={retryProgressionOperation} initialProgramId={trainingProgramFocus}
+        onRetryProgression={retryProgressionOperation} initialProgramId={trainingProgramFocus?.scope === currentSelectionKey ? trainingProgramFocus.programId : null}
+        initialStepId={trainingProgramFocus?.scope === currentSelectionKey ? trainingProgramFocus.stepId : undefined}
         onInitialProgramFocusApplied={() => setTrainingProgramFocus(null)}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }}
