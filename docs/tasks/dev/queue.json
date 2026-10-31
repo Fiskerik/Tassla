@@ -14261,6 +14261,91 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS no findings; product checkpoint affeb1a3b77484793b881f38c3485b5adac89ce0 and full hooks pass. Final docs only; native/live remain NT."
+    },
+    {
+      "id": "PREMIUM-FEEDBACK-01",
+      "title": "Godkänd Expo-haptik och konsekvent tryckrespons",
+      "plan": "docs/tasks/dev/PREMIUM-FEEDBACK-01.md v5",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks beställning2026-10-31 och MVP-COMPLETION-261031",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/feedback/confirmation-haptics.ts",
+        "src/feedback/confirmation-intent.ts",
+        "src/feedback/use-confirmed-check-feedback.ts",
+        "src/feedback/README.md",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/LogDateCalendar.tsx",
+        "src/features/more/MoreScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "tests/confirmation-feedback.test.mjs",
+        "tests/motion-policy.test.mjs",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/native.jsx",
+        "tools/visual-check/verify-premium-feedback.py",
+        "docs/design/evidence/premium-feedback-01",
+        "docs/tasks/dev/PREMIUM-FEEDBACK-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "tests/training-overview.test.mjs"
+      ],
+      "acceptance": [
+        "User-initiated confirmed-only haptics with same save guards",
+        "Consistent existing press feedback without scrim/gesture regression",
+        "Expo57 API, reduced motion and no initial/retry duplicate feedback verified"
+      ],
+      "checks": [
+        "pnpm check",
+        "confirmation-feedback tests",
+        "RNWeb feedback flow",
+        "public iOS export"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2, Critic PROCEED v2 and Security plan PASS; user explicitly approves Expo-haptics dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root single writer, exact persisted confirmation and scoped intent; installing approved Expo57 module. UI edits await BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Planv5 Architect APPROVE/Critic PROCEED, Security PASS; full check887pass/1skip, final public iOS export and browser PASS; UI REVIEW scoped no blockers. Independent QA started."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck887pass/1skip and24browser PASS, actualSDK/files inspected; scoped visual PASS from opened small/reduced/top-composites. Existing fullpanel deviations open, nativeNT. Frozen review next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; all59paths in scope, actualSDK/callers/lifetimes/Nextretry and opened composites verified. QA own24browser and887pass/1skip. Durable commit now; native/live and prior fullpanel gaps remain open."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; all59paths in scope, actualSDK/callers/lifetimes/Nextretry and opened composites verified. QA own24browser and887pass/1skip. Durable commit now; native/live and prior fullpanel gaps remain open."
     }
   ]
 }

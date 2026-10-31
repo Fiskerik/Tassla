@@ -1,0 +1,31 @@
+{
+  "results": [
+    "daily: pending/unknown silent; same check confirms once; duplicate confirmation/uncheck silent",
+    "phase: pending/unknown silent; same check confirms once; duplicate confirmation/uncheck silent",
+    "initial: real component lifetime/native-boundary policy PASS",
+    "hydrate: real component lifetime/native-boundary policy PASS",
+    "scope: real component lifetime/native-boundary policy PASS",
+    "unmount: real component lifetime/native-boundary policy PASS",
+    "web: real component lifetime/native-boundary policy PASS",
+    "reduced: real component lifetime/native-boundary policy PASS",
+    "reject: real component lifetime/native-boundary policy PASS",
+    "Long press preserved without completion feedback",
+    "log 375x844: press/release scale and cancellation preserved",
+    "more 375x844: press/release scale and cancellation preserved",
+    "log 430x844: press/release scale and cancellation preserved",
+    "more 430x844: press/release scale and cancellation preserved",
+    "log 375x667: press/release scale and cancellation preserved",
+    "more 375x667: press/release scale and cancellation preserved",
+    "log 375x844-reduced: press/release scale and cancellation preserved",
+    "more 375x844-reduced: press/release scale and cancellation preserved",
+    "Calendar month actions remain usable",
+    "fast: Next/Back open actual active step after confirmed readback",
+    "delayed: Next/Back open actual active step after confirmed readback",
+    "failed: no false advance; exact-operation retry verified",
+    "unknown-once: no false advance; exact-operation retry verified",
+    "empty: delayed start/resume selects saved first active step",
+    "paused: delayed start/resume selects saved first active step"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RNWeb with OS/SDK boundary substitution. Physical haptics/native accessibility not verified."
+}

@@ -199,7 +199,9 @@ export function DailyChecklistScreen({ dateKey, state, activities, refreshing, r
             icon={item.icon} showRoutineIcon={item.kind === 'routine'}
             accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
             accessibilityHint={item.kind === 'routine' && routineDay?.routine_id ? 'Håll inne på en rutinpunkt för att öppna redigeringen.' : undefined}
-            completed={item.completed} pending={itemMutation && mutationBusy}
+            feedbackKey={routineDay ? `${routineDay.dog_id}:${routineDay.date_key}:${routineDay.id}:${item.routineItemId}` : undefined}
+                    confirmed={state === 'ready' && !mutationBusy && !mutationError}
+                    completed={item.completed} pending={itemMutation && mutationBusy}
             statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
             onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}
             onOpen={item.kind === 'training' && item.programId && item.stepId

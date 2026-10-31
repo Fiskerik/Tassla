@@ -1,3 +1,5 @@
+import {DailyActivityItem} from '../../src/components/ui/DailyActivityItem';
+import {ChecklistItem} from '../../src/components/ui/ChecklistItem';
 import type {HomeDailyTrainingOption} from '../../src/features/home/HomeScreen';
 import type {DailyTrainingSelection} from '../../src/features/home/daily-activity-data';
 import {buildDailyTrainingOptions} from '../../src/features/home/daily-training-options';
@@ -5,7 +7,7 @@ import driveArticles from '../../docs/content/artiklar/drive-articles-v1.json';
 import React,{useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {AppScreen} from '../../src/components/AppPrimitives';
-import {StyleSheet, Text, View} from 'react-native';
+import {Platform, StyleSheet, Text, View} from 'react-native';
 import {BottomNav,Button} from '../../src/components/ui';
 import {ScreenTransition} from '../../src/components/ui/Motion';
 import {HomeScreen} from '../../src/features/home/HomeScreen';
@@ -262,7 +264,30 @@ function WorkspaceRetentionFixture({review}:{review:boolean}){
   </View>:null}
  </View>;
 }
+function ConfirmationFeedbackFixture(){
+ const params=new URLSearchParams(location.search);
+ const [checked,setChecked]=useState(params.get('initialChecked')==='true');
+ const [pending,setPending]=useState(false);const [confirmed,setConfirmed]=useState(true);const [error,setError]=useState(false);
+ const [scope,setScope]=useState('dog-a:day-a:item-a');const [visible,setVisible]=useState(true);const target=useRef(false);
+ if(params.get('feedbackPlatform')==='ios')Object.defineProperty(Platform,'OS',{configurable:true,value:'ios'});
+ function request(){target.current=!checked;setPending(true);setConfirmed(false);setError(false);}
+ return <View style={{padding:tokens.spacing.lg,gap:tokens.spacing.md,backgroundColor:tokens.colors.home.canvas,minHeight:'100%'}}>
+  <Text accessibilityRole="header">Bekräftelseprov</Text>
+  {visible?<>
+   <DailyActivityItem variant="home" kind="routine" routineLabel="Provrutin" label="Provpunkt" completed={checked} confirmed={confirmed} feedbackKey={scope}
+    pending={pending} statusError={error} statusMessage={error?'Okänt resultat':''} onToggle={request} onOpen={()=>{}}
+    onLongPress={()=>{window.__feedbackLongPress=(window.__feedbackLongPress??0)+1;}} />
+   <ChecklistItem label="Fasprovet" checked={checked} confirmed={confirmed&&!pending&&!error} feedbackKey={scope+':preset'} pending={pending} disabled={pending} onPress={request}/>
+  </>:null}
+  <Button label="Bekräfta sparande" accessibilityLabel="Bekräfta sparande" onPress={()=>{setChecked(target.current);setPending(false);setConfirmed(true);setError(false);}}/>
+  <Button variant="secondary" label="Okänt sparande" accessibilityLabel="Okänt sparande" onPress={()=>{setPending(false);setConfirmed(false);setError(true);}}/>
+  <Button variant="secondary" label="Hydrera sparad punkt" accessibilityLabel="Hydrera sparad punkt" onPress={()=>{setChecked(true);setPending(false);setConfirmed(true);}}/>
+  <Button variant="tertiary" label="Byt objekt" accessibilityLabel="Byt objekt" onPress={()=>{setScope('dog-b:day-b:item-b');setChecked(true);setPending(false);setConfirmed(true);}}/>
+  <Button variant="tertiary" label="Stäng probraden" accessibilityLabel="Stäng probraden" onPress={()=>setVisible(false)}/>
+ </View>;
+}
 function App(){
+ if(new URLSearchParams(location.search).get('feedbackProbe')==='true')return <ConfirmationFeedbackFixture/>;
  const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const firstDayMode=params.get('firstDay')==='true';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const insightsPaged=['insights-paged','insights-local-older'].includes(logScenario);const insightsMany=logScenario==='insights-many';const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
  const [fixtureDate,setFixtureDate]=useState(today);
  const [fixtureChecklistPlanFocus,setFixtureChecklistPlanFocus]=useState(false);
@@ -432,7 +457,7 @@ function App(){
    if(shouldReturnUnknown&&!progressionUnknownTriggered.current&&!pending){
     progressionUnknownTriggered.current=true;setPendingProgressions(current=>({...current,[versionId]:{action,operationId,status:'unknown'}}));return 'unknown';
    }
-   setTrainingProgression(next);setPendingProgressions(current=>{const copy={...current};delete copy[versionId];return copy;});return 'saved';
+   if(params.get('progressionRefresh')==='delayed')setTimeout(()=>setTrainingProgression(next),300);else setTrainingProgression(next);setPendingProgressions(current=>{const copy={...current};delete copy[versionId];return copy;});return 'saved';
   }finally{setTrainingBusyStepKey(null);}
  }
  function retryProgressionFixture(versionId:string):Promise<'saved'|'failed'|'unknown'>{

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { MotionPressable } from './Motion';
+import { useConfirmedCheckFeedback } from '../../feedback/use-confirmed-check-feedback';
+import { MotionPressable, useReducedMotion } from './Motion';
 import { IconChip, type IconCategory } from './IconChip';
 import { ThemedIcon } from './ThemedIcon';
 import { tokens } from '../../theme/tokens';
@@ -16,6 +17,8 @@ export type DailyActivityItemProps = {
   showRoutineIcon?: boolean;
   detail?: string;
   completed: boolean;
+  feedbackKey?: string;
+  confirmed?: boolean;
   onToggle?: () => void;
   onOpen?: () => void;
   onLongPress?: () => void;
@@ -56,7 +59,9 @@ export function DailyActivityItem(props: DailyActivityItemProps) {
 }
 
 function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, icon, showRoutineIcon = false, completed, onToggle, onOpen, onLongPress, accessibilityHint, accessibilityLabel = label,
-  pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
+  feedbackKey, confirmed = false, pending = false, statusMessage = '', statusError = false, onRetry }: DailyActivityItemProps) {
+  const reduced = useReducedMotion();
+  const requestFeedback = useConfirmedCheckFeedback(feedbackKey, completed, confirmed && !pending && !statusError, reduced);
   const status = pending ? 'Sparar…' : statusMessage;
   const rowLabel = accessibilityLabel + (kind === 'training' ? `, ${completed ? 'klar' : 'inte klar'}, öppna Träning` : '');
   const routineItemLabel = routineLabel ? `Rutin ${routineLabel}, punkt ${label}` : `Egen rutin: ${label}`;
@@ -85,7 +90,7 @@ function HomeDailyActivityItem({ label, kind = 'routine', routineLabel, icon, sh
     <View style={styles.homeRoutineRow}>
       <MotionPressable accessibilityRole="checkbox" aria-checked={completed} accessibilityLabel={`${routineItemLabel}, ${completed ? 'klar' : 'inte klar'}`}
         accessibilityState={{ checked: completed, disabled: !onToggle || pending }} disabled={!onToggle || pending}
-        onPress={onToggle} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
+        onPress={() => { if (onToggle && !pending) { requestFeedback(!completed); onToggle(); } }} style={({ pressed }) => [styles.homeToggleTarget, pressed && styles.pressed]}>
         {routineCheckbox}
       </MotionPressable>
       <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna ${routineItemLabel}`} accessibilityHint={accessibilityHint}

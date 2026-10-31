@@ -755,3 +755,8 @@ Architect, relevanta Security-granskningar, UI Critic, oberoende QA och Reviewer
 Nästa miljösteg: applicera `supabase/migrations/202610300001_routine_checklist_validation_fix.sql`, därefter `202610300002_daily_active_training_selection.sql` i avsedd Supabasemiljö. De har inte körts live av Codex. Kontoupplåsningen behöver en ny appbuild men ingen ny backendmigration. I det bygget: Mer → Konto → Kontrollera och lås upp, därefter separat vanlig raderingsbekräftelse. Telefonens SecureStore/native Alert/VoiceOver/Dynamic Type och verklig kontoradering återstår att prova. ACCOUNT-DELETE-STATUS-01 förblir blockerad för det verkliga serverutfallet.
 
 Detta är en snapshot före push; distanscommit och PR redovisas i överlämningen. Ingen main-merge, signerad distribution eller live-radering har utförts.
+
+## 2026-10-31 — PREMIUM-FEEDBACK-01, lokal implementation
+Bas f0065da, feature/complete-mvp-journeys. Godkänd Expo57-haptik bara vid egen bekräftad bock; gemensam tryckrespons och rätt aktivt träningssteg efter snabb/fördröjd sparning. Lokal check887pass/1skip, browser24/24 och public iOS-exportPASS; Architect/Critic/Security/UICritic och oberoendeQAPASS inom scope. FrozenReviewer återstår; ännu inte pushad eller TestFlight. Fysisknative/live och gamla fullpanelavvikelser öppna. Se taskplan för exakt scope/bevis; commit-SHA tillförs efter hållbar checkpoint.
+
+PREMIUM-FEEDBACK-01 slutreview: Frozen Reviewer PASS utan fynd. Alla59paths inom deklarerat v5-scope, actualSDK/24browser och öppnade composites. Lokal slice klar, inte fullpanel/native/livegodkänd. Produktcommit avses `feat: add confirmed haptics and consistent press feedback`; exakt SHA skrivs i nästa checkpoint efter commit.

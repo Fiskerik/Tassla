@@ -1,7 +1,8 @@
+import { MotionPressable, useReducedMotion } from '../../components/ui/Motion';
 import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ExpoCrypto from 'expo-crypto';
-import { AccessibilityInfo, ActivityIndicator, Animated, Easing, LayoutAnimation, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, LayoutAnimation, StyleSheet, Text, TextInput, View } from 'react-native';
 import { BottomSheet, Button, Card, CheckboxCard, Dialog, FirstUseTip, HorizontalGestureRegion, IconChip, ListRow, QuickLogTile, SectionHeader, Skeleton, Toast, useFirstUseTip } from '../../components/ui';
 import { DatePickerField, MessageCard, TimePickerField } from '../../components/AppPrimitives';
 import { tokens } from '../../theme/tokens';
@@ -63,7 +64,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
 }) {
   const [moreVisible, setMoreVisible] = useState(false);
   const [addEventVisible, setAddEventVisible] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(true);
+  const reduceMotion = useReducedMotion();
   const [duplicate, setDuplicate] = useState<{ type: LogEventType; timestamp: number; accidentIntent?: AccidentLogIntent } | null>(null);
   const [accidentDraft, setAccidentDraft] = useState<{ kinds: AccidentKind[]; error: string; submitting: boolean } | null>(null);
   const accidentSubmitLocked = useRef(false);
@@ -169,12 +170,6 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     setEntryAnimationTarget({ eventId: mutation.id, key });
     setConsumedEntryAnimationKey(null);
   }, [events, mutation]);
-
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => undefined);
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => subscription.remove();
-  }, []);
 
   useEffect(() => {
     if (!persistLayout) return;
@@ -396,10 +391,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
     <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
     <View style={styles.dateNavigator}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+      <MotionPressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Valt datum ${formatSelectedDate(selectedDate, todayDate)}. Öppna kalender`} accessibilityHint="Välj en dag och se vilka dagar som har loggar" onPress={() => {
+      </MotionPressable>
+      <MotionPressable accessibilityRole="button" accessibilityLabel={`Valt datum ${formatSelectedDate(selectedDate, todayDate)}. Öppna kalender`} accessibilityHint="Välj en dag och se vilka dagar som har loggar" onPress={() => {
         const month = localMonthKey(new Date(`${selectedDate}T12:00:00`));
         setCalendarMonth(month);
         setCalendarOpen(true);
@@ -409,10 +404,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
         <View testID="log-calendar-date-icon" pointerEvents="none" style={styles.dateCalendarIconWrap}>
           <Ionicons testID="log-calendar-date-glyph" name="calendar-outline" size={tokens.size.iconSm} color={tokens.colors.primary} />
         </View>
-      </Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => setSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
+      </MotionPressable>
+      <MotionPressable accessibilityRole="button" accessibilityLabel="Visa nästa dag" accessibilityState={{ disabled: selectedDate >= todayDate }} disabled={selectedDate >= todayDate} onPress={() => setSelectedDate((date) => shiftLocalDate(date, 1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-forward" size={tokens.size.iconMd} color={selectedDate >= todayDate ? tokens.colors.textSecondary : tokens.colors.textPrimary} />
-      </Pressable>
+      </MotionPressable>
     </View>
     <BottomSheet visible={calendarOpen} title="Välj datum" onRequestClose={closeCalendar}>
       <LogDateCalendar month={calendarMonth} selectedDate={selectedDate} today={todayDate}
@@ -493,10 +488,10 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       })}
       {!dayReadComplete && !loadMoreError ? <View style={styles.loadingOlder} accessibilityLiveRegion="polite"><ActivityIndicator color={tokens.colors.primary} size="small" /><Text style={styles.loadingOlderText}>{loadingMore ? 'Hämtar fler händelser…' : 'Söker efter fler händelser…'}</Text></View> : null}
       {dayReadComplete && timelineItems.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>Inga händelser den här dagen</Text><Text style={styles.emptyBody}>Tryck på Lägg till händelse nedan för fler val, eller välj en ruta ovan för att logga idag.</Text></View> : null}
-      <Pressable accessibilityRole="button" accessibilityLabel="Lägg till händelse" accessibilityHint="Öppnar fler loggtyper" accessibilityState={{ disabled }} disabled={disabled} onPress={() => { firstUseTip.dismiss(); setAddEventVisible(true); }} style={({ pressed }) => [styles.addEventButton, pressed && !disabled && styles.addEventPressed, disabled && styles.addEventDisabled]}>
+      <MotionPressable accessibilityRole="button" accessibilityLabel="Lägg till händelse" accessibilityHint="Öppnar fler loggtyper" accessibilityState={{ disabled }} disabled={disabled} onPress={() => { firstUseTip.dismiss(); setAddEventVisible(true); }} style={({ pressed }) => [styles.addEventButton, pressed && !disabled && styles.addEventPressed, disabled && styles.addEventDisabled]}>
         <Ionicons name="add" size={tokens.size.iconMd} color={tokens.colors.onPrimary} />
         <Text style={styles.addEventLabel}>Lägg till händelse</Text>
-      </Pressable>
+      </MotionPressable>
       <BottomSheet visible={addEventVisible} title="Lägg till händelse" onRequestClose={() => setAddEventVisible(false)}>
         <Text style={styles.addEventHelp}>Välj vilken typ av händelse du vill registrera.</Text>
         <View style={styles.grid} accessibilityLabel="Fler loggtyper">{renderRows(layout.more)}</View>
@@ -565,11 +560,11 @@ function LogViewTabs({ view, onChange }: { view: 'today' | 'overview'; onChange:
   return <View style={styles.viewTabs} accessibilityRole="tablist" accessibilityLabel="Loggvy">
     {([['today', 'Idag'], ['overview', 'Översikt']] as const).map(([key, label]) => {
       const selected = view === key;
-      return <Pressable key={key} accessibilityRole="tab" accessibilityLabel={label}
+      return <MotionPressable key={key} accessibilityRole="tab" accessibilityLabel={label}
         accessibilityState={{ selected }} aria-selected={selected} onPress={() => onChange(key)}
         style={({ pressed }) => [styles.viewTab, selected && styles.viewTabSelected, pressed && styles.pressed]}>
         <Text style={[styles.viewTabLabel, selected && styles.viewTabLabelSelected]}>{label}</Text>
-      </Pressable>;
+      </MotionPressable>;
     })}
   </View>;
 }
@@ -669,7 +664,7 @@ function LogEventEditor({ event, initialDraft, disabled, onSave, onSaved, onDele
 
     <Text style={styles.fieldTitle}>Typ</Text>
     <View style={styles.typePicker}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Händelsetyp: ${LOG_EVENT_LABELS[type]}`}
+      <MotionPressable accessibilityRole="button" accessibilityLabel={`Händelsetyp: ${LOG_EVENT_LABELS[type]}`}
         accessibilityHint={typePickerOpen ? 'Dölj händelsetyper' : 'Visa händelsetyper'}
         accessibilityState={{ disabled, expanded: typePickerOpen }} aria-expanded={typePickerOpen}
         disabled={disabled} onPress={() => setTypePickerOpen((open) => !open)}
@@ -678,11 +673,11 @@ function LogEventEditor({ event, initialDraft, disabled, onSave, onSaved, onDele
           <IconChip category={type} size="medium" variant="rev02-log" />
         </View>
         <Ionicons name="chevron-down" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden />
-      </Pressable>
+      </MotionPressable>
       {typePickerOpen ? <View style={styles.typePickerOptions}>
         {LOG_ENTRY_TYPES.map((option) => {
           const selected = type === option;
-          return <Pressable key={option} accessibilityRole="radio" accessibilityLabel={LOG_EVENT_LABELS[option]} aria-checked={selected}
+          return <MotionPressable key={option} accessibilityRole="radio" accessibilityLabel={LOG_EVENT_LABELS[option]} aria-checked={selected}
             accessibilityState={{ selected, disabled }} disabled={disabled}
             onPress={() => { changeType(option); setTypePickerOpen(false); }}
             style={({ pressed }) => [styles.typePickerOption, selected && styles.selectedTypeOption, pressed && !disabled && styles.pressed, disabled && styles.disabled]}>
@@ -691,7 +686,7 @@ function LogEventEditor({ event, initialDraft, disabled, onSave, onSaved, onDele
             </View>
             <Text style={[styles.typeOptionText, selected && styles.selectedTypeText]}>{LOG_EVENT_LABELS[option]}</Text>
             {selected ? <Ionicons name="checkmark" size={tokens.size.iconSm} color={tokens.colors.primary} accessibilityElementsHidden /> : null}
-          </Pressable>;
+          </MotionPressable>;
         })}
       </View> : null}
     </View>

@@ -328,6 +328,8 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
                   const isReadbackError = itemMutation && dailyMutationMessage.startsWith('Ändringen sparades, men dagens lista');
                   return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
                     accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
+                    feedbackKey={routineDay ? `${routineDay.dog_id}:${routineDay.date_key}:${routineDay.id}:${item.routineItemId}` : undefined}
+                    confirmed={dailyState === 'ready' && !dailyMutationBusy && !dailyMutationError}
                     completed={item.completed} pending={itemMutation && dailyMutationBusy}
                     statusMessage={itemMutation ? dailyMutationMessage : ''} statusError={itemMutation && dailyMutationError}
                     onToggle={routineDay ? () => item.routineItemId && onSetRoutineCompletion?.(routineDay, item.routineItemId, !item.completed) : undefined}

@@ -55,7 +55,9 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
             const readbackError = itemMutation && mutationMessage.startsWith('Ändringen sparades, men dagens lista');
             return <DailyActivityItem key={item.id} variant="home" kind={item.kind} label={item.label} routineLabel={item.routineLabel}
               accessibilityLabel={item.kind === 'routine' ? `Rutin ${item.routineLabel ?? ''}, punkt ${item.label}` : `Träningsuppgift: ${item.label}`}
-              completed={item.completed} pending={itemMutation && mutationBusy}
+              feedbackKey={routineDay ? `${routineDay.dog_id}:${routineDay.date_key}:${routineDay.id}:${item.routineItemId}` : undefined}
+                    confirmed={state === 'ready' && !mutationBusy && !mutationError}
+                    completed={item.completed} pending={itemMutation && mutationBusy}
               statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
               onToggle={routineDay && item.routineItemId ? () => onSetRoutineCompletion(routineDay, item.routineItemId!, !item.completed) : undefined}
               onOpen={item.kind === 'training' && item.programId && item.stepId

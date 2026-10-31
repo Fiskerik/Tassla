@@ -17,3 +17,5 @@ if (new URLSearchParams(location.search).get('accountMarker') === 'pending') sec
 export const getItemAsync=async(key)=>secureFixture.get(key)??null;
 export const setItemAsync=async(key,value)=>{secureFixture.set(key,value);};
 export const deleteItemAsync=async(key)=>{secureFixture.delete(key);};
+
+export const selectionAsync=async()=>{globalThis.__tasslaHapticCalls=(globalThis.__tasslaHapticCalls??0)+1;if(new URLSearchParams(location.search).get("hapticsReject")==="true")throw new Error("Synthetic unavailable haptics");};
