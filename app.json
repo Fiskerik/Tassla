@@ -12,7 +12,8 @@
       "expo-router",
       "expo-secure-store",
       ["expo-notifications", { "defaultChannel": "tassla-reminders-v1" }],
-      "expo-image"
+      "expo-image",
+      ["expo-splash-screen", { "backgroundColor": "#F7F1E7", "image": "./assets/images/tassla-icon.png", "imageWidth": 200, "resizeMode": "contain" }]
     ],
     "experiments": { "typedRoutes": true }
   }

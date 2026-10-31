@@ -22,6 +22,7 @@ import { buildTrainingTimeline } from './training-timeline-model';
 import { trainingInstructionPreview } from './training-instruction';
 import { ContentSources } from '../knowledge/ContentSources';
 import { KnowledgeImage } from '../knowledge/KnowledgeImage';
+import { hasVisibleExerciseInstruction, useExerciseKeepAwake } from './exercise-keep-awake';
 import { presentTrainingInstruction } from './training-step-presentation';
 
 function exerciseProgressLabel(program: PublishedTrainingProgram): string {
@@ -126,6 +127,11 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   ));
   const waitingForSelectedRefresh = Boolean(selectedProgram && awaitingProgressionRefresh?.programId === selectedProgram.id
     && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, selectedProgram.id));
+  const instructionVisible = hasVisibleExerciseInstruction({
+    historical: Boolean(focusStep?.readOnly), historicalReady: historicalDetail?.status === 'ready' && Boolean(historicalDetail.detail),
+    program: Boolean(selectedProgram), step: Boolean(selectedStep), focused: Boolean(focusStep), selected: Boolean(selection), waiting: waitingForSelectedRefresh,
+  });
+  useExerciseKeepAwake(instructionVisible);
   const nextStep = selectedProgram?.steps.find((step) => !selectedProgram.completedStepIds.includes(step.id));
   const journeyProgramIds = new Set(progression.journeys.map((journey) => journey.program_version_id));
   const sortedPrograms = sortPrograms(visiblePrograms);

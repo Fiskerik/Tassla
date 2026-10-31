@@ -14446,6 +14446,78 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS v5 no findings, actualSDK, sixassets/quality/metadata, focal faces and delayedweb verified. IndependentQA and UIReviewPASS scoped; native/fullpanelNT. Commit next."
+    },
+    {
+      "id": "NATIVE-READINESS-01",
+      "title": "Varm start och vaken träningsinstruktion",
+      "plan": "docs/tasks/dev/NATIVE-READINESS-01.md v1",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks uttryckliga Expo-beställning2026-10-31",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "app.json",
+        "app/_layout.tsx",
+        "src/startup/startup-splash.ts",
+        "src/startup/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/exercise-keep-awake.ts",
+        "src/features/training/README.md",
+        "tests/native-readiness.test.mjs",
+        "docs/tasks/dev/NATIVE-READINESS-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+      ],
+      "acceptance": [
+        "Warm configured splash with bounded JS watchdog and first-layout release",
+        "Awake only for actively visible training instructions and foreground, async race safe",
+        "Actual Expo57 APIs, failure/release and public iOS JS export"
+      ],
+      "checks": [
+        "pnpm check",
+        "native readiness controller tests",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "IMAGE-DELIVERY-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "ArchitectAPPROVE, CriticPROCEED, owner explicitly approves SDK57 packages. No auth blocking; lifecycle fenced and root-first-layout watchdog."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root solewriter installs Expo57 compatible splash/keepawake, then implements approved bounded lifecycle."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic/Security and static UI REVIEW PASS scoped; fullcheck894pass/1skip, targeted lifecycle,24 web regression and public iOS export PASS. Independent QA in progress. Native appearance/sleep NT."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck894pass/1skip, actualSDK APIs/native and lifecycle PASS; no new permissions. Physical launch/wakelock/possible icon seam NT. Frozen review next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; actual SDK/native APIs, root release, foreground/instruction/tag lifetime and all13paths verified. QA fullcheck and JS export PASS. Commit next; device NT."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; actual SDK/native APIs, root release, foreground/instruction/tag lifetime and all13paths verified. QA fullcheck and JS export PASS. Commit next; device NT."
     }
   ]
 }

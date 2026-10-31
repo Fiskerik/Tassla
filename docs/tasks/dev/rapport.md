@@ -1479,3 +1479,6 @@ Vanlig branch feature/complete-mvp-journeys från main f0065da. Expo-haptics57.0
 
 ## 2026-10-31 — IMAGE-DELIVERY-01
 Sex befintliga foton13551755→812436byte; ExpoImage57.0.5 används i befintliga bilder med samma beräknade crop och källidentitet. Tre tidigare beskurna fasers ansikten/öron justerade. Architect/Critic/Security/UICritic och oberoendeQA/Reviewer PASS avgränsat, actual Expo-web delayedsource375/430, metadata, publiciOSexport och fullcheck PASS. Native enhet/cache/manifestaggregation, fullpanel rev02 fortsatt öppna. Nästa durable commit och startup/träningsvakenhet.
+
+## 2026-10-31 — NATIVE-READINESS-01
+Varm statiskt konfigurerad splash, rootlayout/watchdog och vakenhet enbart för öppen aktiv träningsinstruktion. Expo splash57.0.10/keepawake57.0.2. Architect/Critic/Security/UIcritic scoped, oberoende QA egen fullcheck894pass/1skip, livstidsprov och publiciOS JS-export PASS. Android standardfade nollställd; reducerad rörelse på fysisk enhet ej verifierad. Opaque ikon har liten färgskillnad mot bakgrunden, enhetsutseende och fysisk sleep NT. FrozenReviewer/commit nästa; därefter ursprungliga steg1–4.

@@ -765,3 +765,8 @@ PREMIUM-FEEDBACK-01 hållbar produktcommit: `9a11649aee530b98ea85d0484919932ee7d
 
 ## 2026-10-31 — IMAGE-DELIVERY-01 lokal leverans
 Bas9a11649 på feature/complete-mvp-journeys. Sexfotografier 13,551,755→812,436 byte och Expo Image57.0.5 med bevaradefokala ramar/tillgänglighet; tre fasers hela ansikten inklusive öron. Architect/Critic/Security/UICritic, oberoendeQA och Frozen Reviewer PASS inom scope. Expo-web375/430 och publiciOS JS-export PASS, fullcheck889pass/1skip före sista fokalkonstant; commit-hook kör aktuell fullcheck. Ingen testad nativecache/telefon eller fullpanelacceptans. Exakt commit-SHA kompletteras i nästa checkpoint.
+
+IMAGE-DELIVERY-01 produktcommit: `8227cc748e583359cbb8af44ea091438fae7f9cb`, commit-hook fullcheck/diffcheck PASS. Ingen signerad build eller liveåtgärd.
+
+## 2026-10-31 — NATIVE-READINESS-01 lokal leverans
+Bas8227cc7, Expo splash57.0.10 och keepawake57.0.2. Varm splash med första layout och2s JS-watchdog; faktisk övning aktiv+foreground håller skärmen vaken och släpper även vid sen aktivering. Architect/Critic/Security/UIcritic, oberoende QA och Frozen Reviewer PASS inom scope. Fullcheck894pass/1skip, livstidsprov,24RNWeb och public iOS JS-export PASS. Native launch, eventuell fin ikonbakgrundskant, faktisk skärmsläckning och native reducedmotion NT; ingen signerad build. Commit-SHA skrivs i nästa checkpoint.
