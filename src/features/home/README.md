@@ -94,3 +94,6 @@ Statuskontroll använder endast RLS-filtrerade `fetchOwnedDogs`; den skickar ing
 
 
 Hem kan öppna en faktiskt inläst logghändelse via dess exakta ID. ProductWorkspace kontrollerar konto-, hund- och livstidsscope och pinnar den tidigare bekräftade raden före Loggs första siduppdatering. Saknad eller inaktuell källa ger ett besked. En pin innebär inte nytt bevis för serverstatus. Träningsdelmål har fortfarande prioritet; neutral historik öppnar Logga utan fokus.
+
+
+Dagens framstegsring animerar endast efter en uttrycklig avbockning med samma hund-/dagsscope och observerad pending följd av komplett bekräftad readback för exakt punkt. Andra ändringar, fel/unknown, ofullständig lista och reducerad/okänd rörelsepreferens förkastar den tillfälliga intentionen. Endast dekorativ SVG interpoleras; räknare och hjälpmedelsvärde visar bekräftat antal direkt. Sekvenstest: `tests/daily-ring-motion.test.mjs`; `tools/visual-check/verify-daily-ring-motion.py` mäter faktiska SVG-värden i syntetisk RNWeb. Native animation och live/RLS verifieras separat.

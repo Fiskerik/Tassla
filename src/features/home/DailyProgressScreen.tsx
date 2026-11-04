@@ -1,5 +1,6 @@
 import { EditorialImage as Image } from '../../components/ui/EditorialImage';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { AppBar, Button, Card, DailyActivityItem, Skeleton } from '../../components/ui';
@@ -8,12 +9,17 @@ import type { DailyRoutineDay } from './daily-activity-data';
 import { dailyProgressRingFill, selectDailyProgress, type DailyProgressSourceState, type HomeDailyActivity } from './daily-activity-model';
 import { checklistDateLabel } from './DailyChecklistScreen';
 import { tokens } from '../../theme/tokens';
+import { useReducedMotionPreference } from '../../components/ui/Motion';
+import { createDailyRingMotionIntent } from './daily-ring-motion';
 
-export function DailyProgressScreen({ dogName, dateKey, state, activities, refreshing = false, refreshError = false,
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+export function DailyProgressScreen({ dogName, dateKey, scopeKey = '', state, activities, refreshing = false, refreshError = false,
   mutationBusy = false, mutationKey = '', mutationMessage = '', mutationError = false,
   onBack, onRetry, onRetryMutation, onManage, onOpenChecklist, onOpenTrainingStep, onSetRoutineCompletion }: {
   dogName: string;
   dateKey: string;
+  scopeKey?: string;
   state: DailyProgressSourceState;
   activities: readonly HomeDailyActivity[];
   refreshing?: boolean;
@@ -32,6 +38,27 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
 }) {
   const progress = selectDailyProgress(activities, state);
   const readyWithActivities = progress.coverage === 'complete';
+  const motionPreference = useReducedMotionPreference();
+  const [motionIntent] = useState(createDailyRingMotionIntent);
+  const [ringMotion, setRingMotion] = useState<{ id: number; from: number; to: number } | null>(null);
+  const [motionPreferenceRevision, setMotionPreferenceRevision] = useState(0);
+  const motionSequence = useRef(0);
+  const snapshot = useMemo(() => ({ scope: scopeKey, complete: state === 'ready' && readyWithActivities, activities: progress.activities,
+    mutationKey, busy: mutationBusy, error: mutationError || refreshError, refreshing,
+    reduced: !motionPreference.ready || motionPreference.reduced }), [scopeKey, state, readyWithActivities, progress.activities,
+    mutationKey, mutationBusy, mutationError, refreshError, refreshing, motionPreference.ready, motionPreference.reduced]);
+  useLayoutEffect(() => {
+    const next = motionIntent.observe(snapshot);
+    if (next) setRingMotion({ id: ++motionSequence.current, ...next });
+  }, [motionIntent, snapshot]);
+  useEffect(() => {
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', () => {
+      motionIntent.reset();
+      setMotionPreferenceRevision((revision) => revision + 1);
+    });
+    return () => subscription.remove();
+  }, [motionIntent]);
+  useEffect(() => () => motionIntent.reset(), [motionIntent]);
 
   return <View style={styles.page} testID="daily-progress-screen">
     <AppBar mode="Back" title="Dagens framsteg" actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" />
@@ -41,7 +68,8 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
 
     {readyWithActivities ? <>
       <View style={styles.heroCard}>
-        <ProgressRing completed={progress.completedCount} total={progress.totalCount} dogName={dogName} />
+        <ProgressRing completed={progress.completedCount} total={progress.totalCount} dogName={dogName}
+          motion={ringMotion} reduced={!motionPreference.ready || motionPreference.reduced} preferenceRevision={motionPreferenceRevision} />
       </View>
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionTitle} accessibilityRole="header">Dagens aktiviteter</Text>
@@ -60,7 +88,10 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
                     confirmed={state === 'ready' && !mutationBusy && !mutationError}
                     completed={item.completed} pending={itemMutation && mutationBusy}
               statusMessage={itemMutation ? mutationMessage : ''} statusError={itemMutation && mutationError}
-              onToggle={routineDay && item.routineItemId ? () => onSetRoutineCompletion(routineDay, item.routineItemId!, !item.completed) : undefined}
+              onToggle={routineDay && item.routineItemId ? () => {
+                motionIntent.request(snapshot, item.id, itemMutationKey, !item.completed);
+                onSetRoutineCompletion(routineDay, item.routineItemId!, !item.completed);
+              } : undefined}
               onOpen={item.kind === 'training' && item.programId && item.stepId
                 ? () => onOpenTrainingStep(item.programId!, item.stepId!)
                 : onOpenChecklist}
@@ -109,13 +140,29 @@ export function DailyProgressScreen({ dogName, dateKey, state, activities, refre
   </View>;
 }
 
-function ProgressRing({ completed, total, dogName }: { completed: number; total: number; dogName: string }) {
+function ProgressRing({ completed, total, dogName, motion, reduced, preferenceRevision }: { completed: number; total: number; dogName: string; motion: { id: number; from: number; to: number } | null; reduced: boolean; preferenceRevision: number }) {
   const diameter = tokens.size.homeProgressRingDiameter;
   const stroke = tokens.size.homeProgressRingStroke;
   const radius = (diameter - stroke) / 2;
   const center = diameter / 2;
   const circumference = Math.PI * 2 * radius;
   const fill = dailyProgressRingFill(completed, total);
+  const [fraction] = useState(() => new Animated.Value(fill.fraction));
+  const handledMotion = useRef(0);
+  useLayoutEffect(() => {
+    fraction.stopAnimation();
+    if (!reduced && motion && motion.id > handledMotion.current && motion.to === fill.fraction) {
+      handledMotion.current = motion.id;
+      fraction.setValue(motion.from);
+      const animation = Animated.timing(fraction, { toValue: motion.to, duration: tokens.motion.progress,
+        easing: Easing.out(Easing.cubic), useNativeDriver: false });
+      animation.start();
+      return () => animation.stop();
+    }
+    if (motion) handledMotion.current = Math.max(handledMotion.current, motion.id);
+    fraction.setValue(fill.fraction);
+    return undefined;
+  }, [fill.fraction, fraction, motion, reduced, preferenceRevision]);
   return <View accessibilityRole="progressbar" accessibilityLabel={`${completed} av ${total} dagsuppgifter klara`}
     accessibilityValue={{ min: 0, max: total, now: completed }} style={[styles.ring, { width: diameter, height: diameter }]}>
     <Svg accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none" width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`} style={styles.ringSvg}>
@@ -126,9 +173,9 @@ function ProgressRing({ completed, total, dogName }: { completed: number; total:
         </LinearGradient>
       </Defs>
       <Circle cx={center} cy={center} r={radius} fill="none" stroke={tokens.colors.home.progressTrack} strokeWidth={stroke} />
-      {fill.fraction > 0 ? <Circle testID="daily-progress-ring-progress" accessible={false} cx={center} cy={center} r={radius}
+      {fill.fraction > 0 ? <AnimatedCircle testID="daily-progress-ring-progress" accessible={false} cx={center} cy={center} r={radius}
         fill="none" stroke="url(#daily-progress-ring-gradient)" strokeWidth={stroke}
-        strokeDasharray={`${circumference * fill.fraction} ${circumference}`} strokeDashoffset={0}
+        strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={fraction.interpolate({ inputRange: [0, 1], outputRange: [circumference, 0] })}
         strokeLinecap={fill.fraction === 1 ? 'butt' : 'round'} transform={`rotate(-90 ${center} ${center})`} /> : null}
     </Svg>
     <View accessible={false} style={[styles.ringContent, { width: diameter, height: diameter }]}>

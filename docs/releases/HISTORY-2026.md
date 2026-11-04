@@ -785,3 +785,7 @@ Hem prioriterar verkligt daterade träningsdelmål och öppnar exakt träningsst
 
 ### HOME-LOG-SOURCE-01 — lokalt verifierat 2026-11-04
 Ett faktiskt loggminne på Hem kan öppna samma händelse på rätt lokal dag utan skrivning; ett äldre utkast eller olöst sparande skyddas. Syntetiskt browserprov, `pnpm check` och public iOS JS-export PASS; live/RLS och native inte testade. Ingen TestFlight-distribution utförd.
+
+
+### DAILY-RING-MOTION-01 — lokalt verifierat 2026-11-04
+Dagens progressring rör sig efter en bekräftad avbockning och respekterar reducerad rörelse även vid preferensbyte. Syntetiska SVG-förlopp, full check och public iOS JS-export PASS; native och live/RLS kvarstår. Inte distribuerat till TestFlight.

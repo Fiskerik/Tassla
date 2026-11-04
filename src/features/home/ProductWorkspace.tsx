@@ -3670,7 +3670,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   function renderPage() {
     const page = visiblePage;
-    if (page === 'progress') return <DailyProgressScreen
+    if (page === 'progress') return <DailyProgressScreen key={currentDailyLifetime} scopeKey={currentDailyLifetime}
       dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
       mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}

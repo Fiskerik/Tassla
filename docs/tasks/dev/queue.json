@@ -14777,6 +14777,75 @@
         }
       ],
       "next_step": "Independent reviewer APPROVE v3: policy, exact source/replay/dog, preserved editor and zero synthetic writes; live/RLS/native/full panel remain open."
+    },
+    {
+      "id": "DAILY-RING-MOTION-01",
+      "title": "Bekräftad rörelse i dagens progressring",
+      "plan": "docs/tasks/dev/DAILY-RING-MOTION-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg2 och ägarens rörelsebeställning",
+      "write_paths": [
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-ring-motion.ts",
+        "src/features/home/README.md",
+        "tests/daily-ring-motion.test.mjs",
+        "tests/daily-progress-screen.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-daily-ring-motion.py",
+        "docs/design/evidence/daily-ring-motion-01",
+        "docs/tasks/dev/DAILY-RING-MOTION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Animation only after matching confirmed completion",
+        "No motion on hydrate/error/unknown/scope or reduced motion",
+        "Synthetic visual and accessibility value remain truthful"
+      ],
+      "checks": [
+        "pnpm check",
+        "daily ring browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "HOME-LOG-SOURCE-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect-approved exact confirmed scope/readback gate; Critic PROCEED v2 and UIcritic BRIEF on viewed panel3."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer implements decorative confirmed-only SVG transition with full-lifetime scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Full check 907 pass/1 skip, public iOS JS export, current synthetic SVG frames incl preference toggles; UIcritic reviewed images."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran motion sequence and preference-change browser and targeted tests; native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE after explicit ready guard; same scoped source, full panel/native/live remain open."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE after explicit ready guard; same scoped source, full panel/native/live remain open."
     }
   ]
 }

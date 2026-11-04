@@ -47,12 +47,13 @@ test('invalid ring inputs remain empty rather than producing NaN layout values',
 test('ring and full list render from the same complete daily selector', () => {
   assert.match(screen, /const progress = selectDailyProgress\(activities, state\)/);
   assert.match(screen, /const readyWithActivities = progress\.coverage === 'complete'/);
+  assert.match(screen, /complete: state === 'ready' && readyWithActivities/);
   assert.match(screen, /<ProgressRing completed=\{progress\.completedCount\} total=\{progress\.totalCount\}/);
   assert.match(screen, /progress\.activities\.map\(/);
   assert.match(screen, /dailyProgressRingFill\(completed, total\)/);
   assert.match(screen, /<Svg accessible={false}/);
-  assert.match(screen, /strokeDasharray={`\$\{circumference \* fill\.fraction\} \$\{circumference\}`\}/);
-  assert.match(screen, /strokeDashoffset=\{0\}/);
+  assert.match(screen, /strokeDasharray={`\$\{circumference\} \$\{circumference\}`\}/);
+  assert.match(screen, /strokeDashoffset=\{fraction\.interpolate/);
   assert.match(screen, /strokeLinecap=\{fill\.fraction === 1 \? 'butt' : 'round'\}/);
   assert.match(screen, /LinearGradient id="daily-progress-ring-gradient"/);
   assert.match(screen, /testID="daily-progress-ring-progress"/);
@@ -76,7 +77,7 @@ test('completion note is factual and appears only when every selected activity i
 });
 
 test('activities retain their real action source and no completion time is made up', () => {
-  assert.match(screen, /onToggle=\{routineDay && item\.routineItemId \? \(\) => onSetRoutineCompletion/);
+  assert.match(screen, /onToggle=\{routineDay && item\.routineItemId \? \(\) => \{[\s\S]*?onSetRoutineCompletion\(routineDay, item\.routineItemId!/);
   assert.match(screen, /onOpen=\{item\.kind === 'training' && item\.programId && item\.stepId/);
   assert.match(screen, /onOpenTrainingStep\(item\.programId!, item\.stepId!\)/);
   assert.doesNotMatch(screen, /completedAt|completed_at|Veckans mål|format\(.*time/i);

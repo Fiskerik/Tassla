@@ -1495,3 +1495,7 @@ Bekräftat delmål prioriteras på Hem och öppnar samma publicerade steg; gilti
 
 ### HOME-LOG-SOURCE-01 — 2026-11-04
 Hem öppnar faktiskt loggminne med exakt hund-/event-ID och lokal dag; en tidigare bekräftad rad pinnas före omladdning. Redigering, utkast och olösta mutationer går före ny fokusbegäran; replay och saknad källa öppnar inget annat. Architect/Critic plan v3, UIcritic och oberoende QA har granskat. Syntetisk browser och policytest PASS, `pnpm check` 903 pass/1 skip och public iOS JS-export PASS. Verklig data/RLS/native och komplett panellikhet återstår; reviewer och slutlig checkpoint följer.
+
+
+### DAILY-RING-MOTION-01 — 2026-11-04
+Dekorativ dagsring animerar endast för exakt användarbegärd och bekräftat återläst punkt; räknare/hjälpmedelsvärde uppdateras direkt. Varje preferensändring avbryter intent och pågående interpolation. Arkitekt/Critic, UIcritic med tidsserie, oberoende QA och Reviewer godkända scoped; `pnpm check` 907 pass/1 skip, public iOS JS-export och syntetiskt browserprov PASS. Native, VoiceOver och live/RLS fortsatt otestade, full panel3 har kvarstående visuella avvikelser. Nästa: relevant publicerat tränings-/kunskapsinnehåll samt hel vardagsresa.
