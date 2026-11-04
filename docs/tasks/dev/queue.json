@@ -14846,6 +14846,80 @@
         }
       ],
       "next_step": "Independent reviewer APPROVE after explicit ready guard; same scoped source, full panel/native/live remain open."
+    },
+    {
+      "id": "KNOWLEDGE-READ-CHECKLIST-01",
+      "title": "Publicerat checklistinnehåll i Kunskapsbiblioteket",
+      "plan": "docs/tasks/dev/KNOWLEDGE-READ-CHECKLIST-01.md v6",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg3",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/article-delivery.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-knowledge-read-checklist.py",
+        "docs/design/evidence/knowledge-read-checklist-01",
+        "docs/tasks/dev/KNOWLEDGE-READ-CHECKLIST-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/verify-drive-articles.py",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/verify-ui-r02-04.py",
+        "tools/visual-check/verify-ui-copy-cleanup.py"
+      ],
+      "acceptance": [
+        "Published checklist is discoverable and truthfully labeled",
+        "Exact published text/sources and recommended/full library semantics preserved",
+        "Synthetic catalog and reader visual checks"
+      ],
+      "checks": [
+        "pnpm check",
+        "knowledge checklist browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "DAILY-RING-MOTION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirmed existing published projection and safe reader; Critic PROCEED v2, UIcritic BRIEF on viewed panel7."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer enables existing published checklist in library with truthful content labels."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "908 pass/1 skip, public iOS JS export, checklist and article/profile + FAQ synthetic browser PASS, UIcritic reviewed 140% reader."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran targeted age/draft/source tests and full synthetic checklist journey, live/native NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE v6 for published-only reading, recommendation separation and scoped evidence."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE v6 for published-only reading, recommendation separation and scoped evidence."
     }
   ]
 }

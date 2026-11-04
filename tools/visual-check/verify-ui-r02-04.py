@@ -120,7 +120,7 @@ with sync_playwright() as playwright:
     expect(page.get_by_text("Tassla", exact=True)).to_have_count(0)
     expect(page.get_by_text(re.compile("Tillfälligt exempel|Syntetisk text för layoutgranskning"), exact=False)).to_have_count(0)
     capture("faq-contexts")
-    page.get_by_role("button", name="Tillbaka till guider").click()
+    page.get_by_role("button", name="Tillbaka till biblioteket").click()
     expect(page.get_by_role("button", name="Öppna Vanliga frågor")).to_be_visible()
     expect(page.get_by_role("button", name="Öppna Checklistor")).to_be_visible()
     passed.append("FAQ shared context tabs retain public empty/review-gated content boundary and compact header")
@@ -130,7 +130,7 @@ with sync_playwright() as playwright:
         expect(page.get_by_text("För er just nu", exact=True)).to_be_visible()
     else:
         expect(page.get_by_text("Inga checklistor publicerade ännu.", exact=True)).to_be_visible()
-    page.get_by_role("button", name="Tillbaka till guider").click()
+    page.get_by_role("button", name="Tillbaka till biblioteket").click()
     expect(page.get_by_role("button", name="Öppna Checklistor")).to_be_visible()
     passed.append("Checklistor returns to the guide destination through its compact back action")
 
@@ -141,7 +141,7 @@ with sync_playwright() as playwright:
     expect(page.get_by_text("Tassla", exact=True)).to_have_count(0)
     expect(page.get_by_text(re.compile("Tillfälligt exempel|Syntetisk text för layoutgranskning"), exact=False)).to_have_count(0)
     capture("guide-detail")
-    page.get_by_role("button", name="Tillbaka till guider").click()
+    page.get_by_role("button", name="Tillbaka till biblioteket").click()
     expect(page.get_by_role("button", name="Öppna Vanliga frågor")).to_be_visible()
     passed.append("guide detail keeps its source content and compact back bar")
 

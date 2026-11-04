@@ -137,7 +137,12 @@ const genericArticleFixture={id:'generic-guide',contentId:'generic-guide',versio
 const sourceArticleFixture=trainingBundle.items.filter(item=>item.content_type==='article').slice(0,1).map(item=>{
  const version=item.versions[0];return {id:version.id,contentId:item.id,slug:item.slug,version:version.version,title:version.title,body:version.body,contentType:'article',sources:[...trainingBundle.sources.map(source=>source.url),'https://example.org/editorial','docs/source.md'],isAiGenerated:true,recommended:true};
 });
-const content=new URLSearchParams(location.search).get('sourceFixture')==='true'?sourceArticleFixture:articleFixture?[...canonicalArticleFixtures,...(new URLSearchParams(location.search).get('unassignedArticle')==='true'?[genericArticleFixture]:[])]:placeholderContent;
+const checklistReadingFixture=trainingBundle.items.filter(item=>item.slug==='environment-checklist').map(item=>{
+ const version=item.versions[0];const refs=['rspca-puppy-care','avsab-puppy-socialization','avsab-humane-training-2021'];
+ return {id:version.id,contentId:item.id,slug:item.slug,version:version.version,title:version.title,body:version.body,contentType:'checklist',
+  sources:refs.map(id=>trainingBundle.sources.find(source=>source.id===id)?.url).filter(Boolean),isAiGenerated:true,recommended:new URLSearchParams(location.search).get('ageOutside')!=='true'};
+});
+const content=new URLSearchParams(location.search).get('knowledgeChecklistFixture')==='true'?[...checklistReadingFixture,{...genericArticleFixture,id:'not-a-guide',title:'Test av träningsprogram',contentType:'training_program'}]:new URLSearchParams(location.search).get('sourceFixture')==='true'?sourceArticleFixture:articleFixture?[...canonicalArticleFixtures,...(new URLSearchParams(location.search).get('unassignedArticle')==='true'?[genericArticleFixture]:[])]:placeholderContent;
 const initialProgram={id:'t1',content_id:'t1',version:1,title:'Vecka 11',body:'Trygghet och vardagsliv.',sources:[],completedStepIds:['s0'],completedAtByStepId:{},steps:['Hantering (tassar, öron, mun)','Miljöträning – nya ljud','Ensamhet – korta stunder','Inkallning – grunder','Möte med andra hundar'].map((title,i)=>({id:'s'+i,position:i,title,instruction:''}))};
 const publicTrainingFixture:PublishedTrainingProgram[]=[
  {...initialProgram,id:'fixture-training:trygg-start',content_id:'fixture-training:trygg-start',currentAgeBreedMatch:true,title:'Trygg vardagsstart',body:'',sources:[],completedStepIds:['trygg-1'],completedAtByStepId:{'trygg-1':'2026-10-13T08:00:00.000Z'},steps:[{id:'trygg-1',position:0,title:'Utforska i egen takt',instruction:''},{id:'trygg-2',position:1,title:'En lugn paus',instruction:''},{id:'trygg-3',position:2,title:'Vila nära',instruction:''}]},

@@ -1499,3 +1499,7 @@ Hem öppnar faktiskt loggminne med exakt hund-/event-ID och lokal dag; en tidiga
 
 ### DAILY-RING-MOTION-01 — 2026-11-04
 Dekorativ dagsring animerar endast för exakt användarbegärd och bekräftat återläst punkt; räknare/hjälpmedelsvärde uppdateras direkt. Varje preferensändring avbryter intent och pågående interpolation. Arkitekt/Critic, UIcritic med tidsserie, oberoende QA och Reviewer godkända scoped; `pnpm check` 907 pass/1 skip, public iOS JS-export och syntetiskt browserprov PASS. Native, VoiceOver och live/RLS fortsatt otestade, full panel3 har kvarstående visuella avvikelser. Nästa: relevant publicerat tränings-/kunskapsinnehåll samt hel vardagsresa.
+
+
+### KNOWLEDGE-READ-CHECKLIST-01 — 2026-11-04
+Läsbiblioteket visar nu även runtimevaliderade publicerade checklistversioner som Checklista. Samlande Biblioteket/sökcopy anger korrekt omfång; inga nya kryss eller dataskrivningar. Arkitekt/Critic v6, UIcritic på faktiska 375/430/140 %-bilder och oberoende QA på syntetiska data passerade scoped. `pnpm check` 908 pass/1 skip, public iOS JS-export, artikel/profile 12 scenarier och separat faschecklista/FAQ-browser PASS. Live publicering/RLS, native och full panel7 återstår.

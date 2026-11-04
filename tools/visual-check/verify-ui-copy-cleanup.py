@@ -61,7 +61,7 @@ with sync_playwright() as playwright:
         else:
             expect(page.get_by_text('Inga frågor publicerade ännu.', exact=True)).to_be_visible()
         capture('faq-content-retained')
-        page.get_by_role('button', name='Tillbaka till guider').click()
+        page.get_by_role('button', name='Tillbaka till biblioteket').click()
         page.get_by_role('button', name='Öppna Checklistor').click()
         if review:
             page.get_by_role('button', name=re.compile('8–12 veckor')).click()

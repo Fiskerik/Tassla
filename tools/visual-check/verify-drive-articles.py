@@ -26,8 +26,8 @@ with sync_playwright() as p:
         page.set_viewport_size({'width': width, 'height': 844})
         for name, sex in [('Nemo', 'male'), ('Nala', 'female'), ('Max', '')]:
             page.goto(f'{BASE}?screen=knowledge&articleFixture=true&dogName={name}&sex={sex}')
-            expect(page.get_by_role('button', name='Alla artiklar', exact=True)).to_be_visible()
-            page.get_by_role('button', name='Alla artiklar', exact=True).click()
+            expect(page.get_by_role('tab', name='Biblioteket', exact=True)).to_be_visible()
+            page.get_by_role('tab', name='Biblioteket', exact=True).click()
             expect(page.get_by_role('button', name='Läs Första dygnet hemma', exact=True)).to_be_visible()
             guide_cards = page.get_by_role('button', name=re.compile(r'^Läs '))
             assert guide_cards.count() == 3, f'expected three article cards, got {guide_cards.count()}'
@@ -40,7 +40,7 @@ with sync_playwright() as p:
                 image_box = visible_image_frame(guide_cards.nth(index).locator('img')).bounding_box()
                 assert image_box and image_box['width'] > 0
                 ratio = image_box['height'] / image_box['width']
-                assert 0.70 <= ratio <= 0.80, f'secondary article image is too tall: {ratio:.2f}'
+                assert 0.54 <= ratio <= 0.58, f'secondary article image should retain its 16:9 crop: {ratio:.2f}'
                 secondary_ratios.append(round(ratio, 3))
             page.screenshot(path=str(OUT / f'library-{name}-{width}.png'), full_page=True)
             page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).click()
@@ -62,6 +62,7 @@ with sync_playwright() as p:
             page.screenshot(path=str(OUT / f'article-end-{name}-{width}.png'))
             results.append(f'{name}/{sex or "unset"}: library + generic full article at {width}')
         page.goto(f'{BASE}?screen=profile-create&articleFixture=true')
+        page.get_by_role('button', name='Fler uppgifter, valfritt').click()
         expect(page.get_by_label('Förväntad hemkomst (valfritt), år-månad-dag')).to_be_visible()
         field = page.get_by_label('Förväntad hemkomst (valfritt), år-månad-dag')
         assert field.input_value() == ''
@@ -79,7 +80,7 @@ with sync_playwright() as p:
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
         results.append(f'optional date/sex and clearing at {width}; profile readback fixture')
     page.goto(f'{BASE}?screen=knowledge&articleFixture=true&dogName=Nala&sex=female')
-    page.get_by_role('button', name='Alla artiklar', exact=True).click()
+    page.get_by_role('tab', name='Biblioteket', exact=True).click()
     page.get_by_role('button', name='Läs Första dygnet hemma', exact=True).click()
     page.evaluate("""() => {
       const text = [...document.querySelectorAll('div,span,input')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()));
@@ -89,7 +90,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT / 'article-large-text-430.png'), full_page=True)
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
     page.goto(f'{BASE}?screen=knowledge&articleFixture=true&unassignedArticle=true')
-    page.get_by_role('button', name='Alla artiklar', exact=True).click()
+    page.get_by_role('tab', name='Biblioteket', exact=True).click()
     generic = page.get_by_role('button', name='Läs Syntetisk guide', exact=True)
     generic.scroll_into_view_if_needed()
     assert generic.locator('img').count() > 0
@@ -103,8 +104,8 @@ with sync_playwright() as p:
         if state == 'error':
             expect(page.get_by_role('button', name='Försök igen', exact=True)).to_be_visible()
         if state == 'empty':
-            page.get_by_role('button', name='Alla artiklar', exact=True).click()
-            expect(page.get_by_text('Inga artiklar är publicerade ännu.', exact=True)).to_be_visible()
+            page.get_by_role('tab', name='Biblioteket', exact=True).click()
+            expect(page.get_by_text('Inget innehåll är publicerat ännu.', exact=True)).to_be_visible()
         page.screenshot(path=str(OUT / f'library-{state}-430.png'))
         results.append('library state ' + state)
     assert not errors, errors

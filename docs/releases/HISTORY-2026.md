@@ -789,3 +789,7 @@ Ett faktiskt loggminne på Hem kan öppna samma händelse på rätt lokal dag ut
 
 ### DAILY-RING-MOTION-01 — lokalt verifierat 2026-11-04
 Dagens progressring rör sig efter en bekräftad avbockning och respekterar reducerad rörelse även vid preferensbyte. Syntetiska SVG-förlopp, full check och public iOS JS-export PASS; native och live/RLS kvarstår. Inte distribuerat till TestFlight.
+
+
+### KNOWLEDGE-READ-CHECKLIST-01 — lokalt verifierat 2026-11-04
+Publicerad checklists lästext kan hittas i Kunskapsbiblioteket med ursprungligt innehåll, källor och tydlig typetikett; den separata interaktiva faschecklistan är oförändrad. Syntetiska browserprov, full check och public iOS JS-export PASS. Live/RLS och native är inte testade; ingen distribution utförd.

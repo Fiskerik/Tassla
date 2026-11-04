@@ -281,8 +281,8 @@ with sync_playwright() as p:
     page.get_by_text(re.compile('Förbered natten med en lugn sovplats')).wait_for(timeout=3000)
     check('Förbered natten med en lugn sovplats' in page.locator('body').inner_text(), 'FAQ expands the exact reviewed answer for the selected phase')
     check('Referenser' not in page.locator('body').inner_text() and 'rspca.org.uk' not in page.locator('body').inner_text(), 'FAQ shows no reference heading or raw source URL')
-    links = page.get_by_role('link', name=re.compile(r'^\d+\) RSPCA:'))
-    check(links.count() == 2, 'Expanded FAQ shows both numbered links with full accessible publisher/title')
+    links = page.get_by_role('link', name=re.compile(r'^Öppna källa: .+ · RSPCA$'))
+    check(links.count() == 2, 'Expanded FAQ shows both source links with full accessible publisher/title')
     for index in range(links.count()):
         target = links.nth(index).bounding_box()
         check(target is not None and target['width'] >= 44 and target['height'] >= 44, f'FAQ reference {index + 1} meets 44pt target')
@@ -473,7 +473,7 @@ with sync_playwright() as p:
             page.evaluate("""() => { const scroller=[...document.querySelectorAll('*')].find(el => getComputedStyle(el).overflowY === 'auto' && el.scrollHeight > el.clientHeight); if(scroller) scroller.scrollTop=scroller.scrollHeight; }""")
             check(page.get_by_text('Granskningsdata', exact=True).count() == 0,
                   'Knowledge keeps review-only status copy hidden in public mode')
-            check(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True).count() == 1,
+            check(page.get_by_role('textbox', name='Sök i biblioteket', exact=True).count() == 1,
                   'Guide search remains available while review-only status copy is hidden')
             page.screenshot(path=str(OUT / 'knowledge-clean-140-scroll-375.png'))
 

@@ -1012,11 +1012,11 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
         for width in (375, 430):
             page = browser.new_page(viewport={'width': width, 'height': 844})
             page.goto(image_fixture_url('knowledge'), wait_until='networkidle')
-            expect(page.get_by_text('Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.', exact=True)).to_be_visible()
-            page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).click()
-            expect(page.get_by_text('Inga artiklar är publicerade ännu.', exact=True)).to_be_visible()
+            expect(page.get_by_text('Inget rekommenderat innehåll för den valda hunden just nu. Du kan läsa allt i biblioteket.', exact=True)).to_be_visible()
+            page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='Biblioteket', exact=True).click()
+            expect(page.get_by_text('Inget innehåll är publicerat ännu.', exact=True)).to_be_visible()
             record(f'Public Knowledge keeps recommendations and the full-library empty state distinct at {width}px',
-                   page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'true', {})
+                   page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='Biblioteket', exact=True).get_attribute('aria-selected') == 'true', {})
             page.screenshot(path=str(OUT / f'knowledge-empty-{width}.png'), full_page=True)
             page.goto(image_fixture_url('training'), wait_until='networkidle')
             expect(page.get_by_text('Inga övningar tillgängliga ännu', exact=True)).to_be_visible()
@@ -1050,11 +1050,11 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
                all(image_sources) and len(set(image_sources)) == 3,
                {'image_sources': image_sources, 'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         record(f'Knowledge uses a real two-option recommendation/library switch at {width}px',
-               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
-               and page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'false'
+               page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
+               and page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='Biblioteket', exact=True).get_attribute('aria-selected') == 'false'
                and page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).is_visible(),
-               {'tabs': page.get_by_role('tablist', name='Visa artiklar').inner_text()})
-        tabs_box = page.get_by_role('tablist', name='Visa artiklar').bounding_box()
+               {'tabs': page.get_by_role('tablist', name='Visa biblioteket').inner_text()})
+        tabs_box = page.get_by_role('tablist', name='Visa biblioteket').bounding_box()
         recommendation_box = page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).bounding_box()
         featured_box = page.get_by_role('button', name='Läs Kontakt och namn', exact=True).bounding_box()
         tabs_to_heading = recommendation_box['y'] - (tabs_box['y'] + tabs_box['height']) if tabs_box and recommendation_box else None
@@ -1074,28 +1074,28 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
                    for image_box, frame_box in zip(image_boxes, image_frame_boxes)),
                {'image_boxes': image_boxes, 'image_frame_boxes': image_frame_boxes})
         page.screenshot(path=str(OUT / f'knowledge-guides-{width}.png'), full_page=True)
-        expect(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)).to_be_visible()
+        expect(page.get_by_role('textbox', name='Sök i biblioteket', exact=True)).to_be_visible()
         expect(page.get_by_role('tablist', name='Huvudmeny').get_by_role('tab', name='Kunskap', exact=True)).to_be_visible()
         record(f'Knowledge guide search and the selected bottom destination remain visible at {width}px',
                not page_errors and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
                {'page_errors': page_errors})
         expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_have_count(0)
-        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).click()
+        page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='Biblioteket', exact=True).click()
         expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_be_visible()
         record(f'All articles includes library content outside dog recommendations at {width}px',
-               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='Alla artiklar', exact=True).get_attribute('aria-selected') == 'true', {})
+               page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='Biblioteket', exact=True).get_attribute('aria-selected') == 'true', {})
         page.screenshot(path=str(OUT / f'knowledge-library-{width}.png'), full_page=True)
-        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).click()
+        page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='För dig', exact=True).click()
         expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_have_count(0)
-        page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True).fill('utan hundmatchning')
+        page.get_by_role('textbox', name='Sök i biblioteket', exact=True).fill('utan hundmatchning')
         expect(page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)).to_be_visible()
         expect(page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True)).to_have_count(0)
         record(f'Knowledge search reaches non-recommended library content without a false recommendation heading at {width}px',
-               page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
+               page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='För dig', exact=True).get_attribute('aria-selected') == 'true'
                and page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True).is_visible()
                and page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True).count() == 0, {})
-        page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True).fill('')
-        page.get_by_role('tablist', name='Visa artiklar').get_by_role('tab', name='För dig', exact=True).click()
+        page.get_by_role('textbox', name='Sök i biblioteket', exact=True).fill('')
+        page.get_by_role('tablist', name='Visa biblioteket').get_by_role('tab', name='För dig', exact=True).click()
         guide_cards[0].click()
         expect(page.get_by_role('heading', name='Trygg start hemma', exact=True)).to_be_visible()
         article_image = page.locator('img').first
@@ -1148,12 +1148,12 @@ def verify_image_diversity(browser, *, include_home_and_training: bool = True) -
     expect(page.get_by_role('heading', name='Vanliga frågor', exact=True)).to_be_visible()
     expect(page.get_by_role('button', name='När passar en valpkurs?, visa svar', exact=True)).to_be_visible()
     record('Knowledge opens FAQ and displays its review-gated content from the guide overview', True)
-    page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
-    expect(page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)).to_be_visible()
+    page.get_by_role('button', name='Tillbaka till biblioteket', exact=True).click()
+    expect(page.get_by_role('textbox', name='Sök i biblioteket', exact=True)).to_be_visible()
     page.get_by_role('button', name='Öppna Checklistor', exact=True).click()
-    expect(page.get_by_role('button', name='Tillbaka till guider', exact=True)).to_be_visible()
+    expect(page.get_by_role('button', name='Tillbaka till biblioteket', exact=True)).to_be_visible()
     record('Knowledge enters the Checklistor destination and retains its return path', True)
-    page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+    page.get_by_role('button', name='Tillbaka till biblioteket', exact=True).click()
     expect(page.get_by_role('heading', name='Rekommenderat för er just nu', exact=True)).to_be_visible()
     page.screenshot(path=str(OUT / 'knowledge-shortcuts-375x667-text140.png'), full_page=True)
     page.close()
@@ -1258,7 +1258,7 @@ def verify_article_reader(browser) -> None:
     if not REVIEW:
         page = browser.new_page(viewport={'width': 375, 'height': 844})
         page.goto(article_reader_url(), wait_until='networkidle')
-        expect(page.get_by_text('Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.', exact=True)).to_be_visible()
+        expect(page.get_by_text('Inget rekommenderat innehåll för den valda hunden just nu. Du kan läsa allt i biblioteket.', exact=True)).to_be_visible()
         record('Article-reader fixtures stay hidden outside explicit review mode', True)
         page.close()
         return
@@ -1277,7 +1277,7 @@ def verify_article_reader(browser) -> None:
         page_errors: list[str] = []
         page.on('pageerror', lambda error: page_errors.append(str(error)))
         page.goto(article_reader_url(), wait_until='networkidle')
-        search = page.get_by_role('textbox', name='Sök bland alla artiklar', exact=True)
+        search = page.get_by_role('textbox', name='Sök i biblioteket', exact=True)
         search.fill('En artikel utan hundmatchning')
         unmatched = page.get_by_role('button', name='Läs En artikel utan hundmatchning', exact=True)
         expect(unmatched).to_be_visible()
@@ -1287,7 +1287,7 @@ def verify_article_reader(browser) -> None:
         unmatched_related = page.get_by_test_id('knowledge-related-carousel')
         unmatched_related.scroll_into_view_if_needed()
         expect(page.get_by_role('button', name='Läs Första dygnet hemma', exact=True)).to_be_visible()
-        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        page.get_by_role('button', name='Tillbaka till biblioteket', exact=True).click()
         expect(search).to_have_value('En artikel utan hundmatchning')
         record(f'Published-library search opens a non-recommended article and preserves search on Back at {width}px', not page_errors,
                {'page_errors': page_errors})
@@ -1360,7 +1360,7 @@ def verify_article_reader(browser) -> None:
         expect(page.get_by_role('heading', name='Första dygnet hemma', exact=True)).to_be_visible()
         page.wait_for_timeout(100)
         switched_position = vertical_scroll_state(page)
-        page.get_by_role('button', name='Tillbaka till guider', exact=True).click()
+        page.get_by_role('button', name='Tillbaka till biblioteket', exact=True).click()
         expect(search).to_have_value('Rumsrenhet')
         restored_position = vertical_scroll_state(page)
         record(f'Switching carousel articles resets to top and Back restores the scrolled library position at {width}px',
