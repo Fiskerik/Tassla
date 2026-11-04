@@ -12,7 +12,7 @@ test('reflection chooses the latest past event for the active dog', () => {
     event('future', 'dog-a', '2027-01-01T12:00:00'),
     event('invalid', 'dog-a', 'invalid'),
   ], 'dog-a', new Date('2026-10-26T12:00:00'));
-  assert.deepEqual(result, { label: 'Promenad', date: '15 augusti', occurredAt: '2026-08-15T12:00:00' });
+  assert.deepEqual(result, { eventId: 'new', label: 'Promenad', date: '15 augusti', occurredAt: '2026-08-15T12:00:00' });
 });
 
 test('training reflection uses dated, confirmed rows for the active dog and available versions only', () => {
@@ -36,7 +36,14 @@ test('reflection omits missing events and includes an earlier calendar year', ()
   const now = new Date('2026-10-26T12:00:00');
   assert.equal(latestHomeReflection([], 'dog-a', now), null);
   assert.equal(latestHomeReflection([event('other', 'dog-b', '2026-08-15T12:00:00Z')], 'dog-a', now), null);
-  assert.deepEqual(latestHomeReflection([event('old', 'dog-a', '2025-08-15T12:00:00', 'food')], 'dog-a', now), { label: 'Mat', date: '15 augusti 2025', occurredAt: '2025-08-15T12:00:00' });
+  assert.deepEqual(latestHomeReflection([event('old', 'dog-a', '2025-08-15T12:00:00', 'food')], 'dog-a', now), { eventId: 'old', label: 'Mat', date: '15 augusti 2025', occurredAt: '2025-08-15T12:00:00' });
+});
+
+test('equal-time log memories select the same exact event regardless of input order', () => {
+  const items = [event('z', 'dog-a', '2026-08-15T12:00:00', 'food'), event('a', 'dog-a', '2026-08-15T12:00:00', 'walk')];
+  const now = new Date('2026-10-26T12:00:00');
+  assert.equal(latestHomeReflection(items, 'dog-a', now).eventId, 'a');
+  assert.equal(latestHomeReflection(items.reverse(), 'dog-a', now).eventId, 'a');
 });
 
 test('a confirmed milestone remains the memory when a newer session exists', () => {

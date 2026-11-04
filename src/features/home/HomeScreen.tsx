@@ -47,7 +47,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   onOpenChecklist, onOpenProgress, onOpenTrainingStep, onOpenDevelopment,
   onCreateRoutine, onUpdateRoutine, onDeleteRoutine, onAddRoutineToDay, onRemoveRoutineFromDay,
   onSetRoutineCompletion, onAddTrainingToDay, onRemoveTrainingFromDay, onRetryDailyMutation, onGo, onOpenContent, onRetryContent,
-  trainingProgression, trainingProgressionState = 'ready', pendingProgression, trainingReflection = null, nextTrainingSuggestion, onOpenTrainingJourney, onRetryProgression, onRetryTrainingProgressionRead }: {
+  trainingProgression, trainingProgressionState = 'ready', pendingProgression, trainingReflection = null, nextTrainingSuggestion, onOpenTrainingJourney, onOpenLogEvent, onRetryProgression, onRetryTrainingProgressionRead }: {
   dog: OwnedDog;
   ownedDogs?: readonly OwnedDog[];
   onSelectDog?: (dogId: string) => void;
@@ -93,6 +93,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   onOpenDevelopment?: () => void;
   onOpenTrainingStep?: (programId: string, stepId: string, returnPage: 'home' | 'checklist') => void;
   onOpenTrainingJourney?: (programVersionId: string, stepId?: string) => void;
+  onOpenLogEvent?: (eventId: string) => void;
   onRetryProgression?: (programVersionId: string) => void;
   onRetryTrainingProgressionRead?: () => void;
   onRetryDaily?: () => void;
@@ -144,7 +145,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
   const showTrainingReflection = Boolean(trainingReflection && onOpenTrainingJourney);
   const reflectionMessage = showTrainingReflection && trainingReflection ? `${trainingReflection.kind === 'milestone' ? 'Bekräftat delmål' : 'Tränat'}: ${trainingReflection.label} · ${trainingReflection.date}` : logState === 'loading' ? 'Historiken hämtas.' : logState === 'error'
     ? 'Historiken kunde inte hämtas just nu.' : logPendingOrUnknown ? 'En ändring i loggen behöver kontrolleras.' : reflection
-      ? `Senast loggat: ${reflection.label} · ${reflection.date}. Öppna Logga.` : 'Inget bekräftat att visa här just nu. Öppna Logga.';
+      ? `Senast loggat: ${reflection.label} · ${reflection.date}. ${onOpenLogEvent ? 'Öppna händelsen.' : 'Öppna Logga.'}` : 'Inget bekräftat att visa här just nu. Öppna Logga.';
 
   useEffect(() => {
     if (openDogSwitcherInitially) onDogSwitcherInitiallyOpened?.();
@@ -273,7 +274,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
       </View>
     </Card> : null}
 
-    <Card variant="home" onPress={() => { if (showTrainingReflection && trainingReflection) onOpenTrainingJourney?.(trainingReflection.programVersionId, trainingReflection.stepId); else onGo('log'); }} accessibilityLabel={`Titta vad ni redan har gjort. ${reflectionMessage} ${showTrainingReflection ? 'Öppna träningssteget.' : ''}`}>
+    <Card variant="home" onPress={() => { if (showTrainingReflection && trainingReflection) onOpenTrainingJourney?.(trainingReflection.programVersionId, trainingReflection.stepId); else if (reflection && onOpenLogEvent) onOpenLogEvent(reflection.eventId); else onGo('log'); }} accessibilityLabel={`Titta vad ni redan har gjort. ${reflectionMessage} ${showTrainingReflection ? 'Öppna träningssteget.' : ''}`}>
       <View style={styles.reflectionCard} testID="home-reflection">
         <View style={styles.cardHeadingRow}>
           <Ionicons name="time-outline" size={tokens.size.iconSm} color={tokens.colors.home.greenStrong} accessibilityElementsHidden />

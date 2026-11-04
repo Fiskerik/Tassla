@@ -149,6 +149,7 @@ import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { decideProfileExit, profileExitScopeKey, type ProfileExitBlockReason, type ProfileExitScope, type ProfileExitSnapshot } from '../onboarding/profile-exit';
 import { LogScreen, type LogEditorRecovery, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import type { LogEventFocus } from '../puppy-log/log-event-focus';
 import { insightsRequestIsCurrent, parseDogEventInsights, type InsightsPeriod, type InsightsRequestScope } from '../puppy-log/insights-model';
 import type { InsightsLoadState } from '../puppy-log/InsightsScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -295,6 +296,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [plannedHealthHealthFocus, setPlannedHealthHealthFocus] = useState<PlannedHealthHealthFocus | null>(null);
   const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('Översikt');
   const [logEditorRecovery, setLogEditorRecovery] = useState<ScopedEditorRecovery<LogEditorRecovery> | null>(null);
+  const [homeLogFocus, setHomeLogFocus] = useState<(LogEventFocus & { selectionKey: string; lifetime: string }) | null>(null);
+  const homeLogFocusSequence = useRef(0);
   const [healthHistoryEditorRecovery, setHealthHistoryEditorRecovery] = useState<ScopedEditorRecovery<HealthHistoryDraft> | null>(null);
   const [weightEditorRecovery, setWeightEditorRecovery] = useState<ScopedEditorRecovery<WeightEditorDraft> | null>(null);
   const [plannedHealthEditorRecovery, setPlannedHealthEditorRecovery] = useState<ScopedEditorRecovery<PlannedHealthEditorDraft> | null>(null);
@@ -309,6 +312,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [initialPage, onInitialPageOpened]);
   const { page, previousPage } = navigation;
   const setPage = useCallback((nextPage: ProductPage) => {
+    if (nextPage !== 'log') setHomeLogFocus(null);
     setNavigation((current) => current.page === nextPage
       ? current
       : { page: nextPage, previousPage: current.page });
@@ -817,6 +821,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     currentSelectionKeyRef.current = currentSelectionKey;
     currentDailyOwnerScopeRef.current = currentDailyOwnerScope;
     if (previousTrainingLifetime.current !== currentSelectionKey) {
+      setHomeLogFocus(null);
       trainingGeneration.current += 1;
       trainingReadFlight.current?.controller.abort();
       trainingReadFlight.current = null;
@@ -3755,6 +3760,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setTrainingProgramFocus({ scope: currentSelectionKey, programId: programVersionId, stepId });
         navigateMainTab('training');
       }}
+      onOpenLogEvent={(eventId) => {
+        if (currentSelectionKeyRef.current !== currentSelectionKey || logLifetime.current !== currentLogLifetime) return;
+        const available = logDataLifetimeRef.current === currentLogLifetime
+          && eventRows.current.some((row) => row.id === eventId && row.dog_id === dog.id);
+        if (available) logPinnedEventIds.current.add(eventId);
+        setHomeLogFocus({ requestId: ++homeLogFocusSequence.current, eventId, dogId: dog.id, available,
+          selectionKey: currentSelectionKey, lifetime: currentLogLifetime });
+        navigateMainTab('log');
+      }}
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
       onRetryTrainingProgressionRead={() => { void retryTraining(); }}
       reviewTrainingStep={hasReviewTraining}
@@ -3846,6 +3860,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
       onActiveEditorChange={setActiveLogEditor}
+      initialEventFocus={homeLogFocus?.selectionKey === currentSelectionKey && homeLogFocus.lifetime === currentLogLifetime ? homeLogFocus : null}
+      onEventFocusConsumed={(requestId) => setHomeLogFocus((current) => current?.requestId === requestId ? null : current)}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}

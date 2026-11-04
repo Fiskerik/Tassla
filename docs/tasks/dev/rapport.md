@@ -1491,3 +1491,7 @@ DEVELOPMENT-CONTENT-01 återupptagen: registry svarar igen och slutlig public iO
 
 ### HOME-MEMORY-01 — checkpoint 2026-10-31
 Bekräftat delmål prioriteras på Hem och öppnar samma publicerade steg; giltigt träningsminne överlever loggfel/laddning. Pausad/osäker version föreslås inte. Root ensam writer; Architect/Critic, UIcritic på faktiska bilder, oberoende QA och Reviewer har granskat. `pnpm check` 899 pass/1 skip, public iOS JS-export och två syntetiska browserprov PASS. Live/RLS/native och full panellikhet inte verifierade. Nästa steg2-del: sammanhängande historik/exakt loggkälla och uttryckligt bekräftad ringrörelse.
+
+
+### HOME-LOG-SOURCE-01 — 2026-11-04
+Hem öppnar faktiskt loggminne med exakt hund-/event-ID och lokal dag; en tidigare bekräftad rad pinnas före omladdning. Redigering, utkast och olösta mutationer går före ny fokusbegäran; replay och saknad källa öppnar inget annat. Architect/Critic plan v3, UIcritic och oberoende QA har granskat. Syntetisk browser och policytest PASS, `pnpm check` 903 pass/1 skip och public iOS JS-export PASS. Verklig data/RLS/native och komplett panellikhet återstår; reviewer och slutlig checkpoint följer.

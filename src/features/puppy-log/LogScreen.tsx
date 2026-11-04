@@ -15,13 +15,14 @@ import { localMonthKey } from './log-calendar-model';
 import { InsightsScreen, type InsightsLoadState } from './InsightsScreen';
 import type { InsightsPeriod } from './insights-model';
 import type { DogEventCursor } from '../../data/workspace-data';
+import { resolveLogEventFocus, type LogEventFocus } from './log-event-focus';
 
 export type QuickLogMutationView = { kind: 'add' | 'update' | 'delete' | 'undo'; mutationId: string; id: string; type: LogEventType; occurredAt: string; accidentKinds?: readonly AccidentKind[] | null; status: 'pending' | 'failed' | 'unsure' | 'saved' };
 export type LogEventEditorDraft = { type: LogEventType; accidentKinds: AccidentKind[]; preserveLegacyUnknownAccident: boolean; date: string; time: string; note: string };
 export type LogEditorRecovery = { eventId: string; draft: LogEventEditorDraft };
 type EditorActionState = { canSave: boolean; saving: boolean; dirty: boolean };
 
-export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, refreshing = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, onActiveEditorChange, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, loadedThrough = null, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
+export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview', layoutOwnerId, persistLayout = true, busy = false, loading = false, refreshing = false, loadError = false, refreshError = false, onReload, mutation, editorRecovery, onEditorRecoveryChange, onActiveEditorChange, initialEventFocus, onEventFocusConsumed, loadMoreError = false, onRetry, onCancel, onUndo, hasMore = false, loadingMore = false, loadedThrough = null, onLoadMore, calendarMarkerMonth = '', calendarMarkers = [], calendarStatus = 'ready', onLoadCalendarMonth, onCancelCalendarRead, view = 'today', onViewChange, profileOrigin = false, onReturnToProfile, insightsPeriod = 'week', onInsightsPeriodChange, insightsState, onRefreshInsights, dogName = 'hunden' }: {
   events: readonly LogEvent[];
   onAdd: (type: LogEventType, intent?: AccidentLogIntent) => void;
   onUpdate?: (id: string, changes: LogEventChanges) => boolean | Promise<boolean>;
@@ -39,6 +40,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   editorRecovery?: LogEditorRecovery | null;
   onEditorRecoveryChange?: (recovery: LogEditorRecovery | null) => void;
   onActiveEditorChange?: (id: string | null) => void;
+  initialEventFocus?: LogEventFocus | null;
+  onEventFocusConsumed?: (requestId: number) => void;
   loadMoreError?: boolean;
   onRetry?: () => boolean | void | Promise<boolean | void>;
   onCancel?: () => void;
@@ -115,6 +118,28 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const needsDatePage = hasMore && !hasOlderDateBoundary && !loadMoreError && !loadError && !loading;
   const patterns = useMemo(() => summarizePottyPatterns(events).filter((item) => item.count >= 2), [events]);
   const editingEvent = events.find((event) => event.id === editingId) ?? null;
+  const handledFocus = useRef<number | null>(null);
+  const [focusMessage, setFocusMessage] = useState('');
+  useEffect(() => {
+    const decision = resolveLogEventFocus(initialEventFocus, handledFocus.current, events,
+      Boolean(busy || editingId || editorRecovery || (mutation && mutation.status !== 'saved')));
+    if (!initialEventFocus || decision.kind === 'ignored') return;
+    handledFocus.current = initialEventFocus.requestId;
+    if (decision.kind === 'blocked') {
+      setFocusMessage(editorRecovery || mutation?.status === 'failed' || mutation?.status === 'unsure'
+        ? '' : 'Avsluta eller kontrollera din pågående ändring först.');
+    } else if (decision.kind === 'missing') {
+      setFocusMessage('Händelsen kunde inte öppnas just nu.');
+    } else {
+      setFocusMessage('');
+      editorSubmitRef.current = null;
+      setEditorActionState({ canSave: false, saving: false, dirty: false });
+      setSelectedDate(localDateTimeParts(decision.event.occurredAt).date);
+      setEditingId(decision.event.id);
+      setEditorMinimized(false);
+    }
+    onEventFocusConsumed?.(initialEventFocus.requestId);
+  }, [initialEventFocus, events, busy, editingId, editorRecovery, mutation, onEventFocusConsumed]);
   useEffect(() => {
     onActiveEditorChange?.(editingId);
     return () => onActiveEditorChange?.(null);
@@ -385,6 +410,13 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   return <View style={styles.screen}>
     <Text accessibilityRole="header" style={styles.pageTitle}>Logga</Text>
     <LogViewTabs view={view} onChange={(next) => onViewChange?.(next)} />
+    {focusMessage ? <View accessibilityLiveRegion="polite"><MessageCard>{focusMessage}</MessageCard></View> : null}
+    {editorRecovery && !editingEvent && (!mutation || mutation.status === 'saved') ? <View style={styles.recoveryCard}>
+      <MessageCard>Du kan fortsätta din tidigare loggändring.</MessageCard>
+      <Button variant="tertiary" label="Öppna utkast" accessibilityLabel="Öppna din tidigare loggändring"
+        disabled={!events.some((event) => event.id === editorRecovery.eventId)}
+        onPress={() => { setEditingId(editorRecovery.eventId); setEditorMinimized(false); }} />
+    </View> : null}
     {profileOrigin ? <Button variant="tertiary" label="Tillbaka till Hundprofil" accessibilityLabel="Tillbaka till Hundprofil" onPress={() => onReturnToProfile?.()} /> : null}
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />

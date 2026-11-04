@@ -55,3 +55,6 @@ RPC-definitionen finns i `supabase/migrations/202610220002_dog_event_insights_re
 
 
 UI-R02-04 v7: Logg-editorns delete- och discardbekräftelser monteras vid behov inuti dess BottomSheet. Dialogen har då rätt modalägare och ligger över redigeraren; Avbryt behåller samma editorinstans och rå draft. Radering/discard använder oförändrade handlers. Browserprovet klickar verkliga knappar utan force och provar bevarad text respektive endast vald syntetisk post.
+
+
+Hem kan lämna en engångsbegäran om en specifik inläst händelse. LogScreen validerar ID och hund, öppnar befintlig editor och visar händelsens lokala datum; öppningen skriver inga data. Befintligt utkast och olöst mutation har företräde. Ett återställningsutkast kan öppnas igen från Logg; saknad källa leder aldrig till en ersättningspost. Browserprovet `tools/visual-check/verify-home-log-source.py` använder syntetiska data, inte live/RLS eller native.

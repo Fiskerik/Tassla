@@ -781,3 +781,7 @@ DEVELOPMENT-CONTENT-01 produktcommit: `85efaaa35753f44f712b4ec96c0fba403830d068`
 
 ### HOME-MEMORY-01 — lokalt verifierat 2026-10-31
 Hem prioriterar verkligt daterade träningsdelmål och öppnar exakt träningssteg; loggladdning eller loggfel döljer inte verifierad träningshistorik. Tryggt tomläge, pausade/osäkra förslag filtreras. Syntetiska browserprov, pnpm check och public iOS JS-export godkända; verklig databas/RLS och native kvarstår. Commit identifieras i Git-historiken; ej därmed verifierat i TestFlight.
+
+
+### HOME-LOG-SOURCE-01 — lokalt verifierat 2026-11-04
+Ett faktiskt loggminne på Hem kan öppna samma händelse på rätt lokal dag utan skrivning; ett äldre utkast eller olöst sparande skyddas. Syntetiskt browserprov, `pnpm check` och public iOS JS-export PASS; live/RLS och native inte testade. Ingen TestFlight-distribution utförd.

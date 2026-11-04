@@ -1,0 +1,20 @@
+# HOME-LOG-SOURCE-01 — exakt logghändelse från Hem
+
+Status done · plan v3 · bas `5d0fe1e45f1275f0f902ff0bf99413cf99468d97` · risk M · root ensam writer. Steg2 i `MVP-COMPLETION-261031`, inga nya datasyften, backendändringar eller dependencies.
+
+Hemkortets faktiskt sparade loggminne behåller ID och öppnar samma händelse i Loggs befintliga editor på dess lokala datum. Stängning visar källhändelsens lokala dags befintliga tidslinje; öppning skriver inget. Saknad källa ger begripligt besked, aldrig en annan händelse. Om ingen verifierad logg finns öppnas Logga generellt som tidigare. Ägarens pågående/okända ändringar och eventuella utkast får inte överskrivas. Konto-/hund-/livstidsscope och engångskonsumtion förhindrar gammalt fokus. En pinnad bekräftad rad är en tidigare läst snapshot, inte ett nytt livebevis. Dagspaginering och laddning/fel/återförsök bevaras; detta är inte en komplett sammanlagd historik.
+
+Ingår: `src/features/home/home-reflection.ts`, `src/features/home/HomeScreen.tsx`, `src/features/home/ProductWorkspace.tsx`, `src/features/home/README.md`, `src/features/puppy-log/LogScreen.tsx`, `src/features/puppy-log/log-event-focus.ts`, `src/features/puppy-log/README.md`, `tests/home-reflection.test.mjs`, `tests/home-log-source.test.mjs`, `tests/log-screen-policy.test.mjs`, `tools/visual-check/app.tsx`, `tools/visual-check/verify-home-log-source.py`, `docs/design/evidence/home-log-source-01/`, `docs/tasks/dev/HOME-LOG-SOURCE-01.md`, `docs/tasks/dev/queue.json`, `docs/tasks/dev/rapport.md`, `docs/releases/HISTORY-2026.md`.
+
+Acceptans: lika typer/tidpunkter väljer deterministiskt exakt ID, lokal dag kring midnatt, fel hund/konto/livstid, saknad källa, upprepad render, pending/unknown och utkast, äldre pinnad sida, ingen skrivning vid navigation. Testa användarresan med verkliga HomeScreen/LogScreen och syntetiska data, 375/430 och 140 % text, före/efter mot panel1 och5; `pnpm check`, public iOS JS-export, whitespace/scope, oberoende QA och Reviewer. UIcritic BRIEF/REVIEW, Architect/Critic innan implementation. Live/RLS/native separat NOT TESTABLE.
+
+Critic: pinna exakt bekräftad rad före navigering och refresh. Konsumera varje fokus en gång; om någon sparad editor-recovery eller pending/unknown-mutation finns ska nytt fokus avvisas med synligt besked utan att recovery ändras. Samma gäller pågående editor, utan automatisk spara/radering.
+
+Fokusobjekt har unikt begärande-ID, konto, kontogeneration, hund och logglivstid; endast aktuellt scope skickas till Logg. Konsumera exakt en gång även vid konflikt/saknad. Alla osparade editor-recovery och pending/unknown/failed mutationer skyddas med synligt besked; ingen ersätts. Före navigation pinnas exakt scopekontrollerad befintlig rad; saknas den förklaras att källan inte är tillgänglig, inte att den säkert saknas på servern. Vid editorstängning behålls händelsens lokala dag, som i Insights.
+
+Plan v3: efter oberoende review läggs en liten ren fokuspolicy i deklarerad separat fil, med beteendetest för engångsbegäran, exakt hund/ID och konflikt. Browserprovet utökas med åternavigering, ingen skrivning och stor text scroll till fält/radera. Konkreta fel-/utkastbesked ersätter dubblerad generell information. Ingen ändring av scope eller datasyfte.
+
+## Checkpoint 2026-11-04
+Root ensam writer. Architect APPROVE/Critic PROCEED v3; UIcritic BRIEF och uppföljande REVIEW på faktiskt öppnade bilder utan återstående scoped UI-anmärkning. Ny ren produktionspolicy testas mot faktiska händelser; replay efter nyare begäran ignoreras. Browsern provar två identiska tidpunkter, lokalt datum över UTC-midnatt, konflikt, saknad/annan hund, aktiv editor, replay och noll anrop till fixturens skrivfunktioner. Oberoende QA gör egen omkörning. `pnpm check`: 903 PASS och 1 skip. Public iOS JS-export PASS. Oberoende QA körde policytest och utökad syntetisk browser PASS. Verklig auth/scopeväxling, RLS, native och komplett panel är inte bevisade av fixturen.
+
+Oberoende Reviewer APPROVE v3. Scope/whitespace kontrolleras före commit; nästa del är bekräftelsebaserad progressrörelse och övriga steg2–4.
