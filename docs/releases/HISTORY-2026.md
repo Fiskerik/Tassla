@@ -802,3 +802,6 @@ Programversioner använder stabila, generiska bilder och samma beskärningsfokus
 
 ### DAILY-RETRY-ID-01 — lokalt verifierat 2026-11-05
 Återkontroll av samma rutinändring i Checklistor återanvänder samma mutations-ID; separata användarhandlingar får nya ID. Syntetiskt callbackprov, full check och public iOS JS-export PASS. Verklig RPC/RLS och native är inte testade; ingen distribution utförd.
+
+### EXPO-DATEPICKER-EVALUATION-01 — utvärderat 2026-11-05
+Native DatePicker har granskats mot installerat SDK57 och Tasslas befintliga datum-/tidsfält. Webbfallback, lokalt datum och skilda plattformsflöden behöver en separat native-testbar adapter före byte. Inget paket eller appbeteende har ändrats.

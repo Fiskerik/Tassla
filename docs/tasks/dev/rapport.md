@@ -1512,3 +1512,6 @@ Varje känd programversion har explicit, stabilt generiskt bildval och fokus i r
 
 ### DAILY-RETRY-ID-01 — 2026-11-05
 Checklistans tillägg/borttagning av rutin fångar mutations-ID före closure; samma explicit återkontrollerade operation bevarar ID, hund, dag, tidszon och revision. Security/Critic, QA och Reviewer granskade; verkliga JSX-callbacks med mockat dataanrop PASS, `pnpm check` 921 pass/1 skip, public iOS JS-export PASS. Live RPC/RLS och native ej provat. Separat dagsskiftesplan har Critic STOP v1: utkast, serverankare och tvåstegssparning måste lösas före clockändring.
+
+### EXPO-DATEPICKER-EVALUATION-01 — 2026-11-05
+SDK57:s installerade @expo/ui 57.0.21 är inte en verifierad ersättning för Tasslas fält: webb returnerar null, iOS/Androidflöden skiljer sig och Android ISO-konverterar datum. Architect/Critic, QA och Reviewer har kontrollerat källorna och gällande fältkontrakt. Behåll befintliga väljare tills separat adapter/nativeprov finns; inget nytt paket installerat. `pnpm check` 921 pass/1 skip; native och tillgänglighet otestade.

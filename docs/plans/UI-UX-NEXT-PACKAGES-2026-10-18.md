@@ -99,3 +99,7 @@ Local implementation acceptance is separated from rendered/device acceptance bec
 Detta kompletterar äldre paketstatus, inte en SDKuppgradering. Haptik är nu lokalt installerad/verifierad i PREMIUM-FEEDBACK-01 commit9a11649 (fysisk känslaNT). Godkänt för genomförande: komprimera använda foton, expo-splash-screen varm start, expo-image bevarad fokus/cache och expo-keep-awake endast öppen träningsinstruktion; SDK57-kompatibla versioner verifieras per task. @expo/ui native DatePicker utvärderas separat med lokal datumsemantik och fungerande webbfallback.
 
 Efter MVP och separat beslut: widgets (integritet/kostnad/namn på låsskärm), store-review efter beta, updates (tjänst/kostnad/releasepolicy), foto (samtycke/lagring/radering/GDPR). Dessa aktiveras inte nu. Avstå blur, symbols, extra gradientpaket, Reanimated och Lottie. Roadmap MVP-COMPLETION-261031 bevarar de fyra användarresorna parallellt med denna leveransordning.
+
+### Genomgång av native datum-/tidsväljare 2026-11-05
+
+Installerad `@expo/ui` 57.0.21 har en community-wrapper, men dess webbvariant renderar inget och dess iOS-/Androidflöden skiljer sig från Tasslas lokala strängfält och tidsmodalens bekräfta/avbryt; datumfältet uppdateras direkt. Android använder ISO-serialisering som behöver verifieras mot lokal kalenderdag och DST. Den rekommenderade fortsättningen är en separat adapter med fungerande webbfallback och nativeprov, inte ett obeprövat byte inför MVP. Se `docs/tasks/dev/EXPO-DATEPICKER-EVALUATION-01.md`. Ingen ny dependency har lagts till för detta.
