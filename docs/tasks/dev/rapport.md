@@ -1503,3 +1503,6 @@ Dekorativ dagsring animerar endast för exakt användarbegärd och bekräftat å
 
 ### KNOWLEDGE-READ-CHECKLIST-01 — 2026-11-04
 Läsbiblioteket visar nu även runtimevaliderade publicerade checklistversioner som Checklista. Samlande Biblioteket/sökcopy anger korrekt omfång; inga nya kryss eller dataskrivningar. Arkitekt/Critic v6, UIcritic på faktiska 375/430/140 %-bilder och oberoende QA på syntetiska data passerade scoped. `pnpm check` 908 pass/1 skip, public iOS JS-export, artikel/profile 12 scenarier och separat faschecklista/FAQ-browser PASS. Live publicering/RLS, native och full panel7 återstår.
+
+### TRAINING-COMPLETION-01 — 2026-11-05
+Verifierad readback ersätter inaktuell progression säkert inom aktuell konto-/hundlease; status «Alla delmål bekräftade» härleds enbart från samma resas giltiga sparade delmål. Sparning, unknown och läsfel maskerar osäkra statusar; undo och samma-ID-kontroll finns kvar. Critic v7, Security, scoped UIcritic, QA och Reviewer granskade; syntetisk RNWeb och mutationsrace PASS, `pnpm check` 915 pass/1 skip, public iOS JS-export PASS. Full panel6-likhet, native Dynamic Type/VoiceOver, RLS och produktion är kvar. Nästa: spårbara programbilder och DatePicker-beslut, därefter hel vardagsresa.

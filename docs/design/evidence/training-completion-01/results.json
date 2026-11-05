@@ -1,0 +1,14 @@
+{
+  "results": [
+    "375x844: complete, navigation and undo",
+    "430x844: complete, navigation and undo",
+    "375x667: complete, navigation and undo",
+    "pending: no confirmed completion",
+    "unknown: no confirmed completion",
+    "paused: state preserved",
+    "read error: no invented empty or unstarted status; retry offered",
+    "unknown already refreshed: same operation retry opens verified step"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic RNWeb; enlarged CSS is not native Dynamic Type; live/RLS untested."
+}

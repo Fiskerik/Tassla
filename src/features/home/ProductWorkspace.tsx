@@ -125,6 +125,7 @@ import { localDate } from '../onboarding/dog';
 import { latestTrainingReflection } from './home-reflection';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
+import { mergeTrainingReadback, updateTrainingPending } from './training-readback';
 import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen, type HealthTab } from '../health/HealthScreen';
 import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
@@ -1173,6 +1174,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         && currentSelectionKeyRef.current === scope;
       if (current) {
         if (trainingSnapshotRef.current?.scope === scope) {
+          const unavailable = { ...trainingSnapshotRef.current.value, progressionState: 'error' as const };
+          trainingSnapshotRef.current = { ...trainingSnapshotRef.current, value: unavailable };
+          setTraining(unavailable);
+          const dailyCache = dailySnapshotRef.current;
+          if (dailyCache?.scope === dailyLifetime.current) {
+            const dailyUnavailable = { ...dailyCache.training, progressionState: 'error' as const };
+            dailySnapshotRef.current = { ...dailyCache, training: dailyUnavailable };
+            setDailyTrainingSnapshot(dailyUnavailable);
+          }
           setTrainingState('ready');
           setTrainingError('Programmen kunde inte uppdateras. Du ser senast hämtade program.');
         } else {
@@ -1267,6 +1277,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         return true;
       }
       if (hasSnapshot) {
+        if (trainingResult.status === 'fulfilled') {
+          trainingSnapshotRef.current = { scope: currentSelectionKey, value: trainingResult.value, updatedAt: Date.now() };
+          setTraining(trainingResult.value);
+          setTrainingSelectionKey(currentSelectionKey);
+          setTrainingState('ready');
+          const latestDaily = dailySnapshotRef.current;
+          if (latestDaily?.scope === scope) {
+            dailySnapshotRef.current = { ...latestDaily, training: trainingResult.value };
+            setDailyTrainingSnapshot(trainingResult.value);
+          }
+        }
         setDailyRefreshError(true);
       } else {
         setDailySnapshot(null);
@@ -3046,7 +3067,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function isTrainingMutationCurrent(lease: TrainingMutationLease): boolean {
-    return ownsTrainingMutationLease(trainingMutationLease.current, lease, currentSelectionKeyRef.current, accountDeletionInvalidated.current);
+    return mounted.current && ownsTrainingMutationLease(trainingMutationLease.current, lease, currentSelectionKeyRef.current, accountDeletionInvalidated.current);
   }
 
   function finishTrainingMutation(lease: TrainingMutationLease) {
@@ -3073,36 +3094,66 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     try {
       const outcome = await applyTrainingProgressionOperation(client, dog.id, operationId, action);
       if (outcome.status === 'saved') {
-        setPendingTrainingProgressions((current) => {
-          const next = { ...current };
-          delete next[pendingKey];
-          return next;
-        });
-        if (isTrainingMutationCurrent(lease) && currentTrainingOwnerDogScope === ownerDogScope) {
-          try {
-            const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
-            if (analyticsSnapshot && refreshed.progressionState === 'ready' && isTrainingMutationCurrent(lease)) {
-              const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, refreshed.progression, dog.id, action, operationId);
-              if (analyticsEvent) void analyticsService.track(analyticsEvent);
-            }
-          } catch {
-            setTrainingError('Ändringen sparades, men den uppdaterade träningsresan kunde inte hämtas. Försök igen.');
+        if (!isTrainingMutationCurrent(lease)) {
+          if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+            updateTrainingPending(current, pendingKey, operationId, 'unknown'));
+          return 'unknown';
+        }
+        const verified = outcome.value.workspace;
+        const updated = mergeTrainingReadback(trainingSnapshotRef.current, lease.scope, dog.id, verified);
+        const activeDailyScope = dailyLifetime.current;
+        const interruptedDaily = dailyReadFlight.current;
+        trainingGeneration.current += 1;
+        trainingReadFlight.current?.controller.abort();
+        trainingReadFlight.current = null;
+        dailyGeneration.current += 1;
+        dailyReadFlight.current?.controller.abort();
+        dailyReadFlight.current = null;
+        setDailyRefreshing(false);
+        if (updated) {
+          trainingSnapshotRef.current = updated;
+          setTraining(updated.value);
+          setTrainingSelectionKey(lease.scope);
+          setTrainingState('ready');
+          setTrainingError('');
+        } else {
+          trainingSnapshotRef.current = null;
+          setTraining({ programs: [], paused: [], progression: emptyTrainingProgressionWorkspace(), progressionState: 'error' });
+          setTrainingSelectionKey(lease.scope);
+          setTrainingState('error');
+          setTrainingError('Ändringen sparades, men träningsresan behöver hämtas igen.');
+        }
+        const dailyCache = dailySnapshotRef.current;
+        if (dailyCache?.scope === activeDailyScope) {
+          const dailyUpdate = mergeTrainingReadback({ scope: dailyCache.scope, value: dailyCache.training, updatedAt: dailyCache.dailyUpdatedAt },
+            activeDailyScope, dog.id, verified);
+          if (dailyUpdate) {
+            dailySnapshotRef.current = { ...dailyCache, training: dailyUpdate.value };
+            setDailyTrainingSnapshot(dailyUpdate.value);
+          } else {
+            const unavailable = { ...dailyCache.training, progressionState: 'error' as const };
+            dailySnapshotRef.current = { ...dailyCache, training: unavailable };
+            setDailyTrainingSnapshot(unavailable);
           }
+        } else if (interruptedDaily?.scope === activeDailyScope) {
+          setDailyState('error');
+          setDailyStateLifetime(activeDailyScope);
+          setDailyRefreshError(false);
+        }
+        setPendingTrainingProgressions((current) => updateTrainingPending(current, pendingKey, operationId, 'clear'));
+        if (updated && analyticsSnapshot) {
+          const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, verified, dog.id, action, operationId);
+          if (analyticsEvent) void analyticsService.track(analyticsEvent);
         }
         return 'saved';
       }
       if (outcome.status === 'unknown') {
-        setPendingTrainingProgressions((current) => ({
-          ...current,
-          [pendingKey]: { action, operationId, status: 'unknown' },
-        }));
+        if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+          updateTrainingPending(current, pendingKey, operationId, 'unknown'));
         return 'unknown';
       }
-      setPendingTrainingProgressions((current) => {
-        const next = { ...current };
-        delete next[pendingKey];
-        return next;
-      });
+      if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+        updateTrainingPending(current, pendingKey, operationId, 'clear'));
       return 'failed';
     } finally {
       finishTrainingMutation(lease);

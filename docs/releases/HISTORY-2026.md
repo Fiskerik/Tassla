@@ -793,3 +793,6 @@ Dagens progressring rör sig efter en bekräftad avbockning och respekterar redu
 
 ### KNOWLEDGE-READ-CHECKLIST-01 — lokalt verifierat 2026-11-04
 Publicerad checklists lästext kan hittas i Kunskapsbiblioteket med ursprungligt innehåll, källor och tydlig typetikett; den separata interaktiva faschecklistan är oförändrad. Syntetiska browserprov, full check och public iOS JS-export PASS. Live/RLS och native är inte testade; ingen distribution utförd.
+
+### TRAINING-COMPLETION-01 — lokalt verifierat 2026-11-05
+Träningsöversikt visar bekräftat avslut endast när alla delmål i samma resa och version är verifierade. Osäker sparning och läsfel ger återhämtningsbara statusar utan falsk klarindikator. Syntetiska browser-/racetester, full check och public iOS JS-export PASS. Live/RLS och native är inte testade; ingen distribution utförd.

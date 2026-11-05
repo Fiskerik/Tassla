@@ -53,7 +53,9 @@ test('Training errors stay retryable and review examples are injected only after
   const fallback = workspace.indexOf('reviewContentEnabled && result.programs.length === 0');
   const readError = workspace.indexOf('}).catch((error: unknown) =>', fallback);
   assert.ok(fallback >= 0 && readError > fallback);
-  assert.match(workspace.slice(readError, readError + 800), /setTrainingState\('error'\)/);
+  const catchBlock = workspace.slice(readError, workspace.indexOf('}).finally(', readError));
+  assert.match(catchBlock, /progressionState: 'error' as const/);
+  assert.match(catchBlock, /setTrainingState\('error'\)/);
   assert.ok(workspace.includes('<PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />'));
 });
 

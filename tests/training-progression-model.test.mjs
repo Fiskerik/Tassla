@@ -137,3 +137,26 @@ test('operation result parser rejects unknown server actions and malformed saved
   assert.equal(model.isTrainingProgressionResult({ ...valid, action: 'delete_everything' }), false);
   assert.equal(model.isTrainingProgressionResult({ ...valid, state: 'unknown' }), false);
 });
+
+test('program completion requires every distinct published step for the same journey, dog and version', () => {
+  const steps = [{ id: 'step-a1', title: 'Ett' }, { id: 'step-a2', title: 'Två' }];
+  const mark = (id, stepId, overrides = {}) => ({ id, journey_id: journeyA.id, dog_id: dogId, program_version_id: versionA,
+    step_id: stepId, confirmation_operation_id: `op-${id}`, confirmed_at: '2026-10-24T12:00:00Z', ...overrides });
+  const a = mark('a', 'step-a1'), b = mark('b', 'step-a2');
+  const view = (milestones, currentSteps = steps, journey = journeyA) => model.trainingProgressionPresentation({ journeys: [journey], sessions: [], milestones }, versionA, currentSteps);
+  assert.equal(view([a, b]).allMilestonesConfirmed, true);
+  assert.equal(view([a, b]).confirmedMilestones, 2);
+  assert.equal(view([a]).allMilestonesConfirmed, false);
+  assert.equal(view([a, { ...a, id: 'duplicate' }, mark('foreign', 'other')]).allMilestonesConfirmed, false);
+  assert.equal(view([a, mark('wrong-dog', 'step-a2', { dog_id: 'dog-b' })]).allMilestonesConfirmed, false);
+  assert.equal(view([a, mark('wrong-version', 'step-a2', { program_version_id: versionB })]).allMilestonesConfirmed, false);
+  assert.equal(view([a, mark('wrong-journey', 'step-a2', { journey_id: journeyB.id })]).allMilestonesConfirmed, false);
+  assert.equal(view([a, b], []).allMilestonesConfirmed, false);
+  assert.equal(view([a, b], [steps[0], steps[0]]).allMilestonesConfirmed, false);
+  assert.equal(model.trainingProgressionPresentation({ journeys: [], sessions: [], milestones: [a, b] }, versionA, steps).allMilestonesConfirmed, false);
+  const paused = view([a, b], steps, { ...journeyA, state: 'paused' });
+  assert.equal(paused.allMilestonesConfirmed, true);
+  assert.equal(paused.stateLabel, 'Pausad');
+  assert.equal(paused.canStartOrResume, true);
+  assert.equal(view([a]).allMilestonesConfirmed, false, 'undo removes the derived completion status');
+});

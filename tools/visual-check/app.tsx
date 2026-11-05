@@ -183,12 +183,12 @@ function initialProgressionFixture(scenario:string,programs:readonly PublishedTr
   const journey={id:'journey-withdrawn',dog_id:dog.id,program_version_id:'withdrawn-fixture-version',active_step_id:'withdrawn-fixture-step',state:'paused' as const,last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
   return {journeys:[journey],sessions:[{id:'fixture-withdrawn-session',journey_id:journey.id,dog_id:dog.id,program_version_id:journey.program_version_id,step_id:journey.active_step_id,operation_id:'fixture-withdrawn-session-operation',feedback:'paused_early',performed_at:'2026-10-24T10:01:00.000Z'}],milestones:[]};
  }
- const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed','timeline','confirmed-current','confirmable'].includes(scenario))return emptyTrainingProgression();
- const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:['timeline','confirmed-current','confirmable'].includes(scenario)?program.steps[1]?.id??firstStep.id:firstStep.id,state:scenario==='paused'?'paused' as const:'active' as const,
+ const program=programs[0];const firstStep=program?.steps[0];if(!program||!firstStep||!['active','paused','confirmed','timeline','confirmed-current','confirmable','complete','complete-paused'].includes(scenario))return emptyTrainingProgression();
+ const journey={id:`journey-${program.id}`,dog_id:dog.id,program_version_id:program.id,active_step_id:['complete','complete-paused'].includes(scenario)?program.steps.at(-1)?.id??firstStep.id:['timeline','confirmed-current','confirmable'].includes(scenario)?program.steps[1]?.id??firstStep.id:firstStep.id,state:['paused','complete-paused'].includes(scenario)?'paused' as const:'active' as const,
   last_operation_id:'fixture-seed-operation',created_at:'2026-10-24T10:00:00.000Z',updated_at:'2026-10-24T10:00:00.000Z'};
  const sessions=['confirmed','timeline','confirmed-current','confirmable'].includes(scenario)?[{id:'fixture-seed-session',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:['timeline','confirmed-current','confirmable'].includes(scenario)?journey.active_step_id:firstStep.id,
   operation_id:'fixture-seed-session-operation',feedback:'worked_as_planned' as const,performed_at:'2026-10-24T10:01:00.000Z'}]:[];
- const milestones=['confirmed','timeline','confirmed-current','confirmable'].includes(scenario)?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
+ const milestones=['complete','complete-paused'].includes(scenario)?program.steps.map((step,index)=>({id:`fixture-complete-${index}`,journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:step.id,confirmation_operation_id:`fixture-complete-op-${index}`,confirmed_at:'2026-10-24T10:02:00.000Z'})):['confirmed','timeline','confirmed-current','confirmable'].includes(scenario)?[{id:'fixture-seed-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:firstStep.id,
   confirmation_operation_id:'fixture-seed-confirm-operation',confirmed_at:scenario==='timeline'?'2026-08-15T12:00:00.000Z':'2026-10-24T10:02:00.000Z'},
   ...(scenario==='confirmed-current'&&program.steps[1]? [{id:'fixture-current-milestone',journey_id:journey.id,dog_id:dog.id,program_version_id:program.id,step_id:program.steps[1].id,
     confirmation_operation_id:'fixture-current-confirm-operation',confirmed_at:'2026-10-25T10:02:00.000Z'}]:[])]:[];
@@ -467,11 +467,12 @@ function App(){
    if(progressionWrite==='failed'&&!pending)return 'failed';
    if(progressionWrite==='failed-session'&&action.kind==='record_session'&&!pending)return 'failed';
    if(progressionWrite==='failed-confirm-once'&&action.kind==='confirm_step'&&!progressionConfirmFailureUsed.current){progressionConfirmFailureUsed.current=true;return 'failed';}
-   const next=applyProgressionFixtureAction(progressionStore.current,trainingPrograms.find(program=>program.id===versionId),action,operationId);
+   const alreadyApplied=Boolean(pending && progressionStore.current.journeys.some(row=>row.program_version_id===versionId&&row.last_operation_id===operationId));
+   const next=alreadyApplied?progressionStore.current:applyProgressionFixtureAction(progressionStore.current,trainingPrograms.find(program=>program.id===versionId),action,operationId);
    progressionStore.current=next;
-   const shouldReturnUnknown=progressionWrite==='unknown-once'||(progressionWrite==='unknown-session-once'&&action.kind==='record_session');
+   const shouldReturnUnknown=progressionWrite==='unknown-before-retry'||progressionWrite==='unknown-once'||(progressionWrite==='unknown-session-once'&&action.kind==='record_session');
    if(shouldReturnUnknown&&!progressionUnknownTriggered.current&&!pending){
-    progressionUnknownTriggered.current=true;setPendingProgressions(current=>({...current,[versionId]:{action,operationId,status:'unknown'}}));return 'unknown';
+    progressionUnknownTriggered.current=true;if(progressionWrite==='unknown-before-retry')setTrainingProgression(next);setPendingProgressions(current=>({...current,[versionId]:{action,operationId,status:'unknown'}}));return 'unknown';
    }
    if(params.get('progressionRefresh')==='delayed')setTimeout(()=>setTrainingProgression(next),300);else setTrainingProgression(next);setPendingProgressions(current=>{const copy={...current};delete copy[versionId];return copy;});return 'saved';
   }finally{setTrainingBusyStepKey(null);}
@@ -573,7 +574,7 @@ function App(){
   ageWeeks={trainingScenario==='unknown-age'?null:homeAgeInWeeks(dog.birth_date,today)}
   programs={empty||['no-recommendations','paused','paused-unavailable'].includes(trainingScenario)?[]:trainingPrograms}
   paused={pausedTraining} reviewMode={page==='training'&&reviewFixtureEnabled&&!progressionScenario} error={trainingError} busyStepKey={trainingBusyStepKey}
-  progression={trainingProgression} progressionState={progressionReadState} pendingProgressions={pendingProgressions}
+  progression={trainingProgression} progressionState={progressionReadState} pendingProgressions={params.get('completionPending')?{[trainingPrograms[0].id]:{action:{kind:'start_or_resume',programVersionId:trainingPrograms[0].id},operationId:'fixture-pending',status:params.get('completionPending')==='unknown'?'unknown':'pending'}}:pendingProgressions}
   onApplyProgression={applyProgressionFixture} onRetryProgression={retryProgressionFixture}
   initialProgramId={trainingProgramFocus?.programId} initialStepId={trainingProgramFocus?.stepId} onInitialProgramFocusApplied={()=>setTrainingProgramFocus(null)}
   focusStep={page==='home-training-detail'&&focusedChecklistStep?{...focusedChecklistStep,returnPage:'checklist',readOnly:fixtureHistoricalFocus,dateKey:historicalActivity?.dateKey,completed:historicalActivity?.completed}:undefined}

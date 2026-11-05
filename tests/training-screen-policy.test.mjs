@@ -57,8 +57,9 @@ test('journey is the primary progression path and legacy activity marking is dis
 
 test('saved start, next, and back wait for fresh progression props before opening the active step', () => {
   assert.match(screen, /const awaitRefresh = action\.kind === 'start_or_resume' \|\| action\.kind === 'next' \|\| action\.kind === 'back'/);
-  assert.match(screen, /Ändringen är sparad\. Hämtar det aktiva steget\./);
+  assert.match(screen, /Ändringen är sparad\. Läs in träningsresan igen\./);
   assert.match(screen, /setSelection\(\{ programId: waiting\.programId, stepId: journey\.active_step_id \}\)/);
+  assert.match(screen, /accessibilityLabel="Hämta träningsresan igen"/);
   assert.match(screen, /onRetryProgression/);
 });
 
@@ -106,7 +107,7 @@ test('confirmed exercise status is concise, confirmation does not duplicate a su
   assert.match(screen, /accessibilityLabel="Backa till föregående träningssteg"[\s\S]*?styles\.journeyPreviousText\}>Föregående<\/Text>/);
   assert.match(screen, /testID="training-exercise-banner"/);
   assert.match(screen, /testID="training-exercise-step-position" style=\{styles\.timelineStatus\}>Steg/);
-  assert.match(screen, /label=\{journeyStepProgressLabel\(selectedJourneyData\.milestones\.length, selectedProgram\.steps\.length\)\}/);
+  assert.match(screen, /label=\{journeyStepProgressLabel\(selectedJourneyView\.confirmedMilestones, selectedProgram\.steps\.length\)\}/);
   assert.match(screen, /testID="training-ai-origin"/);
   assert.match(screen, /!selectedStep \? <Text style=\{styles\.note\}>Anpassa efter din hund och pausa när det behövs\.<\/Text>/);
   assert.match(screen, /progressionMessage\?\.programId === program\.id \? <Text accessibilityLiveRegion="polite" style=\{styles\.progressionMessage\}/);
