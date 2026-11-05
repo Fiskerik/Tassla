@@ -123,3 +123,14 @@ Sex använda fotografier konverterade utan beskärning med Pillow LANCZOS, JPEG 
 | home-dog-portrait-placeholder.jpg | 2356581 / [1254, 1254] | 52117 / [512, 512] |
 
 Totalt13551755→812436byte (−94,0%). Fokusmetadata och källproportioner kvarstår, Hemporträttets befintliga skala1.08 kvarstår. Inget påstående om uppmätt native decodehastighet. Fulla originalhashar i docs/design/evidence/image-delivery-01/asset-measurements.json. Dog-placeholder-silhuett, transparent maskot och appikon är inte fotografier i denna optimering och är oförändrade.
+
+## Träningsprogrammens bildval — TRAINING-PROGRAM-IMAGES-01
+
+Befintliga dekorativa bilder väljs via exakt `content_id:version` i `src/features/training/training-program-image.ts`, med samma fokus i rekommendationskort, programbanner och övningsmodal. De föreställer inte användarens hund och är dolda för skärmläsare. Källor/genereringshistorik och filstorlekar finns ovan i detta manifest; inga nya bildfiler har tillkommit.
+
+- Hantering v1: `puppy-training.jpg`, fokus (.65, .48), bildförhållande 3:2.
+- Miljö v1: `training-hero-shiba-park.jpg`, fokus (.51, .46), bildförhållande 2:3.
+- Ensamhet v1: `dog-resting.jpg`, fokus (.65, .53), bildförhållande 3:2.
+- Inkallning v1 samt okänd identitet/version: `training-recommendation-puppy-black-tan-park.jpg`, fokus (.50, .35), bildförhållande 4:3.
+
+Kända ansiktsgränser testas geometriskt i kort, programbanner och modal; skärmbilder och visuell granskning finns i `docs/design/evidence/training-program-images-01/`. Fixturens lokala innehåll är utkast, inte bevis för publicering. Native bildbeskärning och tillgänglighet är inte verifierade av RNWeb. Den tidigare reservtexten för shiba har upphört för dessa specifika träningsytor; övriga användningsbegränsningar står kvar.

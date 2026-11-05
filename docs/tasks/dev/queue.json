@@ -14995,6 +14995,75 @@
         }
       ],
       "next_step": "Independent Reviewer approved after fixes; UIcritic partial visual findings documented; QA and checks pass; no native/live claim."
+    },
+    {
+      "id": "TRAINING-PROGRAM-IMAGES-01",
+      "title": "Stabilt bildspråk för träningsprogram",
+      "plan": "docs/tasks/dev/TRAINING-PROGRAM-IMAGES-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg3",
+      "write_paths": [
+        "assets/images/README.md",
+        "src/features/training/training-program-image.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-program-image.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-training-program-images.py",
+        "docs/design/evidence/training-program-images-01",
+        "docs/tasks/dev/TRAINING-PROGRAM-IMAGES-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Stable explicit content identity and version mapping with fallback",
+        "Face visible in recommendations and banners",
+        "No new publication or content"
+      ],
+      "checks": [
+        "pnpm check",
+        "synthetic browser images",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-COMPLETION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect identity/version mapping, Critic v2 conditions, UIcritic BRIEF actual reference and four images."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer; actual crops and face boundaries will be tested in four program variants and fallback."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Explicit identity/version mapping, geometric face bounds and synthetic 375/430/fallback pass; full check 917 pass/1 skip and public iOS export pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS scoped including independently rerun RNWeb ordering/fallback; UIcritic reviewed all images, native/live not tested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer approved source mapping and scoped behavior; panel6 visual differences and native/live limits documented."
+        }
+      ],
+      "next_step": "Independent Reviewer approved source mapping and scoped behavior; panel6 visual differences and native/live limits documented."
     }
   ]
 }

@@ -24,6 +24,19 @@ import { ContentSources } from '../knowledge/ContentSources';
 import { KnowledgeImage } from '../knowledge/KnowledgeImage';
 import { hasVisibleExerciseInstruction, useExerciseKeepAwake } from './exercise-keep-awake';
 import { presentTrainingInstruction } from './training-step-presentation';
+import { trainingProgramImage, type TrainingProgramImage } from './training-program-image';
+
+const trainingImageSources: Record<TrainingProgramImage['key'], number> = {
+  handling: require('../../../assets/images/puppy-training.jpg'),
+  environment: require('../../../assets/images/training-hero-shiba-park.jpg'),
+  alone: require('../../../assets/images/dog-resting.jpg'),
+  generic: require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg'),
+};
+
+function ProgramImage({ program }: { program: PublishedTrainingProgram }) {
+  const image = trainingProgramImage(program);
+  return <KnowledgeImage source={trainingImageSources[image.key]} focus={image.focus} />;
+}
 
 function exerciseProgressLabel(program: PublishedTrainingProgram): string {
   if (program.steps.length === 0) return '';
@@ -357,7 +370,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     </View>;
   }
 
-  function renderJourneyOverview(program: PublishedTrainingProgram) {
+  function renderJourneyOverview(program: PublishedTrainingProgram, showBanner = true) {
     if (reviewMode && isReviewTrainingProgram(program.id)) return null;
     const view = trainingProgressionPresentation(progression, program.id, program.steps);
     const pendingOperation = pendingProgressions[program.id];
@@ -365,10 +378,9 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     const waitingForRefresh = awaitingProgressionRefresh?.programId === program.id
       && awaitingProgressionRefresh.fingerprint === progressionFingerprint(progression, program.id);
     return <View style={styles.journeySection} testID={`training-journey-${program.id}`}>
-      <View style={styles.journeyBanner} testID="training-journey-banner">
-        <KnowledgeImage source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
-          focus={{ x: 0.5, y: 0.35, zoom: 1, aspectRatio: 4 / 3 }} />
-      </View>
+      {showBanner ? <View style={styles.journeyBanner} testID="training-journey-banner">
+        <ProgramImage program={program} />
+      </View> : null}
 {progressionState === 'error' ? <View style={styles.emptyCard}>
         <Text style={styles.body}>Träningsresan kunde inte hämtas just nu. Aktivitetsmarkeringarna finns kvar.</Text>
         <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningsresan igen" onPress={onRetry} />
@@ -700,19 +712,16 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           <Text style={styles.body}>Då kan vi visa vilka publicerade program som passar åldern.</Text>
           {onAddBirthDate ? <Button variant="secondary" label="Lägg till födelsedatum" accessibilityLabel="Lägg till födelsedatum" onPress={onAddBirthDate} /> : null}
         </View> : ageMatchedPrograms.length > 0 ? <View style={[styles.recommendationGrid, stackRecommendations && styles.recommendationGridStacked]}>
-          {ageMatchedPrograms.slice(0, 2).map((program, index) => {
+          {ageMatchedPrograms.slice(0, 2).map((program) => {
             const next = pickNextExercise([program]);
             const step = next && program.steps.find((candidate) => candidate.id === next.stepId);
             if (!next || !step) return null;
-            const source = index === 0
-              ? require('../../../assets/images/training-hero-shiba-park.jpg')
-              : require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg');
             return <View key={program.id} style={styles.recommendationCell}>
               <Card variant="home" onPress={() => setSelection({ programId: program.id, stepId: step.id })}
                 accessibilityLabel={`Öppna nästa övning ${step.title} i ${program.title}`}>
                 <View style={styles.recommendationCard}>
                   <View style={styles.recommendationImageFrame}>
-                    <Image source={source} style={styles.recommendationImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+                    <ProgramImage program={program} />
                   </View>
                   <View style={[styles.recommendationCopy, { minHeight: currentRecommendationCopyHeight }]}
                     onLayout={(event) => recordRecommendationCopyHeight(event.nativeEvent.layout.height)}>
@@ -837,9 +846,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     </>}
 
     <BottomSheet visible={Boolean(selectedProgram)} title={waitingForSelectedRefresh ? 'Träning' : selectedStep?.title ?? 'Om programmet'}
-      headerContent={!waitingForSelectedRefresh && selectedStep ? <View style={styles.exerciseBanner} testID="training-exercise-banner">
-        <KnowledgeImage source={require('../../../assets/images/training-recommendation-puppy-black-tan-park.jpg')}
-          focus={{ x: 0.5, y: 0.35, zoom: 1, aspectRatio: 4 / 3 }} />
+      headerContent={!waitingForSelectedRefresh && selectedStep && selectedProgram ? <View style={styles.exerciseBanner} testID="training-exercise-banner">
+        <ProgramImage program={selectedProgram} />
       </View> : undefined}
       onRequestClose={() => { if (!busyStepKey) { setSelection(null); setAwaitingProgressionRefresh(null); } }}>
       {waitingForSelectedRefresh && progressionState !== 'ready' ? <View style={styles.emptyCard}><Text style={styles.body}>Träningsresan kunde inte hämtas.</Text><Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : waitingForSelectedRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Läs in träningsresan igen.</Text><Button variant="tertiary" label="Hämta igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : <>
@@ -861,7 +869,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         }} />
         {sourceMessage ? <Text accessibilityLiveRegion="polite" style={styles.note}>{sourceMessage}</Text> : null}
       </> : null}
-      {selectedProgram && selectedStep && !selectedTimelineReadOnly && (progressionState !== 'ready' || !progression.journeys.some((journey) => journey.program_version_id === selectedProgram.id) || progression.journeys.find((journey) => journey.program_version_id === selectedProgram.id)?.state === 'paused') ? renderJourneyOverview(selectedProgram) : null}
+      {selectedProgram && selectedStep && !selectedTimelineReadOnly && (progressionState !== 'ready' || !progression.journeys.some((journey) => journey.program_version_id === selectedProgram.id) || progression.journeys.find((journey) => journey.program_version_id === selectedProgram.id)?.state === 'paused') ? renderJourneyOverview(selectedProgram, false) : null}
       {selectedProgram && selectedStep ? renderJourneyExercise(selectedProgram, selectedStep.id) : null}
       {selectedStep && selectedTimelineReadOnly ? <View style={styles.readOnlyNotice} testID="training-step-read-only">
         <Ionicons name="eye-outline" size={tokens.size.iconSm} color={tokens.colors.textSecondary} />
@@ -974,7 +982,6 @@ const styles = StyleSheet.create({
   recommendationCell: { flex: 1, minWidth: 0 },
   recommendationCard: { gap: tokens.spacing.sm },
   recommendationImageFrame: { width: '100%', aspectRatio: 4 / 3, borderRadius: tokens.radius.md, overflow: 'hidden', backgroundColor: tokens.colors.training.card },
-  recommendationImage: { width: '100%', height: '100%' },
   recommendationCopy: { gap: tokens.spacing.xs },
   recommendationProgramTitle: { ...tokens.typography.smallCaption, color: tokens.colors.textSecondary },
   recommendationTitle: { ...tokens.typography.label, color: tokens.colors.textPrimary },

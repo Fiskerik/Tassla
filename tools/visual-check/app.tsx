@@ -150,6 +150,7 @@ const publicTrainingFixture:PublishedTrainingProgram[]=[
  {...initialProgram,id:'fixture-training:trygg-miljo',content_id:'fixture-training:trygg-miljo',currentAgeBreedMatch:true,title:'Trygg i nya miljöer',body:'',sources:[],completedStepIds:[],steps:[{id:'miljo-1',position:0,title:'Titta i lugn takt',instruction:''},{id:'miljo-2',position:1,title:'Ta en kort paus',instruction:''}]},
 ];
 function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTrainingProgram[]{
+ if(scenario==='images'){const items=[...trainingScenarioFixture('feedback',reviewMode),...trainingScenarioFixture('recall-draft',reviewMode)];return new URLSearchParams(location.search).get('imageOrder')==='tail'?[...items.slice(2),...items.slice(0,2)]:items;}
  if(scenario==='feedback')return trainingBundle.items.filter(item=>item.content_type==='training_program').map(item=>{
   const version=item.versions[0];
   return {id:version.id,content_id:item.id,version:version.version,title:version.title,body:version.body,sources:[],is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:version.training_steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))};

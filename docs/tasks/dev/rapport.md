@@ -1506,3 +1506,6 @@ Läsbiblioteket visar nu även runtimevaliderade publicerade checklistversioner 
 
 ### TRAINING-COMPLETION-01 — 2026-11-05
 Verifierad readback ersätter inaktuell progression säkert inom aktuell konto-/hundlease; status «Alla delmål bekräftade» härleds enbart från samma resas giltiga sparade delmål. Sparning, unknown och läsfel maskerar osäkra statusar; undo och samma-ID-kontroll finns kvar. Critic v7, Security, scoped UIcritic, QA och Reviewer granskade; syntetisk RNWeb och mutationsrace PASS, `pnpm check` 915 pass/1 skip, public iOS JS-export PASS. Full panel6-likhet, native Dynamic Type/VoiceOver, RLS och produktion är kvar. Nästa: spårbara programbilder och DatePicker-beslut, därefter hel vardagsresa.
+
+### TRAINING-PROGRAM-IMAGES-01 — 2026-11-05
+Varje känd programversion har explicit, stabilt generiskt bildval och fokus i rekommendation, program och steg; okänd version får samma fasta fallback. UIcritic har sett alla 4:3-kort och låga banners/modaler på 375/430 och fallback: ansikten syns. QA och Reviewer PASS scoped; syntetisk RNWeb, geometritest, `pnpm check` 917 pass/1 skip och public iOS JS-export PASS. Publicerat innehåll/live/RLS/native ej testat; panel6 fortsatt delvis.
