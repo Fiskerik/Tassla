@@ -799,3 +799,6 @@ Träningsöversikt visar bekräftat avslut endast när alla delmål i samma resa
 
 ### TRAINING-PROGRAM-IMAGES-01 — lokalt verifierat 2026-11-05
 Programversioner använder stabila, generiska bilder och samma beskärningsfokus i rekommendation, översikt och övning; okända versioner har en säker fallback. Syntetiska bild- och geometritester, full check och public iOS JS-export PASS. Native och live publicering/RLS är inte testade; ingen distribution utförd.
+
+### DAILY-RETRY-ID-01 — lokalt verifierat 2026-11-05
+Återkontroll av samma rutinändring i Checklistor återanvänder samma mutations-ID; separata användarhandlingar får nya ID. Syntetiskt callbackprov, full check och public iOS JS-export PASS. Verklig RPC/RLS och native är inte testade; ingen distribution utförd.

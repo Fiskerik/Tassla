@@ -3771,10 +3771,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
         const row: DailyRoutineDayDraft = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id,
           date_key: dailyDateKey, time_zone: dailyTimeZone, routine_label_snapshot: routine.label, checklist_snapshot: routine.checklist };
-        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, ExpoCrypto.randomUUID()));
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, mutationId));
       }}
-      onRemoveRoutineFromDay={(row, routine) => { void runDailyMutation(`remove-routine:${row.id}`,
-        () => removeRoutineFromDay(client, row, routine, ExpoCrypto.randomUUID())); }}
+      onRemoveRoutineFromDay={(row, routine) => {
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row, routine, mutationId));
+      }}
       onAddTrainingToDay={(option) => {
         if (!dailyDateKey) return;
         const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId,

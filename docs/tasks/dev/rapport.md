@@ -1509,3 +1509,6 @@ Verifierad readback ersätter inaktuell progression säkert inom aktuell konto-/
 
 ### TRAINING-PROGRAM-IMAGES-01 — 2026-11-05
 Varje känd programversion har explicit, stabilt generiskt bildval och fokus i rekommendation, program och steg; okänd version får samma fasta fallback. UIcritic har sett alla 4:3-kort och låga banners/modaler på 375/430 och fallback: ansikten syns. QA och Reviewer PASS scoped; syntetisk RNWeb, geometritest, `pnpm check` 917 pass/1 skip och public iOS JS-export PASS. Publicerat innehåll/live/RLS/native ej testat; panel6 fortsatt delvis.
+
+### DAILY-RETRY-ID-01 — 2026-11-05
+Checklistans tillägg/borttagning av rutin fångar mutations-ID före closure; samma explicit återkontrollerade operation bevarar ID, hund, dag, tidszon och revision. Security/Critic, QA och Reviewer granskade; verkliga JSX-callbacks med mockat dataanrop PASS, `pnpm check` 921 pass/1 skip, public iOS JS-export PASS. Live RPC/RLS och native ej provat. Separat dagsskiftesplan har Critic STOP v1: utkast, serverankare och tvåstegssparning måste lösas före clockändring.
