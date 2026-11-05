@@ -15219,6 +15219,76 @@
         }
       ],
       "next_step": "Independent Reviewer approved corrected date/time distinction and documented source evidence; no app or dependency change."
+    },
+    {
+      "id": "ROUTINE-SAVED-NOT-SELECTED-01",
+      "title": "Visa när sparad rutin inte lades till på dagen",
+      "plan": "docs/tasks/dev/ROUTINE-SAVED-NOT-SELECTED-01.md v7",
+      "risk_class": "H",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg4",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/RoutineNotSelectedNotice.tsx",
+        "src/features/home/daily-activity-recovery.ts",
+        "src/features/home/README.md",
+        "tests/routine-saved-not-selected.test.mjs",
+        "tests/dog-profile-delete.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-routine-saved-not-selected.py",
+        "docs/design/evidence/routine-saved-not-selected-01",
+        "docs/tasks/dev/ROUTINE-SAVED-NOT-SELECTED-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Honest persistent owner-scoped notice without overwriting pending operations",
+        "No duplicate template or automatic selection after scope change",
+        "Dog/account isolation and explicit recovery"
+      ],
+      "checks": [
+        "pnpm check",
+        "actual two-stage async tests",
+        "synthetic UI",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "EXPO-DATEPICKER-EVALUATION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect, Security and Critic PROCEED v3; UIcritic BRIEF and dog/account deletion requirements recorded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer; implement scope-gated persistent in-memory notice and exact operation retry semantics."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual two-stage and callback harness, synthetic 375/430/140 UI, check 931 pass/1 skip and iOS JS export pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for scope, retry, dog/account deletion and synthetic UI. Native/live/RLS not tested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer and Security approve v7; UIcritic scoped review, untested 140% CTA and native limits recorded."
+        }
+      ],
+      "next_step": "Reviewer and Security approve v7; UIcritic scoped review, untested 140% CTA and native limits recorded."
     }
   ]
 }

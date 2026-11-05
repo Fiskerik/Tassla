@@ -126,7 +126,8 @@ import { latestTrainingReflection } from './home-reflection';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
 import { mergeTrainingReadback, updateTrainingPending } from './training-readback';
-import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
+import { RoutineNotSelectedNotice } from './RoutineNotSelectedNotice';
+import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, routineNotSelectedStore, routineTemplateWithUnknownNotice, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen, type HealthTab } from '../health/HealthScreen';
 import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
 import type { HealthHistoryDraft } from '../health/HealthHistoryScreen';
@@ -279,6 +280,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const navigationPageRef = useRef<ProductPage>(initialPage);
   const [logView, setLogView] = useState<'today' | 'overview'>('today');
   const [insightsPeriod, setInsightsPeriod] = useState<InsightsPeriod>('week');
   const [insightsState, setInsightsState] = useState<InsightsLoadState>({ status: 'loading' });
@@ -313,6 +315,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [initialPage, onInitialPageOpened]);
   const { page, previousPage } = navigation;
   const setPage = useCallback((nextPage: ProductPage) => {
+    navigationPageRef.current = nextPage;
     if (nextPage !== 'log') setHomeLogFocus(null);
     setNavigation((current) => current.page === nextPage
       ? current
@@ -659,6 +662,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
   );
+  const routineNotSelectedSession = routineNotSelectedStore.sessionKey(currentDailyOwnerScope, accountGeneration);
+  const routineNotSelectedNotices = useSyncExternalStore(routineNotSelectedStore.subscribe,
+    () => routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession) ?? null,
+    () => routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession) ?? null);
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
   const currentEditorScope = useMemo(() => ({ ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id }), [accountGeneration, currentSelectionKey, dog.id, session?.user.id]);
   const currentLogEditorScope = { ...currentEditorScope, lifetime: currentLogLifetime };
@@ -1920,6 +1927,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       outcome = { status: 'unknown', ownedDogs: null };
     }
     if (outcome.status === 'deleted' && isCurrentOwner()) {
+      if (ownerId) routineNotSelectedStore.invalidateDog(ownerId, accountGeneration, dog.id);
       onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
     }
     return outcome;
@@ -1936,6 +1944,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       outcome = { status: 'unknown', ownedDogs: null };
     }
     if (outcome.status === 'deleted' && isCurrentOwner()) {
+      if (ownerId) routineNotSelectedStore.invalidateDog(ownerId, accountGeneration, dog.id);
       onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
     }
     return outcome;
@@ -2979,6 +2988,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setPage('checklist');
   }
 
+  function openRoutineNotice(notice: NonNullable<typeof routineNotSelectedNotices>[number]) {
+    const ownerId = session?.user.id;
+    if (!ownerId || !mounted.current || !isCurrentAccount(ownerId, accountGeneration)
+      || accountDeletionInvalidated.current || accountDeleteInFlight.current || accountDeleteBusy
+      || accountDeleteStatus === 'unknown' || accountDeleteStatus === 'confirmed'
+      || navigationPageRef.current !== 'home' || currentSelectionKeyRef.current !== currentSelectionKey
+      || dog.id !== notice.dogId || !ownedDogs.some((item) => item.id === notice.dogId)
+      || dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) || dailyMutationInFlight.current
+      || routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession)?.[0] !== notice) return;
+    openHomeChecklist(true);
+  }
+
   function openHomeProgress() {
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
     setPage('progress');
@@ -3380,6 +3401,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   async function createRoutineForToday(input: DailyRoutineCreateInput): Promise<{ status: 'saved' | 'failed' | 'unknown' } | undefined> {
     const routine = { ...input, dog_id: dog.id, checklist: input.checklist.map((item) => ({ ...item })) };
     const capturedScope = { ownerScope: currentDailyOwnerScope, selectionKey: currentSelectionKey, lifetime: currentDailyLifetime };
+    const ownerId = session?.user.id;
+    const noticeToken = ownerId && dailyDateKey && routine.repeat_unit === null
+      ? routineNotSelectedStore.capture(ownerId, accountGeneration, dog.id) : null;
+    const publishNotSelected = () => {
+      if (!ownerId || !dailyDateKey || !noticeToken || !isCurrentAccount(ownerId, accountGeneration)) return;
+      try {
+        routineNotSelectedStore.enqueue(noticeToken, { ownerId, accountGeneration, dogId: dog.id, dogName: dog.name,
+          routineId: routine.id, routineName: routine.label, dateKey: dailyDateKey, timeZone: dailyTimeZone });
+      } catch { /* A notice must not change a verified write result. */ }
+    };
     const result = await createRoutineAndSelectForToday({
       routine,
       dateKey: dailyDateKey,
@@ -3390,10 +3421,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         selectionKey: currentSelectionKeyRef.current,
         lifetime: dailyLifetime.current,
       }),
-      createRoutine: (draft) => runDailyMutation(`create-routine:${routine.id}`, () => createDailyRoutine(client, draft, dailyTimeZone)),
+      createRoutine: (draft) => runDailyMutation(`create-routine:${routine.id}`,
+        routineTemplateWithUnknownNotice(() => createDailyRoutine(client, draft, dailyTimeZone), publishNotSelected)),
       selectRoutineDay: (day, mutationId) => runDailyMutation(`select-routine:${routine.id}`,
         () => addRoutineToDay(client, day, null, mutationId), false, undefined, createdRoutineDaySelectionRecoveryCopy),
     });
+    if (result.template?.status === 'saved' && routine.repeat_unit === null && dailyDateKey
+      && (result.selection === 'scope-changed' || (result.selection === 'attempted' && !result.daySelection))) publishNotSelected();
     if (result.template?.status !== 'saved') {
       return result.template ? { status: result.template.status === 'unknown' ? 'unknown' : 'failed' } : undefined;
     }
@@ -3475,6 +3509,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       accountDeletionInvalidated.current = true;
       dailyMutationStore.clearOwner(ownerId);
       routineDraftStore.clearOwner(ownerId);
+      routineNotSelectedStore.clearOwner(ownerId);
       checklistRangeGeneration.current += 1;
       checklistRangeFlight.current?.controller.abort();
       checklistRangeFlight.current = null;
@@ -3612,6 +3647,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (result.localSessionCleared && ownerId) {
       dailyMutationStore.clearOwner(ownerId);
       routineDraftStore.clearOwner(ownerId);
+      routineNotSelectedStore.clearSession(ownerId, accountGeneration);
     }
     if (mounted.current) setSignOutError(!result.localSessionCleared);
   }
@@ -3713,6 +3749,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setDailyMessageIsGlobal(false);
       }} /> : null}
     </> : null}
+    {!showDailyRecoveryBanner && !pendingDailyWriteForOwner && !dailyBusyKey && !accountDeleteBusy && accountDeleteStatus !== 'unknown' && accountDeleteStatus !== 'confirmed' && routineNotSelectedNotices?.[0] ? <RoutineNotSelectedNotice
+      notice={routineNotSelectedNotices[0]} activeDogId={dog.id} dogAvailable={ownedDogs.some((item) => item.id === routineNotSelectedNotices[0].dogId)} onHome={page === 'home'}
+      onOpen={page === 'home' && dog.id === routineNotSelectedNotices[0].dogId && ownedDogs.some((item) => item.id === dog.id) ? () => openRoutineNotice(routineNotSelectedNotices[0]) : undefined} onDismiss={() => routineNotSelectedStore.dismiss(currentDailyOwnerScope, accountGeneration, routineNotSelectedNotices[0])} /> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}
         duration={transitionDuration} opacityFrom={transitionOpacityFrom}>{pageContent}</ScreenTransition>

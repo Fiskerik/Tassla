@@ -1515,3 +1515,6 @@ Checklistans tillägg/borttagning av rutin fångar mutations-ID före closure; s
 
 ### EXPO-DATEPICKER-EVALUATION-01 — 2026-11-05
 SDK57:s installerade @expo/ui 57.0.21 är inte en verifierad ersättning för Tasslas fält: webb returnerar null, iOS/Androidflöden skiljer sig och Android ISO-konverterar datum. Architect/Critic, QA och Reviewer har kontrollerat källorna och gällande fältkontrakt. Behåll befintliga väljare tills separat adapter/nativeprov finns; inget nytt paket installerat. `pnpm check` 921 pass/1 skip; native och tillgänglighet otestade.
+
+### ROUTINE-SAVED-NOT-SELECTED-01 — 2026-11-05
+Sparad engångsrutin som klienten inte hann lägga på ursprungsdagen ger ett separat session-/hundskyddat besked; även template unknown → samma-operationsretry → saved täcks. Osäker/pågående mutation visas först och inga dagsval skickas automatiskt. CTA på Hem validerar konto, session, hund, köhuvud och raderingsstatus. Architect/Critic, Security och UIcritic granskade; native/live/RLS/processåterstart återstår. Dagklockans v1 har separat Critic STOP och kräver omarbetad plan för utkast och serverankare.

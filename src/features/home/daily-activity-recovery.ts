@@ -325,3 +325,124 @@ export function routineEditDraftFromConflict(
     repeat,
   };
 }
+
+export type RoutineNotSelectedNotice = Readonly<{
+  ownerId: string;
+  accountGeneration: number;
+  dogId: string;
+  dogName: string;
+  routineId: string;
+  routineName: string;
+  dateKey: string;
+  timeZone: string;
+}>;
+
+type RoutineNoticeToken = Readonly<{ ownerId: string; accountGeneration: number; dogId: string; ownerGeneration: number; sessionGeneration: number; dogGeneration: number }>;
+
+/** In-memory notices are session-scoped and independent of pending write recovery. */
+export function createRoutineNotSelectedStore() {
+  let snapshot: ReadonlyMap<string, readonly RoutineNotSelectedNotice[]> = new Map();
+  const seen = new Set<string>();
+  const ownerGenerations = new Map<string, number>();
+  const sessionGenerations = new Map<string, number>();
+  const dogGenerations = new Map<string, number>();
+  const listeners = new Set<() => void>();
+  const sessionKey = (ownerId: string, generation: number) => JSON.stringify([ownerId, generation]);
+  const dogKey = (ownerId: string, generation: number, dogId: string) => JSON.stringify([ownerId, generation, dogId]);
+  const emit = () => listeners.forEach((listener) => listener());
+  return {
+    getSnapshot: () => snapshot,
+    subscribe(listener: () => void) { listeners.add(listener); return () => listeners.delete(listener); },
+    capture(ownerId: string, accountGeneration: number, dogId: string): RoutineNoticeToken {
+      return { ownerId, accountGeneration, dogId, ownerGeneration: ownerGenerations.get(ownerId) ?? 0,
+        sessionGeneration: sessionGenerations.get(sessionKey(ownerId, accountGeneration)) ?? 0, dogGeneration: dogGenerations.get(dogKey(ownerId, accountGeneration, dogId)) ?? 0 };
+    },
+    enqueue(token: RoutineNoticeToken, notice: RoutineNotSelectedNotice) {
+      const key = sessionKey(token.ownerId, token.accountGeneration);
+      const subjectKey = dogKey(token.ownerId, token.accountGeneration, token.dogId);
+      const identity = JSON.stringify([token.ownerId, token.accountGeneration, token.dogId, notice.routineId]);
+      if (notice.ownerId !== token.ownerId || notice.accountGeneration !== token.accountGeneration || notice.dogId !== token.dogId
+        || token.ownerGeneration !== (ownerGenerations.get(token.ownerId) ?? 0)
+        || token.sessionGeneration !== (sessionGenerations.get(key) ?? 0)
+        || token.dogGeneration !== (dogGenerations.get(subjectKey) ?? 0) || seen.has(identity)) return;
+      seen.add(identity);
+      const next = new Map(snapshot);
+      next.set(key, [...(snapshot.get(key) ?? []), { ...notice }]);
+      snapshot = next;
+      emit();
+    },
+    dismiss(ownerId: string, generation: number, notice: RoutineNotSelectedNotice) {
+      const key = sessionKey(ownerId, generation);
+      const queue = snapshot.get(key);
+      if (!queue || queue[0] !== notice) return;
+      const next = new Map(snapshot);
+      if (queue.length === 1) next.delete(key); else next.set(key, queue.slice(1));
+      snapshot = next;
+      emit();
+    },
+    invalidateDog(ownerId: string, generation: number, dogId: string) {
+      const subjectKey = dogKey(ownerId, generation, dogId);
+      dogGenerations.set(subjectKey, (dogGenerations.get(subjectKey) ?? 0) + 1);
+      const key = sessionKey(ownerId, generation);
+      const queue = snapshot.get(key);
+      if (!queue?.some((notice) => notice.dogId === dogId)) return;
+      const filtered = queue.filter((notice) => notice.dogId !== dogId);
+      const next = new Map(snapshot);
+      if (filtered.length) next.set(key, filtered); else next.delete(key);
+      snapshot = next;
+      emit();
+    },
+    clearSession(ownerId: string, generation: number) {
+      const key = sessionKey(ownerId, generation);
+      sessionGenerations.set(key, (sessionGenerations.get(key) ?? 0) + 1);
+      for (const identity of seen) {
+        const [identityOwner, identityGeneration] = JSON.parse(identity);
+        if (identityOwner === ownerId && identityGeneration === generation) seen.delete(identity);
+      }
+      for (const subject of dogGenerations.keys()) {
+        const [subjectOwner, subjectGeneration] = JSON.parse(subject);
+        if (subjectOwner === ownerId && subjectGeneration === generation) dogGenerations.delete(subject);
+      }
+      if (!snapshot.has(key)) return;
+      const next = new Map(snapshot);
+      next.delete(key);
+      snapshot = next;
+      emit();
+    },
+    clearOwner(ownerId: string) {
+      ownerGenerations.set(ownerId, (ownerGenerations.get(ownerId) ?? 0) + 1);
+      for (const key of sessionGenerations.keys()) if (JSON.parse(key)[0] === ownerId) sessionGenerations.delete(key);
+      const next = new Map(snapshot);
+      for (const key of next.keys()) if (JSON.parse(key)[0] === ownerId) next.delete(key);
+      for (const key of seen) if (JSON.parse(key)[0] === ownerId) seen.delete(key);
+      for (const key of dogGenerations.keys()) if (JSON.parse(key)[0] === ownerId) dogGenerations.delete(key);
+      if (next.size === snapshot.size) return;
+      snapshot = next;
+      emit();
+    },
+    sessionKey,
+  };
+}
+
+export const routineNotSelectedStore = createRoutineNotSelectedStore();
+
+/** The same operation is retried; a verified retry after unknown never starts a day selection. */
+export function routineTemplateWithUnknownNotice<T extends { status: 'saved' | 'failed' | 'unknown' | 'conflict' }>(
+  operation: () => Promise<T>, onSavedAfterUnknown: () => void,
+): () => Promise<T> {
+  let wasUnknown = false;
+  return async () => {
+    let result: T;
+    try {
+      result = await operation();
+    } catch (error) {
+      wasUnknown = true;
+      throw error;
+    }
+    if (result.status === 'saved' && wasUnknown) {
+      try { onSavedAfterUnknown(); } catch { /* A notice must not change a verified write result. */ }
+    }
+    if (result.status === 'unknown') wasUnknown = true;
+    return result;
+  };
+}

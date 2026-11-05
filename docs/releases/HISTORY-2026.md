@@ -805,3 +805,6 @@ Programversioner använder stabila, generiska bilder och samma beskärningsfokus
 
 ### EXPO-DATEPICKER-EVALUATION-01 — utvärderat 2026-11-05
 Native DatePicker har granskats mot installerat SDK57 och Tasslas befintliga datum-/tidsfält. Webbfallback, lokalt datum och skilda plattformsflöden behöver en separat native-testbar adapter före byte. Inget paket eller appbeteende har ändrats.
+
+### ROUTINE-SAVED-NOT-SELECTED-01 — lokal checkpoint 2026-11-05
+Sparad engångsrutin som appen inte hann lägga på ursprungsdagen får ett tydligt besked utan duplicerad sparning. Bekräftad återkontroll använder samma operation; skärm och scope har testats syntetiskt. Live RPC/RLS, native och processåterstart är inte verifierade.

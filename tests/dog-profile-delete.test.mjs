@@ -80,6 +80,7 @@ test('a confirmed delete reaches AppFlow after the dog-keyed workspace unmounts'
   };
   let mounted = false;
   let reconcilePromise;
+  const noticeInvalidations = [];
   const ownerIsCurrent = (candidate, generation) => candidate === ownerId && generation === 4;
   const refreshCurrentOwnerDogs = async () => { rootState.refreshed += 1; return [currentDog]; };
   const reconcileAtRoot = sourceFunction(
@@ -105,6 +106,7 @@ test('a confirmed delete reaches AppFlow after the dog-keyed workspace unmounts'
     {
       session: { user: { id: ownerId } }, accountGeneration: 4, client: {}, dog: { id: dogId },
       dogSelectionGeneration: 7, mounted: { current: mounted }, profileLifetime: { current: 2 },
+      routineNotSelectedStore: { invalidateDog: (...args) => noticeInvalidations.push(args) },
       isCurrentAccount: ownerIsCurrent,
       deleteOwnedDogProfile: async (_client, requestedDogId, isCurrentOwner) => {
         assert.equal(requestedDogId, dogId);
@@ -119,6 +121,7 @@ test('a confirmed delete reaches AppFlow after the dog-keyed workspace unmounts'
   const outcome = await removeFromUnmountedWorkspace();
   await reconcilePromise;
   assert.equal(outcome.status, 'deleted');
+  assert.deepEqual(noticeInvalidations, [[ownerId, 4, dogId]]);
   assert.equal(rootState.refreshed, 1, 'a stale dog-selection generation refreshes the owner list');
   assert.deepEqual(rootState.dogs.map((dog) => dog.id), [currentDog.id]);
   assert.equal(rootState.activeDogIdRef.current, currentDog.id, 'the currently selected dog remains active');
@@ -131,6 +134,7 @@ test('confirmed absence readback after workspace unmount reconciles at AppFlow t
   const ownerId = '91000000-0000-4000-8000-000000000001';
   let mounted = true;
   let callbackCount = 0;
+  const noticeInvalidations = [];
   const checkStatus = sourceFunction(
     workspace,
     /async function readDogDeletionStatus\(\): Promise<OwnedDogDeletionOutcome> \{[\s\S]*?\n  \}/,
@@ -139,6 +143,7 @@ test('confirmed absence readback after workspace unmount reconciles at AppFlow t
     {
       session: { user: { id: ownerId } }, accountGeneration: 4, client: {}, dog: { id: dogId },
       dogSelectionGeneration: 3, mounted: { current: mounted }, profileLifetime: { current: 2 },
+      routineNotSelectedStore: { invalidateDog: (...args) => noticeInvalidations.push(args) },
       isCurrentAccount: (candidate, generation) => candidate === ownerId && generation === 4,
       checkOwnedDogDeletionStatus: async (_client, requestedDogId, isCurrentOwner) => {
         assert.equal(requestedDogId, dogId);
@@ -153,6 +158,7 @@ test('confirmed absence readback after workspace unmount reconciles at AppFlow t
   const outcome = await checkStatus();
   assert.equal(outcome.status, 'deleted');
   assert.equal(callbackCount, 1, 'confirmed absence reaches the root reconciliation callback');
+  assert.deepEqual(noticeInvalidations, [[ownerId, 4, dogId]]);
 });
 
 test('a confirmed response cannot update AppFlow after the account generation changes', async () => {
