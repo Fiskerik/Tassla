@@ -9,7 +9,7 @@ import driveArticles from '../../docs/content/artiklar/drive-articles-v1.json';
 import React,{useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {AppScreen} from '../../src/components/AppPrimitives';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import {Modal, Platform, Pressable, StyleSheet, Text, View} from 'react-native';
 import {BottomNav,Button} from '../../src/components/ui';
 import {ScreenTransition} from '../../src/components/ui/Motion';
 import {HomeScreen} from '../../src/features/home/HomeScreen';
@@ -151,6 +151,7 @@ const publicTrainingFixture:PublishedTrainingProgram[]=[
  {...initialProgram,id:'fixture-training:trygg-miljo',content_id:'fixture-training:trygg-miljo',currentAgeBreedMatch:true,title:'Trygg i nya miljöer',body:'',sources:[],completedStepIds:[],steps:[{id:'miljo-1',position:0,title:'Titta i lugn takt',instruction:''},{id:'miljo-2',position:1,title:'Ta en kort paus',instruction:''}]},
 ];
 function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTrainingProgram[]{
+ if(scenario==='motion-long')return trainingScenarioFixture('unstarted',reviewMode).map((program,index)=>index===0?{...program,steps:program.steps.map((step,i)=>({...step,instruction:`## Mål\nSyntetiskt läsprov för steg ${i+1}.\n\n## Steg för steg\n${Array.from({length:12},(_,n)=>`${n+1}. Provtext för läsbarhet och scrollposition i övning ${i+1}.`).join('\n')}`}))}:program);
  if(scenario==='images'){const items=[...trainingScenarioFixture('feedback',reviewMode),...trainingScenarioFixture('recall-draft',reviewMode)];return new URLSearchParams(location.search).get('imageOrder')==='tail'?[...items.slice(2),...items.slice(0,2)]:items;}
  if(scenario==='feedback')return trainingBundle.items.filter(item=>item.content_type==='training_program').map(item=>{
   const version=item.versions[0];
@@ -305,6 +306,8 @@ function App(){
  if(new URLSearchParams(location.search).get('feedbackProbe')==='true')return <ConfirmationFeedbackFixture/>;
  const params=new URLSearchParams(location.search);const state=params.get('state')||'ready';const firstDayMode=params.get('firstDay')==='true';const logScenario=params.get('logScenario')||'ready';const calendarScenario=params.get('calendarScenario')||'loading';const usesSplitLogFixture=['split-day','split-day-error'].includes(logScenario);const insightsPaged=['insights-paged','insights-local-older'].includes(logScenario);const insightsMany=logScenario==='insights-many';const reviewFixtureEnabled=process.env.EXPO_PUBLIC_TASSLA_REVIEW_CONTENT==='true';
  const [fixtureDate,setFixtureDate]=useState(today);
+ const [motionOverlay,setMotionOverlay]=useState(false);
+ Object.assign(window,{__tasslaMotionOverlay:setMotionOverlay});
  const [fixtureChecklistPlanFocus,setFixtureChecklistPlanFocus]=useState(false);
  const [fixtureHistoricalFocus,setFixtureHistoricalFocus]=useState(false);
  const [accountDeleteFixtureStatus,setAccountDeleteFixtureStatus]=useState<'idle'|'confirmed'|'failed'|'unknown'|'unavailable'|'blocked'>(['confirmed','failed','unknown','unavailable','blocked'].includes(state)?state as 'confirmed'|'failed'|'unknown'|'unavailable'|'blocked':'idle');
@@ -597,6 +600,7 @@ function App(){
  {page==='more'?<MoreScreen onNavigate={destination=>setPage(destination)} signOutError={moreScenario==='signout-error'} signingOut={moreScenario==='signing-out'} onSignOut={()=>{}}/>:null}
  </ScreenTransition></MainSwipeNavigation></AppScreen>}
  </View>
+ <Modal visible={motionOverlay} transparent onRequestClose={()=>setMotionOverlay(false)}><View style={{backgroundColor:'white',padding:24}}><Pressable accessibilityRole="button" onPress={()=>setMotionOverlay(false)}><Text>Stäng testdialog</Text></Pressable><Pressable accessibilityRole="button"><Text>Andra testknappen</Text></Pressable></View></Modal>
  </View>
 }
 const styles=StyleSheet.create({shell:{flex:1},appViewport:{flex:1,minHeight:0}});

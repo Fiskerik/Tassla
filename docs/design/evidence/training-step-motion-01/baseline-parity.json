@@ -1,0 +1,116 @@
+{
+  "immediate": {
+    "baseline": {
+      "after_step": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Trygg vardagsstartPågående · 1 pass · 1 delmålDelmål bekräftat · 24 oktober ·",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": "Stäng",
+        "text": "",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      }
+    },
+    "candidate": {
+      "after_step": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Trygg vardagsstartPågående · 1 pass · 1 delmålDelmål bekräftat · 24 oktober ·",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": "Stäng",
+        "text": "",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      }
+    }
+  },
+  "delayed": {
+    "baseline": {
+      "after_step": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Trygg vardagsstartPågående · 1 pass · 1 delmålDelmål bekräftat · 24 oktober ·",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": "Stäng",
+        "text": "",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      }
+    },
+    "candidate": {
+      "after_step": {
+        "tag": "BODY",
+        "label": null,
+        "text": "Trygg vardagsstartPågående · 1 pass · 1 delmålDelmål bekräftat · 24 oktober ·",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": "Stäng",
+        "text": "",
+        "dialogs": [
+          "En lugn pausSteg 2/31 av 3 delmål bekrä"
+        ]
+      }
+    }
+  },
+  "overlay": {
+    "baseline": {
+      "after_step": {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Stäng testdialog",
+        "dialogs": [
+          "Stäng testdialogAndra testknappen"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Andra testknappen",
+        "dialogs": [
+          "Stäng testdialogAndra testknappen"
+        ]
+      }
+    },
+    "candidate": {
+      "after_step": {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Stäng testdialog",
+        "dialogs": [
+          "Stäng testdialogAndra testknappen"
+        ]
+      },
+      "after_shift_tab": {
+        "tag": "BUTTON",
+        "label": null,
+        "text": "Andra testknappen",
+        "dialogs": [
+          "Stäng testdialogAndra testknappen"
+        ]
+      }
+    }
+  }
+}

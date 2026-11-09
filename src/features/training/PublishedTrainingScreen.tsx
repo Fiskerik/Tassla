@@ -1,7 +1,7 @@
 import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
-import { ActivityIndicator, Animated, Linking, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Linking, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { AppBar, BottomSheet, Button, Card, Dialog, Progress, SectionHeader, Tabs, Toast } from '../../components/ui';
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
@@ -96,7 +96,8 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
   const [savedSession, setSavedSession] = useState<{ programId: string; stepId: string; feedback: TrainingSessionFeedback } | null>(null);
   const [sourceMessage, setSourceMessage] = useState('');
   const [progressionMessage, setProgressionMessage] = useState<{ programId: string; message: string } | null>(null);
-  const [awaitingProgressionRefresh, setAwaitingProgressionRefresh] = useState<{ programId: string; fingerprint: string; operationId?: string } | null>(null);
+  const [awaitingProgressionRefresh, setAwaitingProgressionRefresh] = useState<{ programId: string; fingerprint: string; operationId?: string; navigation?: 'next' | 'back'; sourceStepId?: string } | null>(null);
+  const [stepMotion, setStepMotion] = useState<{ programId: string; stepId: string; key: string; direction: 'forward' | 'backward' } | null>(null);
   const selectionKey = `${openProgramId ?? ''}:${selection?.programId ?? ''}:${selection?.stepId ?? ''}`;
   const [feedbackDraftState, setFeedbackDraftState] = useState<{ key: string; value: TrainingSessionFeedback | null }>({ key: '', value: null });
   const [feedbackPickerState, setFeedbackPickerState] = useState<{ key: string; value: boolean }>({ key: '', value: false });
@@ -214,12 +215,18 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       && (!waiting.operationId || journey?.last_operation_id !== waiting.operationId)) return;
     const program = visiblePrograms.find((item) => item.id === waiting.programId);
     if (!journey || !program?.steps.some((step) => step.id === journey.active_step_id)) return;
+    const fromIndex = program.steps.findIndex((step) => step.id === selection?.stepId && selection.programId === program.id);
+    const toIndex = program.steps.findIndex((step) => step.id === journey.active_step_id);
+    const sameOrigin = Boolean(selection && selection.stepId === waiting.sourceStepId && selection.programId === program.id);
+    const direction = sameOrigin && waiting.navigation === 'next' && toIndex > fromIndex && fromIndex >= 0 ? 'forward'
+      : sameOrigin && waiting.navigation === 'back' && toIndex < fromIndex && toIndex >= 0 ? 'backward' : null;
     startTransition(() => {
+      if (direction && !focusStep) setStepMotion({ programId: program.id, stepId: journey.active_step_id, key: `${program.id}:${journey.active_step_id}:${++animationSequence.current}`, direction });
       setOpenProgramId(waiting.programId);
       setSelection({ programId: waiting.programId, stepId: journey.active_step_id });
       setAwaitingProgressionRefresh(null);
     });
-  }, [awaitingProgressionRefresh, progression, progressionState, visiblePrograms]);
+  }, [awaitingProgressionRefresh, focusStep, progression, progressionState, selection, visiblePrograms]);
 
   useEffect(() => {
     if (!initialProgramId) return;
@@ -289,7 +296,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     if (outcome === 'saved') {
       setProgressionMessage(null);
       if (awaitRefresh) {
-        setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint });
+        setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint, navigation: action.kind === 'next' || action.kind === 'back' ? action.kind : undefined, sourceStepId: action.kind === 'next' || action.kind === 'back' ? action.stepId : undefined });
       }
       setSuccessMessage(action.kind === 'confirm_step' || action.kind === 'record_session' ? '' : confirmation);
       if (action.kind === 'confirm_step') setSavedSession(null);
@@ -321,7 +328,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     if (outcome === 'saved') {
       setProgressionMessage(null);
       if (awaitRefresh) {
-        setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint, operationId: pendingOperation?.operationId });
+        setAwaitingProgressionRefresh({ programId, fingerprint: previousFingerprint, operationId: pendingOperation?.operationId, navigation: action?.kind === 'next' || action?.kind === 'back' ? action.kind : undefined, sourceStepId: action?.kind === 'next' || action?.kind === 'back' ? action.stepId : undefined });
       }
       setSuccessMessage(action?.kind === 'confirm_step' || action?.kind === 'record_session' ? '' : progressionRetrySuccessMessage(action));
       if (action?.kind === 'confirm_step') setSavedSession(null);
@@ -845,11 +852,13 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       </View> : null}
     </>}
 
-    <BottomSheet visible={Boolean(selectedProgram)} title={waitingForSelectedRefresh ? 'Träning' : selectedStep?.title ?? 'Om programmet'}
+    <BottomSheet visible={Boolean(selectedProgram)} title={waitingForSelectedRefresh ? 'Träning' : selectedStep?.title ?? 'Om programmet'} scrollToTopKey={stepMotion?.key ?? 'stationary'}
       headerContent={!waitingForSelectedRefresh && selectedStep && selectedProgram ? <View style={styles.exerciseBanner} testID="training-exercise-banner">
         <ProgramImage program={selectedProgram} />
       </View> : undefined}
       onRequestClose={() => { if (!busyStepKey) { setSelection(null); setAwaitingProgressionRefresh(null); } }}>
+      {selectedProgram ? <TrainingStepTransition motionKey={stepMotion?.key ?? 'stationary'} scope={`${selectedProgram.id}:${selectedStep?.id ?? ''}`}>
+      <View style={styles.sheetContent}>
       {waitingForSelectedRefresh && progressionState !== 'ready' ? <View style={styles.emptyCard}><Text style={styles.body}>Träningsresan kunde inte hämtas.</Text><Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : waitingForSelectedRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Läs in träningsresan igen.</Text><Button variant="tertiary" label="Hämta igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : <>
       {!selectedStep ? <Text style={styles.sheetHeading}>{selectedProgram?.title}</Text> : null}
       {selectedStep && selectedTimelineEntry ? <View style={styles.exerciseProgress}>
@@ -887,12 +896,31 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
       <Toast visible={Boolean(successMessage) && Boolean(selectedProgram)} tone="success" confirmed message={successMessage || undefined} autoDismissMs={2500} onAutoDismiss={() => setSuccessMessage('')} />
       <Toast visible={Boolean(error) && Boolean(selectedProgram)} tone="error" message={error || undefined} onRetry={onRetry} />
       </>}
+      </View>
+      </TrainingStepTransition> : null}
     </BottomSheet>
     <Dialog visible={Boolean(resetTarget && resetTargetIsCurrent)} title={resetTarget ? `Börja om med ${resetTarget.program.title}?` : 'Börja om?'}
       onRequestClose={() => setResetTarget(null)} onConfirm={confirmReset} confirmLabel="Börja om" confirmVariant="destructive" cancelLabel="Avbryt" compactActions>
       <Text style={styles.resetDialogBody}>Markeringarna i det här programmet tas bort. Du får ett meddelande om allt inte går att rensa.</Text>
     </Dialog>
   </View>;
+}
+
+function TrainingStepTransition({ children, motionKey, scope }: { children: React.ReactNode; motionKey: string; scope: string }) {
+  const reduced = useReducedMotion();
+  const [opacity] = useState(() => new Animated.Value(1));
+  const previous = useRef({ motionKey, scope });
+  useLayoutEffect(() => {
+    const before = previous.current;
+    previous.current = { motionKey, scope };
+    opacity.stopAnimation();
+    if (before.motionKey === motionKey || reduced) { opacity.setValue(1); return; }
+    opacity.setValue(0.85);
+    const animation = Animated.timing(opacity, { toValue: 1, duration: tokens.motion.enter, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animation.start();
+    return () => animation.stop();
+  }, [motionKey, opacity, reduced, scope]);
+  return <Animated.View testID="training-step-transition" style={{ opacity }}>{children}</Animated.View>;
 }
 
 function TrainingInstruction({ title, instruction }: { title: string; instruction: string }) {
@@ -1003,6 +1031,7 @@ const styles = StyleSheet.create({
   instructionStep: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.sm },
   instructionNumber: { ...tokens.typography.body, color: tokens.colors.training.accent, fontWeight: '700', minWidth: tokens.size.iconMd },
   instructionStepText: { flex: 1 },
+  sheetContent: { gap: tokens.spacing.md },
   instructionBlocks: { gap: tokens.spacing.sm, alignItems: 'stretch' },
   instructionHeading: { ...tokens.typography.label, color: tokens.colors.training.accent, textAlign: 'left' },
   instructionList: { gap: tokens.spacing.xs },
