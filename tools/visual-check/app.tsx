@@ -158,6 +158,7 @@ function trainingScenarioFixture(scenario:string,reviewMode:boolean):PublishedTr
   return {id:version.id,content_id:item.id,version:version.version,title:version.title,body:version.body,sources:[],is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:version.training_steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))};
  });
  const source=reviewMode?[...REVIEW_TRAINING_PROGRAMS]:publicTrainingFixture;
+ if(scenario==='duplicate-steps')return source.map((program,index)=>index===0?{...program,steps:program.steps.map((step,i)=>i===1?{...step,id:program.steps[0].id}:step)}:program);
  if(scenario==='recall-draft')return [{id:recallDraft.version_id,content_id:recallDraft.content_id,version:recallDraft.version,title:recallDraft.title,body:recallDraft.body,sources:recallDraft.sources,is_ai_generated:true,currentAgeBreedMatch:true,completedStepIds:[],completedAtByStepId:{},steps:recallDraft.steps.map(step=>({id:step.id,position:step.position,title:step.title,instruction:step.instruction}))}];
  if(scenario==='structured')return source.map((program,index)=>index===0?{...program,completedStepIds:[],steps:program.steps.map((step,stepIndex)=>stepIndex===0?{...step,instruction:'Öva lugnt och belöna frivillig kontakt.\n\n## Du behöver\nEn belöning.\n\n## Så gör ni\n1. Välj en lugn plats.\n2. Belöna när hunden kommer.'}:step)}:program);
  if(scenario==='timeline')return source.map((program,index)=>{
@@ -332,7 +333,8 @@ function App(){
  const trainingUnmarkScenario=params.get('trainingUnmark')||'';
  const [trainingPrograms,setTrainingPrograms]=useState<PublishedTrainingProgram[]>(()=>trainingScenarioFixture(trainingScenario,reviewFixtureEnabled));
  const progressionScenario=params.get('progression')||'';
- const [trainingProgression,setTrainingProgression]=useState<TrainingProgressionWorkspace>(()=>initialProgressionFixture(progressionScenario,trainingPrograms));
+ const [trainingProgression,setTrainingProgression]=useState<TrainingProgressionWorkspace>(()=>{const initial=initialProgressionFixture(progressionScenario,trainingPrograms);const first=initial.journeys[0];return params.get('duplicateJourney')==='true'&&first?{...initial,journeys:[first,{...first,id:'fixture-duplicate-journey',updated_at:'2026-10-25T10:00:00.000Z'}]}:initial;});
+ Object.assign(window,{__tasslaSwitchContinuation:(index:number)=>setTrainingProgression(initialProgressionFixture('active',[trainingPrograms[index]]))});
  const progressionStore=useRef(trainingProgression);
  const [pendingProgressions,setPendingProgressions]=useState<Record<string,PendingTrainingProgression>>({});
  const progressionOperationNumber=useRef(0);

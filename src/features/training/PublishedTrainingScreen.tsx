@@ -175,6 +175,11 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     || busyStepKey === `journey:${continuationProgram.id}`));
   const continuationView = continuationProgram && continuationJourney && !continuationUnresolved
     ? trainingProgressionPresentation(progression, continuationProgram.id, continuationProgram.steps) : null;
+  const continuationStepsValid = Boolean(continuationProgram && continuationProgram.steps.length > 0
+    && continuationProgram.steps.every((step) => Boolean(step.id.trim()))
+    && new Set(continuationProgram.steps.map((step) => step.id)).size === continuationProgram.steps.length);
+  const continuationProgressUnavailable = Boolean(continuationJourney && !continuationUnresolved
+    && (!continuationStepsValid || continuationView?.journey?.id !== continuationJourney.id));
   const { width: viewportWidth, fontScale } = useWindowDimensions();
   const stackRecommendations = viewportWidth < 350 || fontScale > 1.2;
   const recommendationLayoutKey = JSON.stringify({
@@ -749,19 +754,25 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
 
         {continuationProgram && continuationStep && (continuationJourney || nextExercise?.kind === 'continue') ? <View style={styles.continuationSection}>
           <SectionHeader title="Fortsätt där ni var" />
-          <Card variant="home" onPress={() => continuationJourney?.state === 'paused' || continuationUnresolved
+          <Card variant="home" onPress={() => continuationJourney?.state === 'paused' || continuationUnresolved || continuationProgressUnavailable
             ? setOpenProgramId(continuationProgram.id) : setSelection({ programId: continuationProgram.id, stepId: continuationStep.id })}
             accessibilityLabel={continuationJourney
               ? continuationUnresolved ? `Öppna träningsresan ${continuationProgram.title}, ${continuationSaving ? 'sparar ändringen' : 'ändringen behöver kontrolleras'}`
-                : `Fortsätt träningsresan ${continuationProgram.title}, aktivt steg ${continuationStep.title}${continuationView?.allMilestonesConfirmed ? ', alla delmål bekräftade' : ''}`
+                : continuationProgressUnavailable ? `Öppna träningsresan ${continuationProgram.title}, framstegen kunde inte visas`
+                  : `${continuationJourney.state === 'paused' ? 'Öppna' : 'Fortsätt'} träningsresan ${continuationProgram.title}, aktivt steg ${continuationStep.title}, ${journeyStepProgressLabel(continuationView?.confirmedMilestones ?? 0, continuationProgram.steps.length)}, ${journeySessionCountLabel(continuationView?.loggedSessions ?? 0)}`
               : `Fortsätt ${continuationProgram.title}, nästa övning ${continuationStep.title}, ${exerciseProgressLabel(continuationProgram)}`}>
             <View style={styles.continuationCard}>
               <Image source={require('../../../assets/images/training-next-step-puppy-corgi-home.jpg')} style={styles.nextImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
               <View style={styles.nextCopy}>
                 <Text style={styles.programTitle}>{continuationProgram.title}</Text>
                 <Text style={styles.recommendationTitle}>{continuationStep.title}</Text>
-                {continuationUnresolved ? <Text style={styles.stepMeta}>{continuationSaving ? 'Sparar ändringen…' : 'Ändringen behöver kontrolleras'}</Text> : continuationView ? <Text style={styles.stepMeta}>{continuationView.allMilestonesConfirmed ? 'Alla delmål bekräftade' : `${continuationView.loggedSessions} loggade pass · ${continuationView.confirmedMilestones} delmål bekräftade av dig`}</Text>
-                  : <Progress value={percentage(continuationProgram)} label={exerciseProgressLabel(continuationProgram)} />}
+                {continuationUnresolved ? <Text style={styles.stepMeta}>{continuationSaving ? 'Sparar ändringen…' : 'Ändringen behöver kontrolleras'}</Text> : continuationProgressUnavailable ? <Text style={styles.stepMeta}>Framstegen kunde inte visas.</Text> : continuationView && continuationJourney ? <>
+                  <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                    <Progress key={`${continuationProgram.id}:${continuationJourney.id}`} value={continuationView.confirmedMilestones / continuationProgram.steps.length * 100}
+                      label={journeyStepProgressLabel(continuationView.confirmedMilestones, continuationProgram.steps.length)} />
+                  </View>
+                  <Text style={styles.stepMeta}>{journeySessionCountLabel(continuationView.loggedSessions)}</Text>
+                </> : <Progress key={`activity:${continuationProgram.id}`} value={percentage(continuationProgram)} label={exerciseProgressLabel(continuationProgram)} />}
               </View>
             </View>
           </Card>

@@ -16,7 +16,7 @@ with sync_playwright() as p:
         page = browser.new_page(viewport={'width':width,'height':height})
         page.on('pageerror', lambda error: errors.append(str(error)))
         page.goto(base+'/?screen=training&trainingScenario=unstarted&progression=complete')
-        expect(page.get_by_text('Alla delmål bekräftade', exact=True)).to_be_visible()
+        expect(page.locator('[role="progressbar"][aria-label="3 av 3 delmål bekräftade"]')).to_be_attached()
         if width==375 and not large: page.screenshot(path=str(out/'recommended-375x844.png'))
         page.get_by_role('tab',name='Alla övningar').click()
         card=page.get_by_role('button',name=re.compile('^Trygg vardagsstart, Pågår,'))
