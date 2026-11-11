@@ -87,7 +87,7 @@ export function KnowledgeScreen({
     : [];
   const introductionIndex = selectedItem ? parseGuideBody(selectedItem.body).findIndex((block) => block.type === 'paragraph') : -1;
   const visibleItems = items
-    .filter((item) => item.contentType === 'article' || item.contentType === 'guide')
+    .filter((item) => item.contentType === 'article' || item.contentType === 'guide' || item.contentType === 'checklist')
     .sort(compareGuideTitle);
   const recommendedItems = visibleItems.filter((item) => item.recommended !== false);
   const candidates = showAllGuides || hasSearchQuery ? visibleItems : recommendedItems;
@@ -140,7 +140,7 @@ export function KnowledgeScreen({
         <Text style={featured ? styles.guidePreview : styles.smallGuidePreview} numberOfLines={2}>{getGuidePreviewText(item.body, 120)}</Text>
         <View style={styles.metadataRow}>
           <Text style={styles.metadataPill}>{readingMinutes(item.body)} min</Text>
-          <Text style={styles.metadataPill}>{item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
+          <Text style={styles.metadataPill}>{item.contentType === 'checklist' ? 'Checklista' : item.contentType === 'guide' ? 'Guide' : 'Artikel'}</Text>
         </View>
       </View>
     </MotionPressable>;
@@ -171,25 +171,25 @@ export function KnowledgeScreen({
   return (
     <View style={[styles.screen, selectedItem && styles.articleScreen]}>
       {selectedItem ? <AppBar mode="Back" title="Kunskap" variant="compact"
-        actionLabel={returnToDevelopment ? 'Tillbaka till Utveckling' : 'Tillbaka till guider'}
+        actionLabel={returnToDevelopment ? 'Tillbaka till Utveckling' : 'Tillbaka till biblioteket'}
         onAction={() => { setOpenedId(null); onSelectContent(null); if (returnToDevelopment) onBack(); }} /> : null}
       {!selectedItem && tab === 'För dig'
         ? returnToTraining
           ? <AppBar mode="Back" title="Kunskap" actionLabel="Tillbaka till Träning" onAction={onBack} />
           : <Text accessibilityRole="header" style={styles.pageTitle}>Kunskap</Text>
         : null}
-      {!selectedItem && tab === 'FAQ' ? <AppBar mode="Back" title="Kunskap" variant="compact" actionLabel="Tillbaka till guider" onAction={() => changeTab('För dig')} /> : null}
-      {!selectedItem && tab === 'Checklistor' && !checklistDetailOpen ? <AppBar mode="Back" title="Kunskap" variant="compact" actionLabel="Tillbaka till guider" onAction={() => changeTab('För dig')} /> : null}
+      {!selectedItem && tab === 'FAQ' ? <AppBar mode="Back" title="Kunskap" variant="compact" actionLabel="Tillbaka till biblioteket" onAction={() => changeTab('För dig')} /> : null}
+      {!selectedItem && tab === 'Checklistor' && !checklistDetailOpen ? <AppBar mode="Back" title="Kunskap" variant="compact" actionLabel="Tillbaka till biblioteket" onAction={() => changeTab('För dig')} /> : null}
 
       {tab === 'För dig' && !selectedItem ? <View style={styles.searchSection}>
         <View style={styles.searchField}>
           {iconsLoaded ? <Ionicons name="search-outline" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" /> : null}
           <TextInput
-            accessibilityLabel={`Sök bland alla artiklar`}
-            accessibilityHint={`Sök bland alla publicerade artiklar.`}
+            accessibilityLabel={`Sök i biblioteket`}
+            accessibilityHint={`Sök bland publicerade artiklar, guider och checklistor.`}
             value={searchQuery}
             onChangeText={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, value }))}
-            placeholder={`Sök bland alla artiklar`}
+            placeholder={`Sök i biblioteket`}
             returnKeyType="search"
             style={styles.searchInput}
           />
@@ -200,25 +200,25 @@ export function KnowledgeScreen({
       </View> : null}
 
       {tab === 'För dig' && !selectedItem ? <Tabs
-        items={['För dig', 'Alla artiklar']}
-        active={showAllGuides ? 'Alla artiklar' : 'För dig'}
+        items={['För dig', 'Biblioteket']}
+        active={showAllGuides ? 'Biblioteket' : 'För dig'}
         variant="rev02-segmented"
         activeTone="home"
-        accessibilityLabel="Visa artiklar"
-        onChange={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: value === 'Alla artiklar' }))}
+        accessibilityLabel="Visa biblioteket"
+        onChange={(value) => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: value === 'Biblioteket' }))}
       /> : null}
 
       {showGuideScreen && contentState === 'loading' && <Skeleton shape="card" lines={4} />}
       {showGuideScreen && contentState === 'error' && <>
-        <MessageCard tone="error">Guiderna kunde inte hämtas. Försök igen.</MessageCard>
+        <MessageCard tone="error">Innehållet kunde inte hämtas. Försök igen.</MessageCard>
         <PrimaryButton title="Försök igen" onPress={onRetry} />
       </>}
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && displayedItems.length === 0 && !hasSearchQuery && <MessageCard>
-        {showAllGuides ? 'Inga artiklar är publicerade ännu.' : 'Inga rekommenderade artiklar för den valda hunden just nu. Du kan läsa alla publicerade artiklar.'}
+        {showAllGuides ? 'Inget innehåll är publicerat ännu.' : 'Inget rekommenderat innehåll för den valda hunden just nu. Du kan läsa allt i biblioteket.'}
       </MessageCard>}
       {tab === 'För dig' && !selectedItem && contentState === 'ready' && visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0
         ? <View style={styles.searchEmpty}>
-          <MessageCard>{`Inga artiklar matchar "${searchQuery.trim()}" i biblioteket.`}</MessageCard>
+          <MessageCard>{`Inget innehåll matchar "${searchQuery.trim()}" i biblioteket.`}</MessageCard>
           <QuietButton title="Rensa sökning" onPress={clearSearch} />
         </View>
         : null}
@@ -236,7 +236,7 @@ export function KnowledgeScreen({
             {cardItems[0] ? renderGuideCard(cardItems[0], true) : null}
             {cardItems.length > 1 ? <View style={styles.articleGrid}>{cardItems.slice(1).map((item) => renderGuideCard(item, false))}</View> : null}
           </>}
-        {hasMoreGuides ? <QuietButton title="Visa alla artiklar" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
+        {hasMoreGuides ? <QuietButton title="Visa biblioteket" onPress={() => setGuideViewState((current) => ({ ...current, scopeKey: searchScopeKey, showAll: true }))} /> : null}
       </View> : null}
 
       {selectedItem && contentState === 'ready' ? <View testID="knowledge-article-reader" style={styles.article}>

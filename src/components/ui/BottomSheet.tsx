@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { tokens } from '../../theme/tokens';
@@ -8,12 +8,22 @@ import { Button } from './Button';
 import { createSheetDrag } from './sheet-drag';
 import { ModalSwipeHandle, useModalSwipeDismiss } from './modal-swipe-dismiss';
 
-export function BottomSheet({ visible, title, children, onRequestClose, onPrimaryAction, primaryLabel = 'Klar', headerContent, footer, keyboardAware = false, scrollContent = true }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onPrimaryAction?: () => void; primaryLabel?: string; headerContent?: ReactNode; footer?: ReactNode; keyboardAware?: boolean; scrollContent?: boolean }) {
+export function BottomSheet({ visible, title, children, onRequestClose, onPrimaryAction, primaryLabel = 'Klar', headerContent, footer, keyboardAware = false, scrollContent = true, scrollToTopKey }: { visible: boolean; title: string; children: ReactNode; onRequestClose: () => void; onPrimaryAction?: () => void; primaryLabel?: string; headerContent?: ReactNode; footer?: ReactNode; keyboardAware?: boolean; scrollContent?: boolean; scrollToTopKey?: string }) {
   const reduced = useReducedMotion();
   const insets = useSafeAreaInsets();
   const [translateY] = useState(() => new Animated.Value(0));
   const [drag] = useState(() => createSheetDrag(translateY));
   const swipe = useModalSwipeDismiss(visible, onRequestClose, reduced);
+  const scrollRef = useRef(null as ScrollView | null);
+  const previousScrollKey = useRef(undefined as string | undefined);
+  useLayoutEffect(() => {
+    if (!visible || !scrollContent) { previousScrollKey.current = undefined; return; }
+    const previous = previousScrollKey.current;
+    previousScrollKey.current = scrollToTopKey;
+    if (previous !== undefined && scrollToTopKey !== undefined && previous !== scrollToTopKey) {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }
+  }, [visible, scrollContent, scrollToTopKey]);
   // Commit current guards before the next gesture can run.
   useLayoutEffect(() => { drag.update({ visible, reduced, onRequestClose }); });
   useEffect(() => () => drag.dispose(), [drag]);
@@ -41,7 +51,7 @@ export function BottomSheet({ visible, title, children, onRequestClose, onPrimar
           </View>
           {headerContent}
           {scrollContent
-            ? <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={[styles.scroll, keyboardAware && styles.keyboardAwareScroll]} contentContainerStyle={styles.content}>{children}</ScrollView>
+            ? <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={[styles.scroll, keyboardAware && styles.keyboardAwareScroll]} contentContainerStyle={styles.content}>{children}</ScrollView>
             : <View style={styles.childScrollBody}>{children}</View>}
           {footer ? <View style={styles.footer}>{footer}</View> : null}
           {onPrimaryAction ? <Button label={primaryLabel} accessibilityLabel={primaryLabel} onPress={onPrimaryAction} /> : null}

@@ -11,6 +11,7 @@ const resolution = registerHooks({ resolve(s, c, next) { return next(s.startsWit
 const { fetchKnowledgeContent } = await import('../src/data/workspace-data.ts');
 resolution.deregister();
 const articles = JSON.parse(await readFile(new URL('../docs/content/artiklar/drive-articles-v1.json', import.meta.url)));
+const bundle = JSON.parse(await readFile(new URL('../docs/content/mvp-content-bundle-v1.json', import.meta.url)));
 const { matchesArticleRules } = articleTargeting;
 
 test('planned homecoming matches Dec 8–15 regardless of the legacy 16-week maximum', () => {
@@ -65,6 +66,34 @@ test('complete library includes nonmatching published articles; recommendations 
     const otherBreed = await fetchKnowledgeContent(client, { id: 'dog', name: 'Nala', breed_id: 'mixed' }, 10);
     assert.equal(otherBreed[1].recommended, false);
     assert.equal(otherBreed.length, 3);
+  } finally { await client.auth.dispose(); }
+});
+
+test('published checklist stays readable outside its age window and drafts fail closed', async () => {
+  const item = bundle.items.find((entry) => entry.slug === 'environment-checklist');
+  const version = item.versions[0];
+  const row = { id: version.id, content_id: item.id, version: version.version, status: 'published', title: version.title,
+    body: version.body, min_age_weeks: version.min_age_weeks, max_age_weeks: version.max_age_weeks,
+    sources: ['https://www.rspca.org.uk/adviceandwelfare/pets/dogs/health/puppycare'], is_ai_generated: true,
+    content_items: { slug: item.slug, content_type: 'checklist' }, content_breed_targets: [], article_version_metadata: null };
+  let response = [row];
+  const client = createClient('https://synthetic.supabase.invalid', 'synthetic-key', {
+    auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: async (url) => {
+      assert.equal(new URL(url).searchParams.get('status'), 'eq.published');
+      return new Response(JSON.stringify(response), { headers: { 'Content-Type': 'application/json' } });
+    } },
+  });
+  try {
+    for (const [age, recommended] of [[16, false], [17, true], [26, true], [27, false]]) {
+      const [entry] = await fetchKnowledgeContent(client, { id: 'dog', breed_id: null }, age);
+      assert.equal(entry.recommended, recommended);
+      assert.equal(entry.id, version.id);
+      assert.equal(entry.contentType, 'checklist');
+      assert.equal(entry.body, version.body);
+      assert.equal(entry.isAiGenerated, true);
+    }
+    response = [{ ...row, status: 'draft' }];
+    await assert.rejects(() => fetchKnowledgeContent(client, { id: 'dog', breed_id: null }, 20));
   } finally { await client.auth.dispose(); }
 });
 

@@ -1473,3 +1473,48 @@ Architect, relevanta Security-granskningar, UI Critic, oberoende QA och Reviewer
 Nästa miljösteg: applicera `supabase/migrations/202610300001_routine_checklist_validation_fix.sql`, därefter `202610300002_daily_active_training_selection.sql` i avsedd Supabasemiljö. De har inte körts live av Codex. Kontoupplåsningen behöver en ny appbuild men ingen ny backendmigration. I det bygget: Mer → Konto → Kontrollera och lås upp, därefter separat vanlig raderingsbekräftelse. Telefonens SecureStore/native Alert/VoiceOver/Dynamic Type och verklig kontoradering återstår att prova. ACCOUNT-DELETE-STATUS-01 förblir blockerad för det verkliga serverutfallet.
 
 Detta är en snapshot före push; distanscommit och PR redovisas i överlämningen. Ingen main-merge, signerad distribution eller live-radering har utförts.
+
+## 2026-10-31 — PREMIUM-FEEDBACK-01, före slutreview
+Vanlig branch feature/complete-mvp-journeys från main f0065da. Expo-haptics57.0.3 och bekräftad bock/livstid samt tryckrespons i fyra vardagsvyer; Next readback-race och utebliven failedtext rättade. Architect/Critic v5, Security och UICritic scopedPASS. Oberoende QA egen fullcheck887pass/1skip +24RNWeb och bildöppningPASS; publiciOSexportPASS. Scope59paths inom deklaration, diffcheckPASS. Fysisknative/liveNT och gamla fullpanelavvikelser öppna. FrozenReviewer nästa, sedan hållbar commit. Roadmap bevarar de fyra huvudresorna och senaste Expo/performancebeställning med framtidsbeslut separata.
+
+## 2026-10-31 — IMAGE-DELIVERY-01
+Sex befintliga foton13551755→812436byte; ExpoImage57.0.5 används i befintliga bilder med samma beräknade crop och källidentitet. Tre tidigare beskurna fasers ansikten/öron justerade. Architect/Critic/Security/UICritic och oberoendeQA/Reviewer PASS avgränsat, actual Expo-web delayedsource375/430, metadata, publiciOSexport och fullcheck PASS. Native enhet/cache/manifestaggregation, fullpanel rev02 fortsatt öppna. Nästa durable commit och startup/träningsvakenhet.
+
+## 2026-10-31 — NATIVE-READINESS-01
+Varm statiskt konfigurerad splash, rootlayout/watchdog och vakenhet enbart för öppen aktiv träningsinstruktion. Expo splash57.0.10/keepawake57.0.2. Architect/Critic/Security/UIcritic scoped, oberoende QA egen fullcheck894pass/1skip, livstidsprov och publiciOS JS-export PASS. Android standardfade nollställd; reducerad rörelse på fysisk enhet ej verifierad. Opaque ikon har liten färgskillnad mot bakgrunden, enhetsutseende och fysisk sleep NT. FrozenReviewer/commit nästa; därefter ursprungliga steg1–4.
+
+## 2026-10-31 — DEVELOPMENT-CONTENT-01, granskat men ej committat
+Bas283b81d. Faktisk publicerad katalog i Utveckling med ålders-/explicitkontext, rekommenderade artiklar/guider och scope-/abort-/clientguard; inga draftfallbacks. Architect/Critic/UICritic, oberoende QA och frozen kodreview PASS inom scope, fullcheck896pass/1skip och synthetic browser9 + visionssubset60PASS. Bilder tydligt syntetiska; fullpanel2/livepublicering/RLS/native ej godkända. Public iOS-export och git-hook kräver paketregister som svarar HTTP503; retry pågår, gamla exporter räknas inte som aktuellt PASS. Home→Checklist återställer59px efterlayout i både tidigare/currentbundle; initialt omedelbart visionsprov läste för tidigt. Nästa: invänta register, slutlig export/commit; därefter steg2–4 och överväg @expo/ui enligt roadmap.
+
+DEVELOPMENT-CONTENT-01 återupptagen: registry svarar igen och slutlig public iOS JS-export PASS. Frozen kodreview/oberoendeQA, 9 syntetiska katalogfall och60 visionskontroller PASS inom scope. Git-hook körs utan undantag före commit. Livekatalog/RLS/native och fullpanelavvikelser öppna. Nästa steg2–4.
+
+
+### HOME-MEMORY-01 — checkpoint 2026-10-31
+Bekräftat delmål prioriteras på Hem och öppnar samma publicerade steg; giltigt träningsminne överlever loggfel/laddning. Pausad/osäker version föreslås inte. Root ensam writer; Architect/Critic, UIcritic på faktiska bilder, oberoende QA och Reviewer har granskat. `pnpm check` 899 pass/1 skip, public iOS JS-export och två syntetiska browserprov PASS. Live/RLS/native och full panellikhet inte verifierade. Nästa steg2-del: sammanhängande historik/exakt loggkälla och uttryckligt bekräftad ringrörelse.
+
+
+### HOME-LOG-SOURCE-01 — 2026-11-04
+Hem öppnar faktiskt loggminne med exakt hund-/event-ID och lokal dag; en tidigare bekräftad rad pinnas före omladdning. Redigering, utkast och olösta mutationer går före ny fokusbegäran; replay och saknad källa öppnar inget annat. Architect/Critic plan v3, UIcritic och oberoende QA har granskat. Syntetisk browser och policytest PASS, `pnpm check` 903 pass/1 skip och public iOS JS-export PASS. Verklig data/RLS/native och komplett panellikhet återstår; reviewer och slutlig checkpoint följer.
+
+
+### DAILY-RING-MOTION-01 — 2026-11-04
+Dekorativ dagsring animerar endast för exakt användarbegärd och bekräftat återläst punkt; räknare/hjälpmedelsvärde uppdateras direkt. Varje preferensändring avbryter intent och pågående interpolation. Arkitekt/Critic, UIcritic med tidsserie, oberoende QA och Reviewer godkända scoped; `pnpm check` 907 pass/1 skip, public iOS JS-export och syntetiskt browserprov PASS. Native, VoiceOver och live/RLS fortsatt otestade, full panel3 har kvarstående visuella avvikelser. Nästa: relevant publicerat tränings-/kunskapsinnehåll samt hel vardagsresa.
+
+
+### KNOWLEDGE-READ-CHECKLIST-01 — 2026-11-04
+Läsbiblioteket visar nu även runtimevaliderade publicerade checklistversioner som Checklista. Samlande Biblioteket/sökcopy anger korrekt omfång; inga nya kryss eller dataskrivningar. Arkitekt/Critic v6, UIcritic på faktiska 375/430/140 %-bilder och oberoende QA på syntetiska data passerade scoped. `pnpm check` 908 pass/1 skip, public iOS JS-export, artikel/profile 12 scenarier och separat faschecklista/FAQ-browser PASS. Live publicering/RLS, native och full panel7 återstår.
+
+### TRAINING-COMPLETION-01 — 2026-11-05
+Verifierad readback ersätter inaktuell progression säkert inom aktuell konto-/hundlease; status «Alla delmål bekräftade» härleds enbart från samma resas giltiga sparade delmål. Sparning, unknown och läsfel maskerar osäkra statusar; undo och samma-ID-kontroll finns kvar. Critic v7, Security, scoped UIcritic, QA och Reviewer granskade; syntetisk RNWeb och mutationsrace PASS, `pnpm check` 915 pass/1 skip, public iOS JS-export PASS. Full panel6-likhet, native Dynamic Type/VoiceOver, RLS och produktion är kvar. Nästa: spårbara programbilder och DatePicker-beslut, därefter hel vardagsresa.
+
+### TRAINING-PROGRAM-IMAGES-01 — 2026-11-05
+Varje känd programversion har explicit, stabilt generiskt bildval och fokus i rekommendation, program och steg; okänd version får samma fasta fallback. UIcritic har sett alla 4:3-kort och låga banners/modaler på 375/430 och fallback: ansikten syns. QA och Reviewer PASS scoped; syntetisk RNWeb, geometritest, `pnpm check` 917 pass/1 skip och public iOS JS-export PASS. Publicerat innehåll/live/RLS/native ej testat; panel6 fortsatt delvis.
+
+### DAILY-RETRY-ID-01 — 2026-11-05
+Checklistans tillägg/borttagning av rutin fångar mutations-ID före closure; samma explicit återkontrollerade operation bevarar ID, hund, dag, tidszon och revision. Security/Critic, QA och Reviewer granskade; verkliga JSX-callbacks med mockat dataanrop PASS, `pnpm check` 921 pass/1 skip, public iOS JS-export PASS. Live RPC/RLS och native ej provat. Separat dagsskiftesplan har Critic STOP v1: utkast, serverankare och tvåstegssparning måste lösas före clockändring.
+
+### EXPO-DATEPICKER-EVALUATION-01 — 2026-11-05
+SDK57:s installerade @expo/ui 57.0.21 är inte en verifierad ersättning för Tasslas fält: webb returnerar null, iOS/Androidflöden skiljer sig och Android ISO-konverterar datum. Architect/Critic, QA och Reviewer har kontrollerat källorna och gällande fältkontrakt. Behåll befintliga väljare tills separat adapter/nativeprov finns; inget nytt paket installerat. `pnpm check` 921 pass/1 skip; native och tillgänglighet otestade.
+
+### ROUTINE-SAVED-NOT-SELECTED-01 — 2026-11-05
+Sparad engångsrutin som klienten inte hann lägga på ursprungsdagen ger ett separat session-/hundskyddat besked; även template unknown → samma-operationsretry → saved täcks. Osäker/pågående mutation visas först och inga dagsval skickas automatiskt. CTA på Hem validerar konto, session, hund, köhuvud och raderingsstatus. Architect/Critic, Security och UIcritic granskade; native/live/RLS/processåterstart återstår. Dagklockans v1 har separat Critic STOP och kräver omarbetad plan för utkast och serverankare.

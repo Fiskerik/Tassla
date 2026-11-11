@@ -1,5 +1,6 @@
+import { MotionPressable } from '../../components/ui/Motion';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MessageCard, PageHeading, QuietButton } from '../../components/AppPrimitives';
 import { SectionHeader } from '../../components/ui';
@@ -43,7 +44,7 @@ export function MoreScreen({ onNavigate, signOutError, signingOut, onSignOut }: 
 function DestinationRow({ icon, title, detail, color, last, onPress }: {
   icon: IconName; title: string; detail: string; color: Accent; last: boolean; onPress: () => void;
 }) {
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${title}. ${detail}`} onPress={onPress}
+  return <MotionPressable accessibilityRole="button" accessibilityLabel={`${title}. ${detail}`} onPress={onPress}
     style={({ pressed }) => [styles.row, !last && styles.rowDivider, pressed && styles.pressed]}>
     <View style={[styles.iconBadge, { backgroundColor: color.bg }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Ionicons name={icon} size={tokens.size.iconMd} color={color.fg} />
@@ -53,7 +54,7 @@ function DestinationRow({ icon, title, detail, color, last, onPress }: {
       <Text style={styles.detail}>{detail}</Text>
     </View>
     <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.textSecondary} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
-  </Pressable>;
+  </MotionPressable>;
 }
 
 const styles = StyleSheet.create({

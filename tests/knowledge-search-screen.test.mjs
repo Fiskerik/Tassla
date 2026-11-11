@@ -11,7 +11,7 @@ const homeCarouselPath = new URL('../src/features/home/HomeCarousel.tsx', import
 test('Knowledge cards and search contain only already selected article and guide records', async () => {
   const screen = await readFile(screenPath, 'utf8');
   const workspace = await readFile(workspacePath, 'utf8');
-  assert.match(screen, /items\s*\.filter\(\(item\) => item\.contentType === 'article' \|\| item\.contentType === 'guide'\)/);
+  assert.match(screen, /items\s*\.filter\(\(item\) => item\.contentType === 'article' \|\| item\.contentType === 'guide' \|\| item\.contentType === 'checklist'\)/);
   assert.match(screen, /\.sort\(compareGuideTitle\)/);
   assert.match(screen, /const candidates = showAllGuides \|\| hasSearchQuery \? visibleItems : recommendedItems/);
   assert.match(workspace, /items=\{visibleGuideContent\}/);
@@ -25,8 +25,8 @@ test('library search copy covers all articles and query state is scoped by sessi
   const workspace = await readFile(workspacePath, 'utf8');
   assert.match(screen, /guideSearchScopeKey\(sessionKey, dogId\)/);
   assert.match(screen, /guideSearchValueForScope\(guideViewState, searchScopeKey\)/);
-  assert.match(screen, /accessibilityLabel=\{`Sök bland alla artiklar`\}/);
-  assert.match(screen, /placeholder=\{`Sök bland alla artiklar`\}/);
+  assert.match(screen, /accessibilityLabel=\{`Sök i biblioteket`\}/);
+  assert.match(screen, /placeholder=\{`Sök i biblioteket`\}/);
   assert.doesNotMatch(screen, /searchHelp/);
   assert.match(workspace, /dogName=\{dog\.name\}/);
 });
@@ -35,7 +35,7 @@ test('guide metadata comes from published fields and secondary destinations stay
   const screen = await readFile(screenPath, 'utf8');
   const imageComponent = await readFile(imageComponentPath, 'utf8');
   assert.match(screen, /readingMinutes\(item\.body\)/);
-  assert.match(screen, /item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
+  assert.match(screen, /item\.contentType === 'checklist' \? 'Checklista' : item\.contentType === 'guide' \? 'Guide' : 'Artikel'/);
   assert.match(screen, /featuredImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
   assert.match(screen, /smallImageFrame: \{ width: '100%', aspectRatio: 16 \/ 9, overflow: 'hidden'/);
   assert.match(screen, /<KnowledgeImage source=\{image\} focus=\{imageFocus\} \/>/);
@@ -59,9 +59,9 @@ test('recommendations are labeled, library view and search include unmatched con
   assert.match(screen, /const cardItems = hasSearchQuery \|\| showAllGuides \? displayedItems : displayedItems\.slice\(0, 3\)/);
   assert.match(screen, /cardItems\.slice\(1\)\.map\(\(item\) => renderGuideCard\(item, false\)\)/);
   assert.match(screen, /const hasMoreGuides = !hasSearchQuery && !showAllGuides && recommendedItems\.length > 3/);
-  assert.match(screen, /title="Visa alla artiklar"/);
+  assert.match(screen, /title="Visa biblioteket"/);
   assert.match(screen, /displayedItems\.length === 1 \? '1 träff' : `\$\{displayedItems\.length\} träffar`/);
-  assert.match(screen, /<Tabs[\s\S]*items=\{\['För dig', 'Alla artiklar'\]\}[\s\S]*accessibilityLabel="Visa artiklar"/);
+  assert.match(screen, /<Tabs[\s\S]*items=\{\['För dig', 'Biblioteket'\]\}[\s\S]*accessibilityLabel="Visa biblioteket"/);
   assert.match(screen, /!hasSearchQuery && !showAllGuides \? <Text accessibilityRole="header" style=\{styles\.recommendationHeading\}>Rekommenderat för er just nu/);
   assert.match(screen, /recommendationHeading: \{ \.\.\.tokens\.typography\.label, color: tokens\.colors\.textPrimary/);
   assert.match(screen, /hasSearchQuery \|\| showAllGuides\s*\? <View style=\{styles\.articleGrid\}>/);
@@ -80,7 +80,7 @@ test('published guide versions retain explicit images and library cards use an e
     '61000000-0000-4000-8000-000000000002:1': 'knowledge-card-puppy-sheltie-window.jpg',
     '61000000-0000-4000-8000-000000000003:1': 'knowledge-card-puppy-cocker-coast.jpg',
     '61000000-0000-4000-8000-000000000004:1': 'knowledge-guide-handling.jpg',
-    '61000000-0000-4000-8000-000000000006:1': 'puppy-resting-carousel.png',
+    '61000000-0000-4000-8000-000000000006:1': 'puppy-resting-carousel.jpg',
     '61000000-0000-4000-8000-000000000007:1': 'knowledge-guide-weight.jpg',
     '61000000-0000-4000-8000-000000000008:1': 'knowledge-guide-vet.jpg',
   });
@@ -128,8 +128,8 @@ test('loading, errors, no published guides and zero matches stay distinct; guide
   assert.match(screen, /function openArticle\(id: string\)/);
   assert.match(screen, /setOpenedId\(null\); onSelectContent\(null\)/);
   assert.doesNotMatch(screen, /function openArticle\([^)]*\)\s*\{[^}]*setGuideViewState/s);
-  assert.match(screen, /Inga rekommenderade artiklar för/);
-  assert.match(screen, /Inga artiklar matchar/);
+  assert.match(screen, /Inget rekommenderat innehåll för/);
+  assert.match(screen, /Inget innehåll matchar/);
   assert.match(screen, /Rensa sökning/);
   assert.match(screen, /displayedItems\.length === 0/);
   assert.match(screen, /changeTab\('Checklistor'\)/);

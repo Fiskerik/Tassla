@@ -1,0 +1,15 @@
+{
+  "results": [
+    "Actual catalog: age and two explicit contexts show validated suggestions and source links",
+    "Client change immediately hides prior catalog and ignores late responses",
+    "Phase retry and reading errors are independent",
+    "Dog and owner changes discard late responses from former scope",
+    "Leaving/unmounting ignores late catalog; published-version reading can return",
+    "375x844: phase card displayed without horizontal overflow (synthetic fixture)",
+    "430x844: phase card displayed without horizontal overflow (synthetic fixture)",
+    "375x667: phase card displayed without horizontal overflow (synthetic fixture)",
+    "375x667-text140: phase card displayed without horizontal overflow (synthetic fixture)"
+  ],
+  "page_errors": [],
+  "limits": "Synthetic published-shaped catalog responses. Live publication, RLS and native device behavior not verified."
+}

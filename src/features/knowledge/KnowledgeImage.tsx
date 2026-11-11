@@ -1,5 +1,6 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { ImageSourcePropType, LayoutChangeEvent } from 'react-native';
 import { knowledgeImageLayout, type KnowledgeImageFocus } from './knowledge-image-layout';
 

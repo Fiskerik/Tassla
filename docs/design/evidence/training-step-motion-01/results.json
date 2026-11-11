@@ -1,0 +1,13 @@
+{
+  "results": [
+    "standard: confirmed next and back",
+    "reduced: confirmed next and back",
+    "failed: only verified readback changes step",
+    "unknown-once: only verified readback changes step",
+    "delayed: only verified readback changes step",
+    "standard text: long instructions return to top in both directions",
+    "140% text: long instructions return to top in both directions"
+  ],
+  "errors": [],
+  "limits": "Synthetic RN Web; native VoiceOver, Dynamic Type and live backend untested."
+}

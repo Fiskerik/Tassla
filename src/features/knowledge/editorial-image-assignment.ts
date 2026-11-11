@@ -21,7 +21,7 @@ const KNOWLEDGE_IMAGE_BY_GUIDE_VERSION = new Map<string, ImageSourcePropType>([
   ['61000000-0000-4000-8000-000000000002:1', require('../../../assets/images/knowledge-card-puppy-sheltie-window.jpg')],
   ['61000000-0000-4000-8000-000000000003:1', require('../../../assets/images/knowledge-card-puppy-cocker-coast.jpg')],
   ['61000000-0000-4000-8000-000000000004:1', require('../../../assets/images/knowledge-guide-handling.jpg')],
-  ['61000000-0000-4000-8000-000000000006:1', require('../../../assets/images/puppy-resting-carousel.png')],
+  ['61000000-0000-4000-8000-000000000006:1', require('../../../assets/images/puppy-resting-carousel.jpg')],
   ['61000000-0000-4000-8000-000000000007:1', require('../../../assets/images/knowledge-guide-weight.jpg')],
   ['61000000-0000-4000-8000-000000000008:1', require('../../../assets/images/knowledge-guide-vet.jpg')],
 ]);

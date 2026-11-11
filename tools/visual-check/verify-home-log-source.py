@@ -1,0 +1,80 @@
+"""Synthetic Home-to-Log source navigation; no live data or native verification."""
+import os, re
+from pathlib import Path
+from playwright.sync_api import expect, sync_playwright
+
+base = os.environ['TASSLA_UI_BASE_URL'].rstrip('/')
+out = Path(os.environ.get('TASSLA_UI_EVIDENCE', 'docs/design/evidence/home-log-source-01'))
+out.mkdir(parents=True, exist_ok=True)
+errors = []
+with sync_playwright() as p:
+    browser = p.chromium.launch(executable_path='/usr/bin/chromium', args=['--no-sandbox','--disable-dev-shm-usage'])
+    for width, height, large in [(375,844,False),(430,844,False),(375,667,True)]:
+        page = browser.new_page(viewport={'width':width,'height':height}, timezone_id='Europe/Stockholm')
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        page.goto(base+'/?screen=home&homeScenario=log-source')
+        if large:
+            page.evaluate('''() => document.querySelectorAll('[dir=auto]').forEach(el => {let s=getComputedStyle(el), f=parseFloat(s.fontSize), l=parseFloat(s.lineHeight); if(Number.isFinite(f))el.style.fontSize=`${f*1.4}px`;if(Number.isFinite(l))el.style.lineHeight=`${l*1.4}px`})''')
+        card = page.get_by_role('button', name=re.compile('Titta vad ni redan har gjort.*Öppna händelsen'))
+        expect(card).to_be_visible()
+        card.scroll_into_view_if_needed();page.screenshot(path=str(out/f'home-{width}x{height}.png'))
+        card.click()
+        modal = page.get_by_test_id('center-modal-bottom-sheet')
+        expect(modal.get_by_role('heading',name='Ändra händelse')).to_be_visible()
+        expect(modal.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Rätt händelse')
+        expect(page.get_by_test_id('log-selected-date')).to_contain_text('24 oktober')
+        if large:
+            modal.evaluate('''root => root.querySelectorAll('[dir=auto]').forEach(el => {let s=getComputedStyle(el), f=parseFloat(s.fontSize), l=parseFloat(s.lineHeight); if(Number.isFinite(f))el.style.fontSize=`${f*1.4}px`;if(Number.isFinite(l))el.style.lineHeight=`${l*1.4}px`})''')
+        page.wait_for_timeout(400)
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        page.screenshot(path=str(out/f'editor-{width}x{height}.png'))
+        if large:
+            note = modal.get_by_label('Anteckning, högst 500 tecken')
+            note.scroll_into_view_if_needed(); expect(note).to_be_visible()
+            delete = modal.get_by_role('button',name='Radera mat från loggen')
+            delete.scroll_into_view_if_needed(); expect(delete).to_be_visible()
+            expect(modal.get_by_role('button',name='Spara ändring')).to_be_visible()
+            page.screenshot(path=str(out/'editor-large-scrolled.png'))
+        modal.get_by_role('button',name=re.compile('Stäng')).first.click()
+        expect(modal).to_have_count(0)
+        expect(page.get_by_test_id('log-selected-date')).to_contain_text('24 oktober')
+        page.close()
+    page = browser.new_page(viewport={'width':375,'height':844}, timezone_id='Europe/Stockholm')
+    page.goto(base+'/?screen=home&homeScenario=log-source&sourceUtc=true')
+    page.get_by_role('button',name=re.compile('Titta vad ni redan har gjort.*Öppna händelsen')).click()
+    expect(page.get_by_test_id('log-selected-date')).to_contain_text('25 oktober')
+    expect(page.get_by_test_id('center-modal-bottom-sheet').get_by_label('Anteckning, högst 500 tecken')).to_have_value('Rätt händelse')
+    page.close()
+    page = browser.new_page(viewport={'width':375,'height':844})
+    page.goto(base+'/?screen=home&homeScenario=log-source&sourceTesting=true')
+    page.evaluate('window.__tasslaLogWrites = 0')
+    page.get_by_role('button',name=re.compile('Titta vad ni redan har gjort.*Öppna händelsen')).click()
+    modal=page.get_by_test_id('center-modal-bottom-sheet')
+    expect(modal.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Rätt händelse')
+    page.get_by_role('button',name='Test: annan händelse',include_hidden=True).dispatch_event('click')
+    expect(modal.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Rätt händelse')
+    modal.get_by_role('button',name=re.compile('Stäng')).first.click()
+    expect(modal).to_have_count(0)
+    page.get_by_role('button',name='Test: samma begäran').click()
+    expect(modal).to_have_count(0)
+    page.get_by_role('button',name='Test: annan hund').click()
+    expect(page.get_by_text('Händelsen kunde inte öppnas just nu.',exact=True)).to_be_visible()
+    expect(modal).to_have_count(0)
+    assert page.evaluate('window.__tasslaLogWrites') == 0
+    page.close()
+    for query, message, filename in [('&sourceMissing=true','Händelsen kunde inte öppnas just nu.','missing.png'),('&mutation=failed','Kunde inte spara','failed.png'),('&mutation=pending','Avsluta eller kontrollera din pågående ändring först.','pending.png'),('&mutation=unsure','Vi kunde inte kontrollera om det sparades','unsure.png'),('&sourceRecovery=true','Du kan fortsätta din tidigare loggändring.','recovery.png')]:
+        page=browser.new_page(viewport={'width':375,'height':844})
+        page.on('pageerror',lambda error:errors.append(str(error)))
+        page.goto(base+'/?screen=home&homeScenario=log-source'+query)
+        page.get_by_role('button',name=re.compile('Titta vad ni redan har gjort.*Öppna händelsen')).click()
+        expect(page.get_by_text(message,exact=True)).to_be_visible()
+        expect(page.get_by_test_id('center-modal-bottom-sheet')).to_have_count(0)
+        page.screenshot(path=str(out/filename))
+        if 'sourceRecovery' in query:
+            page.get_by_role('button',name='Öppna din tidigare loggändring').click()
+            modal=page.get_by_test_id('center-modal-bottom-sheet')
+            expect(modal.get_by_label('Anteckning, högst 500 tecken')).to_have_value('Osparat utkast')
+        page.close()
+    browser.close()
+assert not errors, errors
+print('PASS: exact event and local day, 375/430/large text, missing source and protected failed/recovery; synthetic RNWeb')

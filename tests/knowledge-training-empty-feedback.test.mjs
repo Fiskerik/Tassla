@@ -12,7 +12,7 @@ const [knowledge, training, workspace, profileEditor, profileHeader] = await Pro
 
 test('Knowledge distinguishes no published guides from a search with no matches and keeps separate destinations', () => {
   assert.ok(knowledge.includes("contentState === 'ready' && displayedItems.length === 0 && !hasSearchQuery && <MessageCard>"));
-  assert.ok(knowledge.includes('Inga rekommenderade artiklar för'));
+  assert.ok(knowledge.includes('Inget rekommenderat innehåll för'));
   assert.ok(knowledge.includes("visibleItems.length > 0 && hasSearchQuery && displayedItems.length === 0"));
   assert.ok(knowledge.includes("Card onPress={() => changeTab('Checklistor')} accessibilityLabel=\"Öppna Checklistor\""));
   assert.ok(knowledge.includes("Card onPress={() => changeTab('FAQ')} accessibilityLabel=\"Öppna Vanliga frågor\""));
@@ -21,7 +21,7 @@ test('Knowledge distinguishes no published guides from a search with no matches 
 test('FAQ and Checklistor return to the guide view through their compact back actions', () => {
   assert.match(knowledge, /tab === 'FAQ' \? <AppBar[^\n]+variant="compact"/);
   assert.match(knowledge, /tab === 'Checklistor' && !checklistDetailOpen \? <AppBar[^\n]+variant="compact"/);
-  assert.match(knowledge, /actionLabel="Tillbaka till guider" onAction=\{\(\) => changeTab\('För dig'\)\}/);
+  assert.match(knowledge, /actionLabel="Tillbaka till biblioteket" onAction=\{\(\) => changeTab\('För dig'\)\}/);
   assert.ok(knowledge.includes("onBack={() => changeTab('För dig')}"));
   assert.ok(knowledge.includes("tab === 'För dig' && !selectedItem ? <View style={styles.shortcuts}>"));
 });
@@ -53,7 +53,9 @@ test('Training errors stay retryable and review examples are injected only after
   const fallback = workspace.indexOf('reviewContentEnabled && result.programs.length === 0');
   const readError = workspace.indexOf('}).catch((error: unknown) =>', fallback);
   assert.ok(fallback >= 0 && readError > fallback);
-  assert.match(workspace.slice(readError, readError + 800), /setTrainingState\('error'\)/);
+  const catchBlock = workspace.slice(readError, workspace.indexOf('}).finally(', readError));
+  assert.match(catchBlock, /progressionState: 'error' as const/);
+  assert.match(catchBlock, /setTrainingState\('error'\)/);
   assert.ok(workspace.includes('<PrimaryButton title="Försök igen" onPress={() => { void retryTraining(); }} />'));
 });
 

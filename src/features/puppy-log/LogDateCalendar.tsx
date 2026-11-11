@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MotionPressable } from '../../components/ui/Motion';
+import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { tokens } from '../../theme/tokens';
 import { monthCalendarDays, shiftMonth } from './log-calendar-model';
@@ -25,13 +26,13 @@ export function LogDateCalendar({ month, selectedDate, today, markers, status, o
 
   return <View style={styles.container} accessibilityLabel={`Kalender, ${monthLabel}`}>
     <View style={styles.monthHeader}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa föregående månad" onPress={() => onMonthChange(shiftMonth(month, -1))} style={styles.monthButton}>
+      <MotionPressable accessibilityRole="button" accessibilityLabel="Visa föregående månad" onPress={() => onMonthChange(shiftMonth(month, -1))} style={styles.monthButton}>
         <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
-      </Pressable>
+      </MotionPressable>
       <Text accessibilityRole="header" style={styles.monthTitle}>{monthLabel}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="Visa nästa månad" accessibilityState={{ disabled: nextDisabled }} disabled={nextDisabled} onPress={() => onMonthChange(shiftMonth(month, 1))} style={styles.monthButton}>
+      <MotionPressable accessibilityRole="button" accessibilityLabel="Visa nästa månad" accessibilityState={{ disabled: nextDisabled }} disabled={nextDisabled} onPress={() => onMonthChange(shiftMonth(month, 1))} style={styles.monthButton}>
         <Ionicons name="chevron-forward" size={tokens.size.iconMd} color={nextDisabled ? tokens.colors.textSecondary : tokens.colors.textPrimary} />
-      </Pressable>
+      </MotionPressable>
     </View>
     <View style={styles.grid}>
       {WEEKDAYS.map((day, index) => <Text key={`${day}-${index}`} accessibilityLabel={WEEKDAY_NAMES[index]} style={styles.weekday}>{day}</Text>)}
@@ -44,15 +45,15 @@ export function LogDateCalendar({ month, selectedDate, today, markers, status, o
         const weekday = WEEKDAY_NAMES[(index % 7)];
         const humanDate = new Date(`${dateKey}T12:00:00`).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
         const state = [weekday, humanDate, hasLogs ? 'har loggar' : '', selected ? 'vald' : '', isToday ? 'idag' : '', disabled ? 'avstängd' : ''].filter(Boolean).join(', ');
-        return <Pressable key={dateKey} accessibilityRole="button" accessibilityLabel={state} accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => onSelectDate(dateKey)} style={[styles.dayCell, selected && styles.selectedDay, isToday && styles.todayDay, selected && isToday && styles.selectedTodayDay, disabled && styles.disabledDay]}>
+        return <MotionPressable key={dateKey} accessibilityRole="button" accessibilityLabel={state} accessibilityState={{ selected, disabled }} disabled={disabled} onPress={() => onSelectDate(dateKey)} style={[styles.dayCell, selected && styles.selectedDay, isToday && styles.todayDay, selected && isToday && styles.selectedTodayDay, disabled && styles.disabledDay]}>
           <Text style={[styles.dayText, selected && styles.selectedText, disabled && styles.disabledText]}>{day}</Text>
           {hasLogs ? <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.marker, selected && styles.selectedMarker]} /> : <View style={styles.markerPlaceholder} />}
-        </Pressable>;
+        </MotionPressable>;
       })}
     </View>
     <View accessibilityLiveRegion="polite" accessibilityState={{ busy: status === 'loading' }} style={styles.status}>
       {status === 'loading' ? <Text style={styles.statusText}>Hämtar loggdagar…</Text>
-        : status === 'error' ? <View style={styles.errorRow}><Text style={styles.errorText}>Loggdagar kunde inte hämtas.</Text>{onRetry ? <Pressable accessibilityRole="button" accessibilityLabel="Försök hämta loggdagar igen" onPress={onRetry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></Pressable> : null}</View>
+        : status === 'error' ? <View style={styles.errorRow}><Text style={styles.errorText}>Loggdagar kunde inte hämtas.</Text>{onRetry ? <MotionPressable accessibilityRole="button" accessibilityLabel="Försök hämta loggdagar igen" onPress={onRetry} style={styles.retryButton}><Text style={styles.retryText}>Försök igen</Text></MotionPressable> : null}</View>
           : markers.length === 0 ? <Text style={styles.statusText}>Inga loggar den här månaden</Text> : <Text style={styles.statusText}>Prick visar dagar med loggar</Text>}
     </View>
   </View>;

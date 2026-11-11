@@ -124,7 +124,7 @@ test('recommendation card opens its exact next exercise and full list remains se
 
 test('progress is only reset from inside a program, behind the existing confirmation', () => {
   assert.equal(screen.match(/confirmLabel="Börja om"/g)?.length, 1);
-  assert.match(screen, /completedCount\(openProgram\) > 0 \? <Pressable accessibilityRole="button" accessibilityLabel=\{`Börja om med \$\{openProgram\.title\}`\}/);
+  assert.match(screen, /completedCount\(openProgram\) > 0 \? <MotionPressable accessibilityRole="button" accessibilityLabel=\{`Börja om med \$\{openProgram\.title\}`\}/);
   assert.match(screen, /onPress=\{\(\) => openResetConfirmation\(openProgram\)\}/);
   assert.match(screen, /<Dialog visible=\{Boolean\(resetTarget && resetTargetIsCurrent\)\} title=\{resetTarget \? `Börja om med \$\{resetTarget\.program\.title\}\?` : 'Börja om\?'\}/);
   assert.match(screen, /confirmLabel="Börja om" confirmVariant="destructive" cancelLabel="Avbryt" compactActions/);

@@ -445,3 +445,13 @@ Nästa miljösteg: applicera `supabase/migrations/202610300001_routine_checklist
 Detta är en snapshot före push; distanscommit och PR redovisas i överlämningen. Ingen main-merge, signerad distribution eller live-radering har utförts.
 
 Ägarinstruktion2026-10-30: ”Kan du också rensa cache. Eller liknande så jag kan testa ta bort konto?” godkänner den manuella lokala upplåsningen ovan. Äldre support-only-instruktion gäller inte som förbud för denna verifierade användarhandling. Spärren tas inte bort automatiskt och en ny radering kräver fortsatt uttrycklig bekräftelse.
+
+## 2026-10-31 — konsekvent feedback och godkända Expo-förbättringar
+
+Erik beställer expo-haptics och relevanta konsekvensförbättringar med befintlig Animated/LayoutAnimation, därefter bildkomprimering, expo-splash-screen, expo-image och expo-keep-awake enligt det uttryckligen antagna förslaget. SDK57 behålls; SDK58 är ett separat beslut. Kompatibla nativepaket för dessa angivna ändamål är godkända, inte en allmän dependencyfullmakt. @expo/ui DatePicker utvärderas mot SDK57 och Tasslas datum-/tids-/tillgänglighetskontrakt; ingen obeprövad API-integration. Haptik gäller endast användarinitierad bekräftad ändring och är aldrig enda återkoppling.
+
+Framtida beslut, inte aktivering: widgets efter MVP med integritets-/kostnadsbedömning (namn på låsskärm); store-review efter betan; updates efter val av tjänst/kostnad/releasepolicy; foto efter separat godkänt samtyckes-/lagrings-/raderingsupplägg. Avstå från expo-blur, expo-symbols, expo-linear-gradient, Reanimated och Lottie. Föreslagna SDK58-datum/versioner är källmaterial, ingen verifierad repoegenskap eller uppgraderingsorder. Genomförandestatus och kvarvarande fyra MVP-resor finns i MVP-COMPLETION-261031.md.
+
+### SDK57: genomförd utvärdering av @expo/ui DatePicker — 2026-11-05
+
+Expo 57 anger `@expo/ui ~57.0.21`, som finns transitivt men inte är en direkt appdependency. Källgranskning av 57.0.21 visar att community-väljaren saknar webbimplementation, att iOS och Android har olika bekräftelseflöden och att Android-adaptern serialiserar med ISO-tid. Tasslas fält har lokal datumsemantik och manuell inmatning; datumändringar tillämpas direkt medan tidsmodalen har utkast med bekräfta/avbryt och tillåter tom tid. Ett byte kräver plattformsadapter, fungerande webbfallback samt nativeprov av tidszon/DST, interaktion och tillgänglighet. Rekommendationen är att behålla nuvarande väljare tills sådan verifiering kan göras; ingen dependency eller ny tjänst införs. Detta kompletterar genomgången i `docs/tasks/dev/EXPO-DATEPICKER-EVALUATION-01.md`, utan att ändra Eriks registrerade beslut. Nativebeteende är inte verifierat.

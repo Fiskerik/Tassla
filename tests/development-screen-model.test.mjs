@@ -29,12 +29,11 @@ test('missing, invalid and future birth dates do not produce a development age',
   assert.equal(automaticDogAge('2026-03-20', '2026-03-19'), null);
 });
 
-test('development groups milestone links and opts into the shared screen-title role', () => {
+test('development groups voluntary published phase suggestions with separate sources', () => {
   assert.match(developmentScreen, /titleVariant="screen"/);
   assert.match(developmentScreen, /testID="development-age-journey"/);
-  assert.match(developmentScreen, /testID="development-milestones"/);
-  assert.match(developmentScreen, /Nästa milstolpar/);
-  assert.match(developmentScreen, /Öppna källa \$\{index \+ 1\}: \$\{milestone\.title\}/);
-  assert.match(developmentScreen, /accessibilityElementsHidden>\{index \+ 1\}\)/);
-  assert.doesNotMatch(developmentScreen, /Läs källan/);
+  assert.match(developmentScreen, /testID="development-phase-suggestions"/);
+  assert.match(developmentScreen, /Förslag för fasen/);
+  assert.match(developmentScreen, /<ContentSources sources=\{phase\.sources/);
+  assert.doesNotMatch(developmentScreen, /Nästa milstolpar|generalDevelopmentMilestones/);
 });

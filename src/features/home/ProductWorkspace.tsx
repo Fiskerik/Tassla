@@ -125,7 +125,9 @@ import { localDate } from '../onboarding/dog';
 import { latestTrainingReflection } from './home-reflection';
 import { calendarMarkerScopeKey } from '../puppy-log/log-calendar-model';
 import { acquireTrainingMutationLease, homeAgeInWeeks, ownsTrainingMutationLease, releaseTrainingMutationLease, type TrainingMutationLease } from './home-today';
-import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
+import { mergeTrainingReadback, updateTrainingPending } from './training-readback';
+import { RoutineNotSelectedNotice } from './RoutineNotSelectedNotice';
+import { canStartDailyMutation, clearDailyMutationForLifetimeChange, createdRoutineDaySelectionRecoveryCopy, dailyMutationBlocksAccountDeletion, dailyMutationForOwner, dailyMutationStore, recoverDailyMutation, resolvedDailyMutation, routineConflictAfterWrite, routineDraftStore, routineNotSelectedStore, routineTemplateWithUnknownNotice, type DailyMutationRecoveryCopy, type PendingDailyMutation } from './daily-activity-recovery';
 import { HealthScreen, type HealthTab } from '../health/HealthScreen';
 import { PlannedHealthScreen, type PlannedHealthEditorDraft } from '../health/PlannedHealthScreen';
 import type { HealthHistoryDraft } from '../health/HealthHistoryScreen';
@@ -138,7 +140,8 @@ import { checklistReadCacheScope, clearChecklistReadCache, keepChecklistReadCach
 import { CHECKLIST_DESTINATION_ID, FAQ_DESTINATION_ID, REVIEW_TRAINING_GUIDES, REVIEW_TRAINING_PROGRAMS } from '../knowledge/review-content';
 import { HomeScreen, type HomeDailyTrainingOption } from './HomeScreen';
 import { selectNextHomeTraining } from './home-training-suggestion';
-import { DevelopmentScreen } from './DevelopmentScreen';
+import { DevelopmentCatalogScreen } from './DevelopmentCatalogScreen';
+import { recommendedDevelopmentReading } from './development-content';
 import { DailyProgressScreen } from './DailyProgressScreen';
 import { DailyChecklistScreen } from './DailyChecklistScreen';
 import { checklistFilterRange, checklistRangeReadStatus, deriveHomeDailyActivities, deriveSavedRangeActivities, deriveUpcomingActivities, isRoutineDueOnDate, isValidIanaTimeZone, localDateKeyAt, type ChecklistFilter, type HomeDailyActivity } from './daily-activity-model';
@@ -148,6 +151,7 @@ import { ScreenTransition } from '../../components/ui/Motion';
 import { tokens } from '../../theme/tokens';
 import { decideProfileExit, profileExitScopeKey, type ProfileExitBlockReason, type ProfileExitScope, type ProfileExitSnapshot } from '../onboarding/profile-exit';
 import { LogScreen, type LogEditorRecovery, type QuickLogMutationView } from '../puppy-log/LogScreen';
+import type { LogEventFocus } from '../puppy-log/log-event-focus';
 import { insightsRequestIsCurrent, parseDogEventInsights, type InsightsPeriod, type InsightsRequestScope } from '../puppy-log/insights-model';
 import type { InsightsLoadState } from '../puppy-log/InsightsScreen';
 import { canStartLogMutation, checkInsertRetryOperation, finishLogMutationFlight, isCanonicalAccidentKinds, isLogMutationLifetimeCurrent, logMutationStatusForWriteOutcome, retainLogMutationFlightForLifetime, startLogMutationFlight, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType, type LogMutationFlight } from '../puppy-log/log-model';
@@ -276,6 +280,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 }) {
   const [fontsLoaded, fontError] = useFonts(Ionicons.font);
   const [navigation, setNavigation] = useState<{ page: ProductPage; previousPage: ProductPage }>(() => ({ page: initialPage, previousPage: 'home' }));
+  const navigationPageRef = useRef<ProductPage>(initialPage);
   const [logView, setLogView] = useState<'today' | 'overview'>('today');
   const [insightsPeriod, setInsightsPeriod] = useState<InsightsPeriod>('week');
   const [insightsState, setInsightsState] = useState<InsightsLoadState>({ status: 'loading' });
@@ -294,6 +299,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [plannedHealthHealthFocus, setPlannedHealthHealthFocus] = useState<PlannedHealthHealthFocus | null>(null);
   const [activeHealthTab, setActiveHealthTab] = useState<HealthTab>('Översikt');
   const [logEditorRecovery, setLogEditorRecovery] = useState<ScopedEditorRecovery<LogEditorRecovery> | null>(null);
+  const [homeLogFocus, setHomeLogFocus] = useState<(LogEventFocus & { selectionKey: string; lifetime: string }) | null>(null);
+  const homeLogFocusSequence = useRef(0);
   const [healthHistoryEditorRecovery, setHealthHistoryEditorRecovery] = useState<ScopedEditorRecovery<HealthHistoryDraft> | null>(null);
   const [weightEditorRecovery, setWeightEditorRecovery] = useState<ScopedEditorRecovery<WeightEditorDraft> | null>(null);
   const [plannedHealthEditorRecovery, setPlannedHealthEditorRecovery] = useState<ScopedEditorRecovery<PlannedHealthEditorDraft> | null>(null);
@@ -308,6 +315,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [initialPage, onInitialPageOpened]);
   const { page, previousPage } = navigation;
   const setPage = useCallback((nextPage: ProductPage) => {
+    navigationPageRef.current = nextPage;
+    if (nextPage !== 'log') setHomeLogFocus(null);
     setNavigation((current) => current.page === nextPage
       ? current
       : { page: nextPage, previousPage: current.page });
@@ -438,7 +447,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const [trainingError, setTrainingError] = useState('');
   const [busyStepKey, setBusyStepKey] = useState<string | null>(null);
   const [pendingTrainingProgressions, setPendingTrainingProgressions] = useState<Record<string, PendingTrainingProgression>>({});
-  const [trainingProgramFocus, setTrainingProgramFocus] = useState<string | null>(null);
+  const [trainingProgramFocus, setTrainingProgramFocus] = useState<{ scope: string; programId: string; stepId?: string } | null>(null);
   const [dailySnapshot, setDailySnapshot] = useState<DailyActivitySnapshot | null>(null);
   const [dailyTrainingSnapshot, setDailyTrainingSnapshot] = useState<TrainingWorkspaceSnapshot | null>(null);
   const [dailySnapshotLifetime, setDailySnapshotLifetime] = useState('');
@@ -653,6 +662,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
     () => dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) ?? null,
   );
+  const routineNotSelectedSession = routineNotSelectedStore.sessionKey(currentDailyOwnerScope, accountGeneration);
+  const routineNotSelectedNotices = useSyncExternalStore(routineNotSelectedStore.subscribe,
+    () => routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession) ?? null,
+    () => routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession) ?? null);
   const currentDailyLifetime = `${session?.user.id ?? 'signed-out'}:${accountGeneration}:${currentSelectionKey}:${dailyDateKey ?? 'invalid-date'}:${dailyTimeZone}:${reviewContentEnabled ? 'review' : 'public'}`;
   const currentEditorScope = useMemo(() => ({ ownerId: session?.user.id ?? 'signed-out', accountGeneration, selectionKey: currentSelectionKey, dogId: dog.id }), [accountGeneration, currentSelectionKey, dog.id, session?.user.id]);
   const currentLogEditorScope = { ...currentEditorScope, lifetime: currentLogLifetime };
@@ -816,6 +829,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     currentSelectionKeyRef.current = currentSelectionKey;
     currentDailyOwnerScopeRef.current = currentDailyOwnerScope;
     if (previousTrainingLifetime.current !== currentSelectionKey) {
+      setHomeLogFocus(null);
       trainingGeneration.current += 1;
       trainingReadFlight.current?.controller.abort();
       trainingReadFlight.current = null;
@@ -1167,6 +1181,15 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         && currentSelectionKeyRef.current === scope;
       if (current) {
         if (trainingSnapshotRef.current?.scope === scope) {
+          const unavailable = { ...trainingSnapshotRef.current.value, progressionState: 'error' as const };
+          trainingSnapshotRef.current = { ...trainingSnapshotRef.current, value: unavailable };
+          setTraining(unavailable);
+          const dailyCache = dailySnapshotRef.current;
+          if (dailyCache?.scope === dailyLifetime.current) {
+            const dailyUnavailable = { ...dailyCache.training, progressionState: 'error' as const };
+            dailySnapshotRef.current = { ...dailyCache, training: dailyUnavailable };
+            setDailyTrainingSnapshot(dailyUnavailable);
+          }
           setTrainingState('ready');
           setTrainingError('Programmen kunde inte uppdateras. Du ser senast hämtade program.');
         } else {
@@ -1261,6 +1284,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         return true;
       }
       if (hasSnapshot) {
+        if (trainingResult.status === 'fulfilled') {
+          trainingSnapshotRef.current = { scope: currentSelectionKey, value: trainingResult.value, updatedAt: Date.now() };
+          setTraining(trainingResult.value);
+          setTrainingSelectionKey(currentSelectionKey);
+          setTrainingState('ready');
+          const latestDaily = dailySnapshotRef.current;
+          if (latestDaily?.scope === scope) {
+            dailySnapshotRef.current = { ...latestDaily, training: trainingResult.value };
+            setDailyTrainingSnapshot(trainingResult.value);
+          }
+        }
         setDailyRefreshError(true);
       } else {
         setDailySnapshot(null);
@@ -1790,13 +1824,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   const calendarDataMonth = calendarDataIsCurrent ? logCalendarData.key.slice(calendarKeyPrefix.length) : '';
   const nextProgram = training.programs.find((program) => program.steps.some((step) => !program.completedStepIds.includes(step.id)));
   const nextStep = nextProgram?.steps.find((step) => !nextProgram.completedStepIds.includes(step.id));
-  const nextTrainingSuggestion = selectNextHomeTraining(training.programs);
   const trainingProgressionSummary = training.progressionState === 'ready'
     ? latestHomeTrainingSummary(training.progression, training.programs) : null;
   const progressionPendingPrefix = `${currentTrainingOwnerDogScope}:`;
   const progressionPendingByVersion = Object.fromEntries(Object.entries(pendingTrainingProgressions)
     .filter(([key]) => key.startsWith(progressionPendingPrefix))
     .map(([key, value]) => [key.slice(progressionPendingPrefix.length), value]));
+  const unavailableSuggestionVersions = new Set([
+    ...Object.keys(progressionPendingByVersion),
+    ...training.progression.journeys.filter((journey) => journey.state === 'paused').map((journey) => journey.program_version_id),
+    ...training.paused.map((entry) => entry.versionId),
+  ]);
+  const nextTrainingSuggestion = selectNextHomeTraining(training.programs, unavailableSuggestionVersions);
   const dailyTrainingOptionsState = dailyTrainingForView?.progressionState === 'ready' && Object.keys(progressionPendingByVersion).length === 0 ? 'ready' : 'error';
   const dailyTrainingOptions: HomeDailyTrainingOption[] = dailyStateForView === 'ready' && dailyDateKey && dailyTrainingForView
     ? buildDailyTrainingOptions(dog.id, dailyTrainingForView.programs, dailyTrainingForView.progression,
@@ -1888,6 +1927,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       outcome = { status: 'unknown', ownedDogs: null };
     }
     if (outcome.status === 'deleted' && isCurrentOwner()) {
+      if (ownerId) routineNotSelectedStore.invalidateDog(ownerId, accountGeneration, dog.id);
       onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
     }
     return outcome;
@@ -1904,6 +1944,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       outcome = { status: 'unknown', ownedDogs: null };
     }
     if (outcome.status === 'deleted' && isCurrentOwner()) {
+      if (ownerId) routineNotSelectedStore.invalidateDog(ownerId, accountGeneration, dog.id);
       onDogDeleted?.(dog.id, dogSelectionGeneration, outcome.ownedDogs);
     }
     return outcome;
@@ -2947,6 +2988,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     setPage('checklist');
   }
 
+  function openRoutineNotice(notice: NonNullable<typeof routineNotSelectedNotices>[number]) {
+    const ownerId = session?.user.id;
+    if (!ownerId || !mounted.current || !isCurrentAccount(ownerId, accountGeneration)
+      || accountDeletionInvalidated.current || accountDeleteInFlight.current || accountDeleteBusy
+      || accountDeleteStatus === 'unknown' || accountDeleteStatus === 'confirmed'
+      || navigationPageRef.current !== 'home' || currentSelectionKeyRef.current !== currentSelectionKey
+      || dog.id !== notice.dogId || !ownedDogs.some((item) => item.id === notice.dogId)
+      || dailyMutationStore.getSnapshot().get(currentDailyOwnerScope) || dailyMutationInFlight.current
+      || routineNotSelectedStore.getSnapshot().get(routineNotSelectedSession)?.[0] !== notice) return;
+    openHomeChecklist(true);
+  }
+
   function openHomeProgress() {
     setHomeChecklistScope({ selectionKey: currentSelectionKey, dailyLifetime: currentDailyLifetime, openManagerOnEntry: false });
     setPage('progress');
@@ -3035,7 +3088,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function isTrainingMutationCurrent(lease: TrainingMutationLease): boolean {
-    return ownsTrainingMutationLease(trainingMutationLease.current, lease, currentSelectionKeyRef.current, accountDeletionInvalidated.current);
+    return mounted.current && ownsTrainingMutationLease(trainingMutationLease.current, lease, currentSelectionKeyRef.current, accountDeletionInvalidated.current);
   }
 
   function finishTrainingMutation(lease: TrainingMutationLease) {
@@ -3062,36 +3115,66 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     try {
       const outcome = await applyTrainingProgressionOperation(client, dog.id, operationId, action);
       if (outcome.status === 'saved') {
-        setPendingTrainingProgressions((current) => {
-          const next = { ...current };
-          delete next[pendingKey];
-          return next;
-        });
-        if (isTrainingMutationCurrent(lease) && currentTrainingOwnerDogScope === ownerDogScope) {
-          try {
-            const refreshed = await reloadTraining({ force: true, supersede: true, publishToDaily: true });
-            if (analyticsSnapshot && refreshed.progressionState === 'ready' && isTrainingMutationCurrent(lease)) {
-              const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, refreshed.progression, dog.id, action, operationId);
-              if (analyticsEvent) void analyticsService.track(analyticsEvent);
-            }
-          } catch {
-            setTrainingError('Ändringen sparades, men den uppdaterade träningsresan kunde inte hämtas. Försök igen.');
+        if (!isTrainingMutationCurrent(lease)) {
+          if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+            updateTrainingPending(current, pendingKey, operationId, 'unknown'));
+          return 'unknown';
+        }
+        const verified = outcome.value.workspace;
+        const updated = mergeTrainingReadback(trainingSnapshotRef.current, lease.scope, dog.id, verified);
+        const activeDailyScope = dailyLifetime.current;
+        const interruptedDaily = dailyReadFlight.current;
+        trainingGeneration.current += 1;
+        trainingReadFlight.current?.controller.abort();
+        trainingReadFlight.current = null;
+        dailyGeneration.current += 1;
+        dailyReadFlight.current?.controller.abort();
+        dailyReadFlight.current = null;
+        setDailyRefreshing(false);
+        if (updated) {
+          trainingSnapshotRef.current = updated;
+          setTraining(updated.value);
+          setTrainingSelectionKey(lease.scope);
+          setTrainingState('ready');
+          setTrainingError('');
+        } else {
+          trainingSnapshotRef.current = null;
+          setTraining({ programs: [], paused: [], progression: emptyTrainingProgressionWorkspace(), progressionState: 'error' });
+          setTrainingSelectionKey(lease.scope);
+          setTrainingState('error');
+          setTrainingError('Ändringen sparades, men träningsresan behöver hämtas igen.');
+        }
+        const dailyCache = dailySnapshotRef.current;
+        if (dailyCache?.scope === activeDailyScope) {
+          const dailyUpdate = mergeTrainingReadback({ scope: dailyCache.scope, value: dailyCache.training, updatedAt: dailyCache.dailyUpdatedAt },
+            activeDailyScope, dog.id, verified);
+          if (dailyUpdate) {
+            dailySnapshotRef.current = { ...dailyCache, training: dailyUpdate.value };
+            setDailyTrainingSnapshot(dailyUpdate.value);
+          } else {
+            const unavailable = { ...dailyCache.training, progressionState: 'error' as const };
+            dailySnapshotRef.current = { ...dailyCache, training: unavailable };
+            setDailyTrainingSnapshot(unavailable);
           }
+        } else if (interruptedDaily?.scope === activeDailyScope) {
+          setDailyState('error');
+          setDailyStateLifetime(activeDailyScope);
+          setDailyRefreshError(false);
+        }
+        setPendingTrainingProgressions((current) => updateTrainingPending(current, pendingKey, operationId, 'clear'));
+        if (updated && analyticsSnapshot) {
+          const analyticsEvent = progressionAnalyticsEvent(analyticsSnapshot, verified, dog.id, action, operationId);
+          if (analyticsEvent) void analyticsService.track(analyticsEvent);
         }
         return 'saved';
       }
       if (outcome.status === 'unknown') {
-        setPendingTrainingProgressions((current) => ({
-          ...current,
-          [pendingKey]: { action, operationId, status: 'unknown' },
-        }));
+        if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+          updateTrainingPending(current, pendingKey, operationId, 'unknown'));
         return 'unknown';
       }
-      setPendingTrainingProgressions((current) => {
-        const next = { ...current };
-        delete next[pendingKey];
-        return next;
-      });
+      if (mounted.current && !accountDeletionInvalidated.current) setPendingTrainingProgressions((current) =>
+        updateTrainingPending(current, pendingKey, operationId, 'clear'));
       return 'failed';
     } finally {
       finishTrainingMutation(lease);
@@ -3318,6 +3401,16 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   async function createRoutineForToday(input: DailyRoutineCreateInput): Promise<{ status: 'saved' | 'failed' | 'unknown' } | undefined> {
     const routine = { ...input, dog_id: dog.id, checklist: input.checklist.map((item) => ({ ...item })) };
     const capturedScope = { ownerScope: currentDailyOwnerScope, selectionKey: currentSelectionKey, lifetime: currentDailyLifetime };
+    const ownerId = session?.user.id;
+    const noticeToken = ownerId && dailyDateKey && routine.repeat_unit === null
+      ? routineNotSelectedStore.capture(ownerId, accountGeneration, dog.id) : null;
+    const publishNotSelected = () => {
+      if (!ownerId || !dailyDateKey || !noticeToken || !isCurrentAccount(ownerId, accountGeneration)) return;
+      try {
+        routineNotSelectedStore.enqueue(noticeToken, { ownerId, accountGeneration, dogId: dog.id, dogName: dog.name,
+          routineId: routine.id, routineName: routine.label, dateKey: dailyDateKey, timeZone: dailyTimeZone });
+      } catch { /* A notice must not change a verified write result. */ }
+    };
     const result = await createRoutineAndSelectForToday({
       routine,
       dateKey: dailyDateKey,
@@ -3328,10 +3421,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         selectionKey: currentSelectionKeyRef.current,
         lifetime: dailyLifetime.current,
       }),
-      createRoutine: (draft) => runDailyMutation(`create-routine:${routine.id}`, () => createDailyRoutine(client, draft, dailyTimeZone)),
+      createRoutine: (draft) => runDailyMutation(`create-routine:${routine.id}`,
+        routineTemplateWithUnknownNotice(() => createDailyRoutine(client, draft, dailyTimeZone), publishNotSelected)),
       selectRoutineDay: (day, mutationId) => runDailyMutation(`select-routine:${routine.id}`,
         () => addRoutineToDay(client, day, null, mutationId), false, undefined, createdRoutineDaySelectionRecoveryCopy),
     });
+    if (result.template?.status === 'saved' && routine.repeat_unit === null && dailyDateKey
+      && (result.selection === 'scope-changed' || (result.selection === 'attempted' && !result.daySelection))) publishNotSelected();
     if (result.template?.status !== 'saved') {
       return result.template ? { status: result.template.status === 'unknown' ? 'unknown' : 'failed' } : undefined;
     }
@@ -3413,6 +3509,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       accountDeletionInvalidated.current = true;
       dailyMutationStore.clearOwner(ownerId);
       routineDraftStore.clearOwner(ownerId);
+      routineNotSelectedStore.clearOwner(ownerId);
       checklistRangeGeneration.current += 1;
       checklistRangeFlight.current?.controller.abort();
       checklistRangeFlight.current = null;
@@ -3550,6 +3647,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (result.localSessionCleared && ownerId) {
       dailyMutationStore.clearOwner(ownerId);
       routineDraftStore.clearOwner(ownerId);
+      routineNotSelectedStore.clearSession(ownerId, accountGeneration);
     }
     if (mounted.current) setSignOutError(!result.localSessionCleared);
   }
@@ -3651,6 +3749,9 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         setDailyMessageIsGlobal(false);
       }} /> : null}
     </> : null}
+    {!showDailyRecoveryBanner && !pendingDailyWriteForOwner && !dailyBusyKey && !accountDeleteBusy && accountDeleteStatus !== 'unknown' && accountDeleteStatus !== 'confirmed' && routineNotSelectedNotices?.[0] ? <RoutineNotSelectedNotice
+      notice={routineNotSelectedNotices[0]} activeDogId={dog.id} dogAvailable={ownedDogs.some((item) => item.id === routineNotSelectedNotices[0].dogId)} onHome={page === 'home'}
+      onOpen={page === 'home' && dog.id === routineNotSelectedNotices[0].dogId && ownedDogs.some((item) => item.id === dog.id) ? () => openRoutineNotice(routineNotSelectedNotices[0]) : undefined} onDismiss={() => routineNotSelectedStore.dismiss(currentDailyOwnerScope, accountGeneration, routineNotSelectedNotices[0])} /> : null}
     <MainSwipeNavigation enabled={isMainTabDestination(page) && !(page === 'knowledge' && knowledgeDetailOpen)} onSwipe={handleMainSwipe}>
       <ScreenTransition transitionKey={page} direction={transitionDirection} axis="x" distance={transitionDistance}
         duration={transitionDuration} opacityFrom={transitionOpacityFrom}>{pageContent}</ScreenTransition>
@@ -3659,7 +3760,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
 
   function renderPage() {
     const page = visiblePage;
-    if (page === 'progress') return <DailyProgressScreen
+    if (page === 'progress') return <DailyProgressScreen key={currentDailyLifetime} scopeKey={currentDailyLifetime}
       dogName={dog.name} dateKey={dailyDateKey ?? ''} state={dailyStateForView} activities={dailyActivities}
       refreshing={dailyRefreshing} refreshError={dailyRefreshError} mutationBusy={dailyMutationIsBusy}
       mutationKey={dailyMessageKey} mutationMessage={dailyMutationMessageForView} mutationError={dailyMutationErrorForView}
@@ -3709,10 +3810,13 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         const skipped = dailySnapshotForView?.routineDaySkips.find((row) => row.routine_id === routine.id) ?? null;
         const row: DailyRoutineDayDraft = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, routine_id: routine.id,
           date_key: dailyDateKey, time_zone: dailyTimeZone, routine_label_snapshot: routine.label, checklist_snapshot: routine.checklist };
-        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, ExpoCrypto.randomUUID()));
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`select-routine:${routine.id}`, () => addRoutineToDay(client, row, skipped, mutationId));
       }}
-      onRemoveRoutineFromDay={(row, routine) => { void runDailyMutation(`remove-routine:${row.id}`,
-        () => removeRoutineFromDay(client, row, routine, ExpoCrypto.randomUUID())); }}
+      onRemoveRoutineFromDay={(row, routine) => {
+        const mutationId = ExpoCrypto.randomUUID();
+        void runDailyMutation(`remove-routine:${row.id}`, () => removeRoutineFromDay(client, row, routine, mutationId));
+      }}
       onAddTrainingToDay={(option) => {
         if (!dailyDateKey) return;
         const row: DailyTrainingSelection = { id: ExpoCrypto.randomUUID(), dog_id: dog.id, program_version_id: option.versionId,
@@ -3745,9 +3849,18 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       trainingProgressionState={training.progressionState}
       pendingProgression={homeProgressionPending}
       nextTrainingSuggestion={nextTrainingSuggestion}
-      onOpenTrainingJourney={(programVersionId) => {
-        setTrainingProgramFocus(programVersionId);
+      onOpenTrainingJourney={(programVersionId, stepId) => {
+        setTrainingProgramFocus({ scope: currentSelectionKey, programId: programVersionId, stepId });
         navigateMainTab('training');
+      }}
+      onOpenLogEvent={(eventId) => {
+        if (currentSelectionKeyRef.current !== currentSelectionKey || logLifetime.current !== currentLogLifetime) return;
+        const available = logDataLifetimeRef.current === currentLogLifetime
+          && eventRows.current.some((row) => row.id === eventId && row.dog_id === dog.id);
+        if (available) logPinnedEventIds.current.add(eventId);
+        setHomeLogFocus({ requestId: ++homeLogFocusSequence.current, eventId, dogId: dog.id, available,
+          selectionKey: currentSelectionKey, lifetime: currentLogLifetime });
+        navigateMainTab('log');
       }}
       onRetryProgression={(programVersionId) => { void retryProgressionOperation(programVersionId); }}
       onRetryTrainingProgressionRead={() => { void retryTraining(); }}
@@ -3814,12 +3927,17 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       }}
       onRetryContent={() => { void retryContent(); }}
     />;
-    if (page === 'development') return <DevelopmentScreen
+    if (page === 'development' && session?.user.id) return <DevelopmentCatalogScreen
+      key={currentSelectionKey}
+      client={client}
+      ownerId={session.user.id}
+      accountGeneration={accountGeneration}
+      isCurrentAccount={isCurrentAccount}
       dogName={dog.name}
       birthDate={dog.birth_date}
       today={homeToday}
-      guides={age === null ? [] : visibleContent.filter((item) => item.contentType === 'guide')}
-      guidesState={age === null ? 'ready' : visibleContentState}
+      guides={recommendedDevelopmentReading(visibleContent)}
+      guidesState={visibleContentState}
       onBack={() => {
         setDevelopmentFocus(null);
         setPage('home');
@@ -3835,6 +3953,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       onUpdate={updateEvent} onDelete={(id) => deleteEvent(id)} mode="cloud"
       editorRecovery={visibleLogEditorRecovery} onEditorRecoveryChange={onLogEditorRecoveryChange}
       onActiveEditorChange={setActiveLogEditor}
+      initialEventFocus={homeLogFocus?.selectionKey === currentSelectionKey && homeLogFocus.lifetime === currentLogLifetime ? homeLogFocus : null}
+      onEventFocusConsumed={(requestId) => setHomeLogFocus((current) => current?.requestId === requestId ? null : current)}
       calendarMarkerMonth={calendarDataMonth} calendarMarkers={calendarDataIsCurrent ? logCalendarData.markers : []}
       calendarStatus={calendarDataIsCurrent ? logCalendarData.status : 'loading'}
       onLoadCalendarMonth={(month) => { void loadLogCalendarMarkers(month); }} onCancelCalendarRead={cancelLogCalendarRead}
@@ -3858,7 +3978,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         busyStepKey={busyStepKey} error={trainingError} onCompleteStep={completeStep} onUnmarkStep={unmarkStep}
         progression={training.progression} progressionState={training.progressionState}
         pendingProgressions={progressionPendingByVersion} onApplyProgression={applyProgressionAction}
-        onRetryProgression={retryProgressionOperation} initialProgramId={trainingProgramFocus}
+        onRetryProgression={retryProgressionOperation} initialProgramId={trainingProgramFocus?.scope === currentSelectionKey ? trainingProgramFocus.programId : null}
+        initialStepId={trainingProgramFocus?.scope === currentSelectionKey ? trainingProgramFocus.stepId : undefined}
         onInitialProgramFocusApplied={() => setTrainingProgramFocus(null)}
         onContinue={() => setTrainingError('')} onResetProgram={(program) => { void resetProgram(program); }}
         onRetry={() => { void retryTraining(); }}

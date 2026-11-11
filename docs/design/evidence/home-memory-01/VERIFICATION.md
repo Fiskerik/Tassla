@@ -1,0 +1,5 @@
+# HOME-MEMORY-01 — visuell och funktionell evidens
+
+Underlaget är RN Web med syntetiska sparade rader, inte produktionsdata. `after-panel1.png` jämför ändrad Hemvy mot vision_rev02 panel 1. Verifierarna `verify-home-memory.py` och `verify-traction-home.py` provade 375/430 px, 375×667 och 140 % text, faktiskt daterat delmål, exakt träningssteg, förslag, tomt läge, loggladdning/fel, fel/unknown och borttaget steg. `synthetic-milestone-text140-bottom.png` visar att dagskort och genvägar kan nås genom scroll. Ingen horisontell overflow eller pageerror rapporterades. Syntetiskt fel och unknown är inte live RLS- eller backendprov.
+
+UIcritic har faktiskt öppnat före/efter och tillståndsbilderna. §14.16: färger, typografi och ändrade kortformer fungerar visuellt för den provade fixturen. Komposition och bildspråk avviker fortfarande från panelen: extra fas-/historikkort och åldersremsan under porträttet; fem faktiska dagsrader och längre stegtitel än fixturens är inte visuellt verifierade. Full panellikhet, uppmätt kontrast, native iOS/Android, VoiceOver/Dynamic Type, faktisk lagring och RLS är NOT TESTABLE här.

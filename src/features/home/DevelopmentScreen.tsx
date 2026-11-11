@@ -1,5 +1,6 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useMemo, useState } from 'react';
-import { Alert, Image, Linking, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Svg, { Path } from 'react-native-svg';
 import { AppBar, Button, Skeleton } from '../../components/ui';
@@ -10,17 +11,22 @@ import type { HomeContent } from '../../data/app-data';
 import { tokens } from '../../theme/tokens';
 import { automaticDogAge } from '../onboarding/dog';
 import { homeAgeInWeeks } from './home-today';
-import { generalDevelopmentMilestones } from './development-milestones';
+import { developmentPhase } from './development-content';
+import { ContentSources } from '../knowledge/ContentSources';
+import type { ChecklistContext, ChecklistTemplate } from '../knowledge/checklist-model';
 import { developmentTitle } from './development-title';
 
 type GuideState = 'loading' | 'ready' | 'error';
 
-export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesState, onBack, onOpenGuide, onRetryGuides }: {
+export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesState, phaseTemplates = [], phaseState = 'loading', onRetryPhases, onBack, onOpenGuide, onRetryGuides }: {
   dogName: string;
   birthDate: string | null;
   today: string;
   guides: readonly HomeContent[];
   guidesState: GuideState;
+  phaseTemplates?: readonly ChecklistTemplate[];
+  phaseState?: GuideState;
+  onRetryPhases?: () => void;
   onBack: () => void;
   onOpenGuide: (contentId: string) => void;
   onRetryGuides: () => void;
@@ -28,7 +34,9 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   const age = useMemo(() => automaticDogAge(birthDate, today), [birthDate, today]);
   const ageProgress = useMemo(() => age && age.stage !== 'VUXEN' ? progressToAdultStage(birthDate, today) : null, [age, birthDate, today]);
   const phaseLabel = age ? formatStage(age.stage) : null;
-  const milestones = useMemo(() => generalDevelopmentMilestones(homeAgeInWeeks(birthDate, today)), [birthDate, today]);
+  const [context, setContext] = useState<ChecklistContext>('by_age');
+  const ageWeeks = homeAgeInWeeks(birthDate, today);
+  const phase = developmentPhase(phaseTemplates, ageWeeks, context);
 
   return <View style={styles.page} testID="development-screen">
     <View style={styles.heroSection}>
@@ -60,31 +68,45 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
       </View>
     </View>
 
-    <View style={styles.milestoneCard} testID="development-milestones">
-      <Text style={styles.sectionTitle} accessibilityRole="header">Nästa milstolpar</Text>
-      <Text style={styles.milestoneCaption}>Ungefärligt – hundar utvecklas olika.</Text>
-      {milestones.map((milestone, index) => <View key={milestone.id}>
-        {index > 0 ? <View style={styles.milestoneDivider} /> : null}
-        <MotionPressable testID={`development-milestone-${milestone.id}`} accessibilityRole="link"
-          accessibilityLabel={`Öppna källa ${index + 1}: ${milestone.title}`}
-          onPress={() => { void Linking.openURL(milestone.sourceUrl).catch(() => Alert.alert('Källan kunde inte öppnas', 'Försök igen när anslutningen fungerar.')); }} style={styles.milestoneRow}>
-          <ThemedIcon name={milestone.icon} tone={milestone.tone} size="medium" testID={`development-milestone-icon-${milestone.id}`} />
-          <View style={styles.milestoneCopy}>
-            <View style={styles.milestoneTitleRow}>
-              <Text style={styles.milestoneTitle}>{milestone.title}</Text>
-              <Text style={styles.sourceNumber} accessibilityElementsHidden>{index + 1})</Text>
-            </View>
-            <Text style={styles.milestoneDescription}>{milestone.description}</Text>
+    <View style={styles.phaseCard} testID="development-phase-suggestions">
+      <Text style={styles.sectionTitle} accessibilityRole="header">Förslag för fasen</Text>
+      <Text style={styles.phaseCaption}>Välj det som passar er. Hundar utvecklas olika.</Text>
+      <View accessibilityRole="tablist" accessibilityLabel="Välj sammanhang" style={styles.contextChoices}>
+        {([['by_age', 'Utifrån ålder'], ['before_homecoming', 'Före hemkomst'], ['first_days', 'Första dagarna']] as const).map(([value, label]) =>
+          <MotionPressable key={value} accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: context === value }}
+            aria-selected={context === value}
+            onPress={() => setContext(value)} style={[styles.contextChoice, context === value && styles.contextSelected]}>
+            <Text style={[styles.contextText, context === value && styles.contextTextSelected]}>{label}</Text>
+          </MotionPressable>)}
+      </View>
+      {phaseState === 'loading' ? <Skeleton shape="row" lines={2} /> : null}
+      {phaseState === 'error' ? <View style={styles.guideState}>
+        <MessageCard tone="error">Förslagen kunde inte hämtas.</MessageCard>
+        <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta fasförslag igen" onPress={onRetryPhases ?? (() => undefined)} />
+      </View> : null}
+      {phaseState === 'ready' && phase ? <>
+        <Text style={styles.phaseTitle}>{phase.title}</Text>
+        <Text style={styles.phaseCaption}>AI-genererat innehåll</Text>
+        {phase.items.map((item, index) => <View key={item.key} testID={`development-phase-item-${item.key}`}>
+          {index > 0 ? <View style={styles.phaseDivider} /> : null}
+          <View style={styles.phaseRow}>
+            <ThemedIcon name="sparkles-outline" tone="training" size="medium" />
+            <Text style={styles.phaseItem}>{item.title}</Text>
           </View>
-          <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
-        </MotionPressable>
-      </View>)}
-      {milestones.length === 0 ? <Text style={styles.milestoneDescription}>{age ? 'Inga generella hållpunkter för den här åldern just nu.' : 'Hållpunkter visas när ett giltigt födelsedatum finns.'}</Text> : null}
+        </View>)}
+        <ContentSources sources={phase.sources ?? []} onOpenSource={(url) => {
+          void Linking.openURL(url).catch(() => Alert.alert('Källan kunde inte öppnas', 'Försök igen när anslutningen fungerar.'));
+        }} />
+      </> : null}
+      {phaseState === 'ready' && !phase ? <Text style={styles.phaseEmpty}>
+        {context === 'by_age' && (ageWeeks === null || ageWeeks < 8)
+          ? 'Välj sammanhang för att se förslag.' : 'Det finns inga publicerade förslag för valet just nu.'}
+      </Text> : null}
     </View>
 
     <View style={styles.guideSection}>
       <View style={styles.sectionHeading}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Guider för er</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Rekommenderad läsning</Text>
         {guides.length > 0 && guidesState === 'ready' ? <Text style={styles.guideCount}>{guides.length}</Text> : null}
       </View>
       {guidesState === 'loading' ? <View style={styles.loadingGuides}>
@@ -92,11 +114,10 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
         <Skeleton shape="row" lines={2} />
       </View> : null}
       {guidesState === 'error' ? <View style={styles.guideState}>
-        <MessageCard tone="error">Guiderna kunde inte hämtas just nu.</MessageCard>
-        <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta utvecklingsguider igen" onPress={onRetryGuides} />
+        <MessageCard tone="error">Rekommendationerna kunde inte hämtas just nu.</MessageCard>
+        <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta rekommenderad läsning igen" onPress={onRetryGuides} />
       </View> : null}
-      {guidesState === 'ready' && age === null ? <MessageCard>Åldersrelevanta guider visas när ett giltigt födelsedatum finns.</MessageCard> : null}
-      {guidesState === 'ready' && age !== null && guides.length === 0 ? <MessageCard>Det finns inga publicerade guider för den här åldern ännu.</MessageCard> : null}
+      {guidesState === 'ready' && guides.length === 0 ? <MessageCard>Det finns ingen rekommenderad läsning just nu.</MessageCard> : null}
       {guidesState === 'ready' ? guides.map((guide) => <GuideRow key={guide.id} guide={guide} onPress={() => onOpenGuide(guide.id)} />) : null}
     </View>
   </View>;
@@ -167,14 +188,11 @@ function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge:
 }
 
 function GuideRow({ guide, onPress }: { guide: HomeContent; onPress: () => void }) {
-  const teaser = guide.body.split(/\n\s*\n/).find((part) => part.trim() && !/^\s*#{1,6}\s/.test(part))
-    ?.replace(/^\s*[-*]\s+/gm, '').trim();
-  return <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna guide: ${guide.title}`}
+  return <MotionPressable accessibilityRole="button" accessibilityLabel={`Öppna: ${guide.title}`}
     onPress={onPress} style={({ pressed }) => [styles.guideRow, pressed && styles.guidePressed]}>
     <View style={styles.bookIcon}><Ionicons name="book-outline" size={tokens.size.iconMd} color={tokens.colors.destination.knowledge.icon} accessibilityElementsHidden /></View>
     <View style={styles.guideCopy}>
       <Text style={styles.guideTitle} numberOfLines={2}>{guide.title}</Text>
-      {teaser ? <Text style={styles.guideTeaser} numberOfLines={2}>{teaser}</Text> : null}
     </View>
     <Ionicons name="chevron-forward" size={tokens.size.iconSm} color={tokens.colors.home.textMuted} accessibilityElementsHidden />
   </MotionPressable>;
@@ -250,15 +268,18 @@ const styles = StyleSheet.create({
   unknownAgeText: { ...tokens.typography.caption, color: tokens.colors.home.textMuted, flex: 1 },
   sectionHeading: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
   sectionTitle: { ...tokens.typography.label, color: tokens.colors.home.text, flex: 1 },
-  milestoneCard: { gap: tokens.spacing.xs, padding: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
-  milestoneCaption: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted },
-  milestoneRow: { minHeight: tokens.size.touchMin + tokens.spacing.sm, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
-  milestoneDivider: { height: tokens.size.stroke, marginLeft: tokens.size.chipMd + tokens.spacing.sm, backgroundColor: tokens.colors.border },
-  milestoneCopy: { flex: 1, gap: tokens.spacing.xs / 2 },
-  milestoneTitleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
-  milestoneTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
-  sourceNumber: { ...tokens.typography.smallCaption, color: tokens.colors.home.greenStrong, fontWeight: '700' },
-  milestoneDescription: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
+  phaseCard: { gap: tokens.spacing.sm, padding: tokens.spacing.md, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border, borderRadius: tokens.radius.lg, backgroundColor: tokens.colors.home.card },
+  phaseCaption: { ...tokens.typography.smallCaption, color: tokens.colors.home.textMuted },
+  contextChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.spacing.xs },
+  contextChoice: { minHeight: tokens.size.touchMin, justifyContent: 'center', paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, borderWidth: tokens.size.stroke, borderColor: tokens.colors.border },
+  contextSelected: { backgroundColor: tokens.colors.home.greenStrong, borderColor: tokens.colors.home.greenStrong },
+  contextText: { ...tokens.typography.smallCaption, color: tokens.colors.home.text },
+  contextTextSelected: { color: tokens.colors.onPrimary, fontWeight: '700' },
+  phaseTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
+  phaseRow: { minHeight: tokens.size.touchMin, flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm, paddingVertical: tokens.spacing.xs },
+  phaseDivider: { height: tokens.size.stroke, marginLeft: tokens.size.chipMd + tokens.spacing.sm, backgroundColor: tokens.colors.border },
+  phaseItem: { ...tokens.typography.caption, color: tokens.colors.home.text, flex: 1 },
+  phaseEmpty: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   guideSection: { gap: tokens.spacing.xs },
   guideCount: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
   loadingGuides: { gap: tokens.spacing.sm },
@@ -268,5 +289,4 @@ const styles = StyleSheet.create({
   bookIcon: { width: tokens.size.buttonHeight, height: tokens.size.buttonHeight, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.destination.knowledge.surface },
   guideCopy: { flex: 1, gap: tokens.spacing.xs },
   guideTitle: { ...tokens.typography.label, color: tokens.colors.home.text },
-  guideTeaser: { ...tokens.typography.caption, color: tokens.colors.home.textMuted },
 });

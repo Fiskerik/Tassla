@@ -85,6 +85,7 @@ export interface TrainingProgressionPresentation {
   activeStepTitle: string | null;
   loggedSessions: number;
   confirmedMilestones: number;
+  allMilestonesConfirmed: boolean;
   currentStepSessions: number;
   currentStepConfirmed: boolean;
   canStartOrResume: boolean;
@@ -109,8 +110,8 @@ export function progressionForProgram(
   if (!journey) return { journey: null, sessions: [], milestones: [] };
   return {
     journey,
-    sessions: workspace.sessions.filter((row) => row.journey_id === journey.id),
-    milestones: workspace.milestones.filter((row) => row.journey_id === journey.id),
+    sessions: workspace.sessions.filter((row) => row.journey_id === journey.id && row.dog_id === journey.dog_id && row.program_version_id === programVersionId),
+    milestones: workspace.milestones.filter((row) => row.journey_id === journey.id && row.dog_id === journey.dog_id && row.program_version_id === programVersionId),
   };
 }
 
@@ -129,6 +130,7 @@ export function trainingProgressionPresentation(
       activeStepTitle: null,
       loggedSessions: 0,
       confirmedMilestones: 0,
+      allMilestonesConfirmed: false,
       currentStepSessions: 0,
       currentStepConfirmed: false,
       canStartOrResume: steps.length > 0,
@@ -142,6 +144,10 @@ export function trainingProgressionPresentation(
     };
   }
   const stepIndex = steps.findIndex((step) => step.id === journey.active_step_id);
+  const stepIds = new Set(steps.map((step) => step.id));
+  const confirmedStepIds = new Set(selected.milestones.filter((milestone) => stepIds.has(milestone.step_id)).map((milestone) => milestone.step_id));
+  const allMilestonesConfirmed = steps.length > 0 && stepIds.size === steps.length
+    && steps.every((step) => Boolean(step.id.trim()) && confirmedStepIds.has(step.id));
   const currentStepSessions = selected.sessions.filter((session) => session.step_id === journey.active_step_id).length;
   const currentStepConfirmed = selected.milestones.some((milestone) => milestone.step_id === journey.active_step_id);
   const canPractice = journey.state !== 'paused' && stepIndex >= 0;
@@ -153,7 +159,8 @@ export function trainingProgressionPresentation(
     activeStepId: stepIndex >= 0 ? journey.active_step_id : null,
     activeStepTitle: stepIndex >= 0 ? steps[stepIndex].title : null,
     loggedSessions: selected.sessions.length,
-    confirmedMilestones: new Set(selected.milestones.map((milestone) => milestone.step_id)).size,
+    confirmedMilestones: confirmedStepIds.size,
+    allMilestonesConfirmed,
     currentStepSessions,
     currentStepConfirmed,
     canStartOrResume: journey.state === 'paused' && stepIndex >= 0,

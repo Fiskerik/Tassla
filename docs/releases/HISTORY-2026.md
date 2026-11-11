@@ -755,3 +755,56 @@ Architect, relevanta Security-granskningar, UI Critic, oberoende QA och Reviewer
 Nästa miljösteg: applicera `supabase/migrations/202610300001_routine_checklist_validation_fix.sql`, därefter `202610300002_daily_active_training_selection.sql` i avsedd Supabasemiljö. De har inte körts live av Codex. Kontoupplåsningen behöver en ny appbuild men ingen ny backendmigration. I det bygget: Mer → Konto → Kontrollera och lås upp, därefter separat vanlig raderingsbekräftelse. Telefonens SecureStore/native Alert/VoiceOver/Dynamic Type och verklig kontoradering återstår att prova. ACCOUNT-DELETE-STATUS-01 förblir blockerad för det verkliga serverutfallet.
 
 Detta är en snapshot före push; distanscommit och PR redovisas i överlämningen. Ingen main-merge, signerad distribution eller live-radering har utförts.
+
+## 2026-10-31 — PREMIUM-FEEDBACK-01, lokal implementation
+Bas f0065da, feature/complete-mvp-journeys. Godkänd Expo57-haptik bara vid egen bekräftad bock; gemensam tryckrespons och rätt aktivt träningssteg efter snabb/fördröjd sparning. Lokal check887pass/1skip, browser24/24 och public iOS-exportPASS; Architect/Critic/Security/UICritic och oberoendeQAPASS inom scope. FrozenReviewer återstår; ännu inte pushad eller TestFlight. Fysisknative/live och gamla fullpanelavvikelser öppna. Se taskplan för exakt scope/bevis; commit-SHA tillförs efter hållbar checkpoint.
+
+PREMIUM-FEEDBACK-01 slutreview: Frozen Reviewer PASS utan fynd. Alla59paths inom deklarerat v5-scope, actualSDK/24browser och öppnade composites. Lokal slice klar, inte fullpanel/native/livegodkänd. Produktcommit avses `feat: add confirmed haptics and consistent press feedback`; exakt SHA skrivs i nästa checkpoint efter commit.
+
+PREMIUM-FEEDBACK-01 hållbar produktcommit: `9a11649aee530b98ea85d0484919932ee7d0e705`, hookarnas fullcheck och diffcheck PASS. Branch feature/complete-mvp-journeys; ännu ingen signerad build eller liveåtgärd.
+
+## 2026-10-31 — IMAGE-DELIVERY-01 lokal leverans
+Bas9a11649 på feature/complete-mvp-journeys. Sexfotografier 13,551,755→812,436 byte och Expo Image57.0.5 med bevaradefokala ramar/tillgänglighet; tre fasers hela ansikten inklusive öron. Architect/Critic/Security/UICritic, oberoendeQA och Frozen Reviewer PASS inom scope. Expo-web375/430 och publiciOS JS-export PASS, fullcheck889pass/1skip före sista fokalkonstant; commit-hook kör aktuell fullcheck. Ingen testad nativecache/telefon eller fullpanelacceptans. Exakt commit-SHA kompletteras i nästa checkpoint.
+
+IMAGE-DELIVERY-01 produktcommit: `8227cc748e583359cbb8af44ea091438fae7f9cb`, commit-hook fullcheck/diffcheck PASS. Ingen signerad build eller liveåtgärd.
+
+## 2026-10-31 — NATIVE-READINESS-01 lokal leverans
+Bas8227cc7, Expo splash57.0.10 och keepawake57.0.2. Varm splash med första layout och2s JS-watchdog; faktisk övning aktiv+foreground håller skärmen vaken och släpper även vid sen aktivering. Architect/Critic/Security/UIcritic, oberoende QA och Frozen Reviewer PASS inom scope. Fullcheck894pass/1skip, livstidsprov,24RNWeb och public iOS JS-export PASS. Native launch, eventuell fin ikonbakgrundskant, faktisk skärmsläckning och native reducedmotion NT; ingen signerad build. Commit-SHA skrivs i nästa checkpoint.
+
+NATIVE-READINESS-01 produktcommit: `283b81dbf573c40d75a45d1f5e2f25be004ffc77`, commit-hook fullcheck/diffcheck PASS. Native utseende/vakenhet fortsatt NOT TESTABLE utan ny build/enhet.
+
+## 2026-10-31 — DEVELOPMENT-CONTENT-01 lokal leverans
+Bas283b81d på feature/complete-mvp-journeys. Utveckling läser den validerade publicerade faschecklistkatalogen med explicit kontext, visar frivilliga exakta råd och korta källor och rekommenderar enbart publicerade matchade artiklar/guider. Client/owner/generation/abort skyddar sena svar. Architect/Critic/DogExpert för befintliga råd, UICritic, oberoendeQA och Frozen Reviewer PASS inom scope. Fullcheck896pass/1skip, 9 syntetiska katalogfall,60 visionskontroller och efter återställd registry public iOS JS-export PASS. Fullpanel2 har fortfarande synliga kompositions-/täthetsavvikelser; verklig publicering/RLS/native NT. Commit-SHA noteras i nästa checkpoint.
+
+DEVELOPMENT-CONTENT-01 produktcommit: `85efaaa35753f44f712b4ec96c0fba403830d068`, commit-hook fullcheck/diffcheck PASS. Faktisk publicering/RLS/native/fullpanel2 fortfarande öppna.
+
+
+### HOME-MEMORY-01 — lokalt verifierat 2026-10-31
+Hem prioriterar verkligt daterade träningsdelmål och öppnar exakt träningssteg; loggladdning eller loggfel döljer inte verifierad träningshistorik. Tryggt tomläge, pausade/osäkra förslag filtreras. Syntetiska browserprov, pnpm check och public iOS JS-export godkända; verklig databas/RLS och native kvarstår. Commit identifieras i Git-historiken; ej därmed verifierat i TestFlight.
+
+
+### HOME-LOG-SOURCE-01 — lokalt verifierat 2026-11-04
+Ett faktiskt loggminne på Hem kan öppna samma händelse på rätt lokal dag utan skrivning; ett äldre utkast eller olöst sparande skyddas. Syntetiskt browserprov, `pnpm check` och public iOS JS-export PASS; live/RLS och native inte testade. Ingen TestFlight-distribution utförd.
+
+
+### DAILY-RING-MOTION-01 — lokalt verifierat 2026-11-04
+Dagens progressring rör sig efter en bekräftad avbockning och respekterar reducerad rörelse även vid preferensbyte. Syntetiska SVG-förlopp, full check och public iOS JS-export PASS; native och live/RLS kvarstår. Inte distribuerat till TestFlight.
+
+
+### KNOWLEDGE-READ-CHECKLIST-01 — lokalt verifierat 2026-11-04
+Publicerad checklists lästext kan hittas i Kunskapsbiblioteket med ursprungligt innehåll, källor och tydlig typetikett; den separata interaktiva faschecklistan är oförändrad. Syntetiska browserprov, full check och public iOS JS-export PASS. Live/RLS och native är inte testade; ingen distribution utförd.
+
+### TRAINING-COMPLETION-01 — lokalt verifierat 2026-11-05
+Träningsöversikt visar bekräftat avslut endast när alla delmål i samma resa och version är verifierade. Osäker sparning och läsfel ger återhämtningsbara statusar utan falsk klarindikator. Syntetiska browser-/racetester, full check och public iOS JS-export PASS. Live/RLS och native är inte testade; ingen distribution utförd.
+
+### TRAINING-PROGRAM-IMAGES-01 — lokalt verifierat 2026-11-05
+Programversioner använder stabila, generiska bilder och samma beskärningsfokus i rekommendation, översikt och övning; okända versioner har en säker fallback. Syntetiska bild- och geometritester, full check och public iOS JS-export PASS. Native och live publicering/RLS är inte testade; ingen distribution utförd.
+
+### DAILY-RETRY-ID-01 — lokalt verifierat 2026-11-05
+Återkontroll av samma rutinändring i Checklistor återanvänder samma mutations-ID; separata användarhandlingar får nya ID. Syntetiskt callbackprov, full check och public iOS JS-export PASS. Verklig RPC/RLS och native är inte testade; ingen distribution utförd.
+
+### EXPO-DATEPICKER-EVALUATION-01 — utvärderat 2026-11-05
+Native DatePicker har granskats mot installerat SDK57 och Tasslas befintliga datum-/tidsfält. Webbfallback, lokalt datum och skilda plattformsflöden behöver en separat native-testbar adapter före byte. Inget paket eller appbeteende har ändrats.
+
+### ROUTINE-SAVED-NOT-SELECTED-01 — lokal checkpoint 2026-11-05
+Sparad engångsrutin som appen inte hann lägga på ursprungsdagen får ett tydligt besked utan duplicerad sparning. Bekräftad återkontroll använder samma operation; skärm och scope har testats syntetiskt. Live RPC/RLS, native och processåterstart är inte verifierade.

@@ -14261,6 +14261,1034 @@
         }
       ],
       "next_step": "Frozen Reviewer PASS no findings; product checkpoint affeb1a3b77484793b881f38c3485b5adac89ce0 and full hooks pass. Final docs only; native/live remain NT."
+    },
+    {
+      "id": "PREMIUM-FEEDBACK-01",
+      "title": "Godkänd Expo-haptik och konsekvent tryckrespons",
+      "plan": "docs/tasks/dev/PREMIUM-FEEDBACK-01.md v5",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks beställning2026-10-31 och MVP-COMPLETION-261031",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/feedback/confirmation-haptics.ts",
+        "src/feedback/confirmation-intent.ts",
+        "src/feedback/use-confirmed-check-feedback.ts",
+        "src/feedback/README.md",
+        "src/components/ui/ChecklistItem.tsx",
+        "src/components/ui/DailyActivityItem.tsx",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/LogDateCalendar.tsx",
+        "src/features/more/MoreScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "tests/confirmation-feedback.test.mjs",
+        "tests/motion-policy.test.mjs",
+        "tools/visual-check/build.cjs",
+        "tools/visual-check/native.jsx",
+        "tools/visual-check/verify-premium-feedback.py",
+        "docs/design/evidence/premium-feedback-01",
+        "docs/tasks/dev/PREMIUM-FEEDBACK-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/decisions/MASTER-LOG.md",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/DailyChecklistScreen.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/knowledge/PuppyChecklistScreen.tsx",
+        "tools/visual-check/app.tsx",
+        "tests/training-overview.test.mjs"
+      ],
+      "acceptance": [
+        "User-initiated confirmed-only haptics with same save guards",
+        "Consistent existing press feedback without scrim/gesture regression",
+        "Expo57 API, reduced motion and no initial/retry duplicate feedback verified"
+      ],
+      "checks": [
+        "pnpm check",
+        "confirmation-feedback tests",
+        "RNWeb feedback flow",
+        "public iOS export"
+      ],
+      "depends_on": [],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v2, Critic PROCEED v2 and Security plan PASS; user explicitly approves Expo-haptics dependency."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root single writer, exact persisted confirmation and scoped intent; installing approved Expo57 module. UI edits await BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Planv5 Architect APPROVE/Critic PROCEED, Security PASS; full check887pass/1skip, final public iOS export and browser PASS; UI REVIEW scoped no blockers. Independent QA started."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck887pass/1skip and24browser PASS, actualSDK/files inspected; scoped visual PASS from opened small/reduced/top-composites. Existing fullpanel deviations open, nativeNT. Frozen review next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; all59paths in scope, actualSDK/callers/lifetimes/Nextretry and opened composites verified. QA own24browser and887pass/1skip. Durable commit now; native/live and prior fullpanel gaps remain open."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; all59paths in scope, actualSDK/callers/lifetimes/Nextretry and opened composites verified. QA own24browser and887pass/1skip. Durable commit now; native/live and prior fullpanel gaps remain open."
+    },
+    {
+      "id": "IMAGE-DELIVERY-01",
+      "title": "Mindre lokala fotografier och Expo Image",
+      "plan": "docs/tasks/dev/IMAGE-DELIVERY-01.md v5",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks uttryckliga Expo/prestandabeställning2026-10-31",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "src/components/ui/EditorialImage.tsx",
+        "src/features/knowledge/KnowledgeImage.tsx",
+        "src/features/knowledge/checklist-phase-visuals.ts",
+        "src/features/knowledge/editorial-image-assignment.ts",
+        "src/features/knowledge/README.md",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/HomeCarousel.tsx",
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/home/README.md",
+        "src/features/health/PlannedHealthScreen.tsx",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/components/ui/HeroCard.tsx",
+        "src/components/ui/ComponentGalleryScreen.tsx",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/editorial-image-delivery.test.mjs",
+        "assets/images/README.md",
+        "tools/visual-check/image-delivery.tsx",
+        "tools/visual-check/verify-image-delivery.py",
+        "docs/design/evidence/image-delivery-01",
+        "docs/tasks/dev/IMAGE-DELIVERY-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "assets/images/dog-welcome.png",
+        "assets/images/dog-welcome.jpg",
+        "assets/images/dog-resting.png",
+        "assets/images/dog-resting.jpg",
+        "assets/images/puppy-training.png",
+        "assets/images/puppy-training.jpg",
+        "assets/images/puppy-resting-carousel.png",
+        "assets/images/puppy-resting-carousel.jpg",
+        "assets/images/puppy-water.png",
+        "assets/images/puppy-water.jpg",
+        "assets/images/home-dog-portrait-placeholder.png",
+        "assets/images/home-dog-portrait-placeholder.jpg",
+        "app.json",
+        "tools/visual-check/build.cjs",
+        "tests/home-vision.test.mjs",
+        "docs/design/evidence/knowledge-image-focus-2026-10-25/image-focus-inventory.json"
+      ],
+      "acceptance": [
+        "Measured photo reduction with unchanged focal layouts",
+        "Actual Expo57 image API and no old source on change",
+        "Relevant visual regression and full check"
+      ],
+      "checks": [
+        "pnpm check",
+        "actual image browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "PREMIUM-FEEDBACK-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE v1 actualpublishedAPI, CriticPROCEED, userexplicitSDKapproval; preservecrop/accessibility/stablesource; actualdelayedloadbrowserrequired."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root singlewriter; compress sixusedopaquephotosfirst then approvedExpo57 Image adapter with transition0 and stableidentity."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic v5 APPROVE; Security PASS; UICritic scoped FIXED after three focal corrections; fullcheck889pass/1skip pre-final constant, actual SDK webv5 and public iOS v5 PASS. Independent QA v4 PASS and v5 supplement requested."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck and actualExpoWeb, metadata, source and imagery PASS for v4; v5 only cocker focal constant and independently verified UI. Supplemental QA requested; frozen Reviewer next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS v5 no findings, actualSDK, sixassets/quality/metadata, focal faces and delayedweb verified. IndependentQA and UIReviewPASS scoped; native/fullpanelNT. Commit next."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS v5 no findings, actualSDK, sixassets/quality/metadata, focal faces and delayedweb verified. IndependentQA and UIReviewPASS scoped; native/fullpanelNT. Commit next."
+    },
+    {
+      "id": "NATIVE-READINESS-01",
+      "title": "Varm start och vaken träningsinstruktion",
+      "plan": "docs/tasks/dev/NATIVE-READINESS-01.md v1",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks uttryckliga Expo-beställning2026-10-31",
+      "write_paths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "app.json",
+        "app/_layout.tsx",
+        "src/startup/startup-splash.ts",
+        "src/startup/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/exercise-keep-awake.ts",
+        "src/features/training/README.md",
+        "tests/native-readiness.test.mjs",
+        "docs/tasks/dev/NATIVE-READINESS-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md"
+      ],
+      "acceptance": [
+        "Warm configured splash with bounded JS watchdog and first-layout release",
+        "Awake only for actively visible training instructions and foreground, async race safe",
+        "Actual Expo57 APIs, failure/release and public iOS JS export"
+      ],
+      "checks": [
+        "pnpm check",
+        "native readiness controller tests",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "IMAGE-DELIVERY-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "ArchitectAPPROVE, CriticPROCEED, owner explicitly approves SDK57 packages. No auth blocking; lifecycle fenced and root-first-layout watchdog."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root solewriter installs Expo57 compatible splash/keepawake, then implements approved bounded lifecycle."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic/Security and static UI REVIEW PASS scoped; fullcheck894pass/1skip, targeted lifecycle,24 web regression and public iOS export PASS. Independent QA in progress. Native appearance/sleep NT."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck894pass/1skip, actualSDK APIs/native and lifecycle PASS; no new permissions. Physical launch/wakelock/possible icon seam NT. Frozen review next."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS no findings; actual SDK/native APIs, root release, foreground/instruction/tag lifetime and all13paths verified. QA fullcheck and JS export PASS. Commit next; device NT."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS no findings; actual SDK/native APIs, root release, foreground/instruction/tag lifetime and all13paths verified. QA fullcheck and JS export PASS. Commit next; device NT."
+    },
+    {
+      "id": "DEVELOPMENT-CONTENT-01",
+      "title": "Publicerat fas- och läsinnehåll i Utveckling",
+      "plan": "docs/tasks/dev/DEVELOPMENT-CONTENT-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks beställning steg1–4, MVP-COMPLETION-261031 steg1",
+      "write_paths": [
+        "src/features/home/DevelopmentScreen.tsx",
+        "src/features/home/DevelopmentCatalogScreen.tsx",
+        "src/features/home/development-content.ts",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "tests/development-screen-model.test.mjs",
+        "tests/development-content.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/vision-r02-home-panels-app.tsx",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/verify-development-content.py",
+        "docs/design/evidence/development-content-01",
+        "docs/tasks/dev/DEVELOPMENT-CONTENT-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "tools/visual-check/development-content-fixture.tsx"
+      ],
+      "acceptance": [
+        "Actual published catalog and explicit chronological/context choice without invented milestones",
+        "Only explicitly recommended published articles/guides and preserved exact navigation",
+        "Independent error/retry and stale-lifetime protection"
+      ],
+      "checks": [
+        "pnpm check",
+        "development catalog lifecycle and rendering",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "NATIVE-READINESS-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "ArchitectAPPROVE with client-identity synchronous guard and captured accountgeneration; CriticPROCEED; exact reviewed published data only, no inferred homecoming."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root singlewriter, implement guarded catalog lifecycle and pure content selection; visual edits await UIcritic BRIEF."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Architect/Critic v2, UIcritic supplemental and independent QA PASS scoped; fullcheck896pass/1skip, synthetic browser9 PASS. Public iOS export is retrying after registry503, broad checklist scroll finding under investigation. Reviewer next after clear evidence."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA own fullcheck, scoped paths and synthetic actual catalog browser9 PASS, panel2 composition/density differences remain open, live/native NT. Frozen code review while export and scroll investigation continue."
+        },
+        {
+          "from": "review",
+          "to": "blocked",
+          "actor": "coordinator",
+          "evidence": "Local implementation and independent QA/frozen code review PASS; public iOS export and required commit hook blocked by reproducible npm registry HTTP503 during pnpm supply-chain metadata verification. No hooks or policy bypass. Save binary diff/untracked checkpoint; continue independent goal work."
+        },
+        {
+          "from": "blocked",
+          "to": "planned",
+          "actor": "coordinator",
+          "evidence": "Registry recovered; unchanged reviewed implementation, final public iOS JS export PASS, resume existing validated v2 task."
+        },
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Existing Architect APPROVE/Critic PROCEED v2 unchanged; no source changes since frozen review."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Existing reviewed implementation preserved; final iOS JS export PASS after registry recovery."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Existing fullcheck896pass/1skip, synthetic9 and vision60 PASS; final iOS export PASS; independent QA already PASS."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS and supplemental visual review; frozen code unchanged, native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Frozen Reviewer PASS for unchanged code, registry recovered and final iOS JS export PASS; fullpanel/live/native limits remain open. Commit now."
+        }
+      ],
+      "next_step": "Frozen Reviewer PASS for unchanged code, registry recovered and final iOS JS export PASS; fullpanel/live/native limits remain open. Commit now."
+    },
+    {
+      "id": "HOME-MEMORY-01",
+      "title": "Bekräftade minnen och nästa övning på Hem",
+      "plan": "docs/tasks/dev/HOME-MEMORY-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "Eriks beställning steg1–4, MVP-COMPLETION-261031 steg2",
+      "write_paths": [
+        "src/features/home/home-reflection.ts",
+        "src/features/home/home-training-suggestion.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/home-reflection.test.mjs",
+        "tests/home-training-suggestion.test.mjs",
+        "tests/home-vision.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-home-memory.py",
+        "docs/design/evidence/home-memory-01",
+        "docs/tasks/dev/HOME-MEMORY-01.md",
+        "docs/tasks/dev/MVP-COMPLETION-261031.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "tools/visual-check/verify-traction-home.py"
+      ],
+      "acceptance": [
+        "Confirmed own milestone takes priority, no generic-age fake history",
+        "Exact training version/step focus and valid next step without writes",
+        "Scope/error/unknown protection and accessible Home presentation"
+      ],
+      "checks": [
+        "pnpm check",
+        "home memory browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "DEVELOPMENT-CONTENT-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE and Critic PROCEED v2, UIcritic BRIEF; validate exact version/step scope and suppress paused/pending suggestions."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root solewriter: actual milestone priority, honest source/error state, scoped exact training step and safe next suggestion."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Frozen implementation, bounded cleanup, pnpm check 899 pass/1 skip, public iOS export and synthetic Home browsers pass; UIcritic reviewed actual screenshots and recorded limits."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reports targeted tests and synthetic exact-source, error and scope checks pass; public iOS JS export and full check verified, live/RLS/native NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE for scoped exact identity/navigation, pending/paused guards and tests; UIcritic reviewed actual composite and text140; full panel and native/live remain open."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE for scoped exact identity/navigation, pending/paused guards and tests; UIcritic reviewed actual composite and text140; full panel and native/live remain open."
+    },
+    {
+      "id": "HOME-LOG-SOURCE-01",
+      "title": "Hem till exakt logghändelse och daterad dag",
+      "plan": "docs/tasks/dev/HOME-LOG-SOURCE-01.md v3",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg2",
+      "write_paths": [
+        "src/features/home/home-reflection.ts",
+        "src/features/home/HomeScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/puppy-log/LogScreen.tsx",
+        "src/features/puppy-log/log-event-focus.ts",
+        "src/features/puppy-log/README.md",
+        "tests/home-reflection.test.mjs",
+        "tests/home-log-source.test.mjs",
+        "tests/log-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-home-log-source.py",
+        "docs/design/evidence/home-log-source-01",
+        "docs/tasks/dev/HOME-LOG-SOURCE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Exact confirmed event identity and local day, no writes",
+        "Scope and unresolved edit preserved",
+        "Synthetic visual and navigation checks"
+      ],
+      "checks": [
+        "pnpm check",
+        "home log browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "HOME-MEMORY-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect APPROVE, Critic PROCEED v2, UIcritic BRIEF on Home and Log screenshots; exact scoped one-shot event and recovery guards."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer implements exact source focus without persistence writes or changing recovery."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v3: 903 pass/1 skip, public iOS JS export, synthetic exact event/replay/no-write browser, UIcritic reviewed corrected states."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran actual policy tests and synthetic browser v3 successfully, native/live/RLS remain untested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE v3: policy, exact source/replay/dog, preserved editor and zero synthetic writes; live/RLS/native/full panel remain open."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE v3: policy, exact source/replay/dog, preserved editor and zero synthetic writes; live/RLS/native/full panel remain open."
+    },
+    {
+      "id": "DAILY-RING-MOTION-01",
+      "title": "Bekräftad rörelse i dagens progressring",
+      "plan": "docs/tasks/dev/DAILY-RING-MOTION-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg2 och ägarens rörelsebeställning",
+      "write_paths": [
+        "src/features/home/DailyProgressScreen.tsx",
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/daily-ring-motion.ts",
+        "src/features/home/README.md",
+        "tests/daily-ring-motion.test.mjs",
+        "tests/daily-progress-screen.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-daily-ring-motion.py",
+        "docs/design/evidence/daily-ring-motion-01",
+        "docs/tasks/dev/DAILY-RING-MOTION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Animation only after matching confirmed completion",
+        "No motion on hydrate/error/unknown/scope or reduced motion",
+        "Synthetic visual and accessibility value remain truthful"
+      ],
+      "checks": [
+        "pnpm check",
+        "daily ring browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "HOME-LOG-SOURCE-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect-approved exact confirmed scope/readback gate; Critic PROCEED v2 and UIcritic BRIEF on viewed panel3."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer implements decorative confirmed-only SVG transition with full-lifetime scope."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Full check 907 pass/1 skip, public iOS JS export, current synthetic SVG frames incl preference toggles; UIcritic reviewed images."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran motion sequence and preference-change browser and targeted tests; native/live NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE after explicit ready guard; same scoped source, full panel/native/live remain open."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE after explicit ready guard; same scoped source, full panel/native/live remain open."
+    },
+    {
+      "id": "KNOWLEDGE-READ-CHECKLIST-01",
+      "title": "Publicerat checklistinnehåll i Kunskapsbiblioteket",
+      "plan": "docs/tasks/dev/KNOWLEDGE-READ-CHECKLIST-01.md v6",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg3",
+      "write_paths": [
+        "src/features/knowledge/KnowledgeScreen.tsx",
+        "src/features/knowledge/README.md",
+        "tests/knowledge-search-screen.test.mjs",
+        "tests/article-delivery.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-knowledge-read-checklist.py",
+        "docs/design/evidence/knowledge-read-checklist-01",
+        "docs/tasks/dev/KNOWLEDGE-READ-CHECKLIST-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tools/visual-check/verify-drive-articles.py",
+        "tools/visual-check/verify-vision-r02-home-panels.py",
+        "tools/visual-check/verify-know02.py",
+        "tools/visual-check/verify.py",
+        "tools/visual-check/verify-ui-r02-04.py",
+        "tools/visual-check/verify-ui-copy-cleanup.py"
+      ],
+      "acceptance": [
+        "Published checklist is discoverable and truthfully labeled",
+        "Exact published text/sources and recommended/full library semantics preserved",
+        "Synthetic catalog and reader visual checks"
+      ],
+      "checks": [
+        "pnpm check",
+        "knowledge checklist browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "DAILY-RING-MOTION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect confirmed existing published projection and safe reader; Critic PROCEED v2, UIcritic BRIEF on viewed panel7."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer enables existing published checklist in library with truthful content labels."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "908 pass/1 skip, public iOS JS export, checklist and article/profile + FAQ synthetic browser PASS, UIcritic reviewed 140% reader."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA reran targeted age/draft/source tests and full synthetic checklist journey, live/native NT."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent reviewer APPROVE v6 for published-only reading, recommendation separation and scoped evidence."
+        }
+      ],
+      "next_step": "Independent reviewer APPROVE v6 for published-only reading, recommendation separation and scoped evidence."
+    },
+    {
+      "id": "TRAINING-COMPLETION-01",
+      "title": "Sanningsenligt träningsavslut och verifierad readback",
+      "plan": "docs/tasks/dev/TRAINING-COMPLETION-01.md v7",
+      "risk_class": "H",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg3",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "src/features/training/training-progression.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-progression-model.test.mjs",
+        "tests/training-progression-ui.test.mjs",
+        "tests/training-overview.test.mjs",
+        "tests/training-completion-readback.test.mjs",
+        "tests/knowledge-training-empty-feedback.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-training-completion.py",
+        "docs/design/evidence/training-completion-01",
+        "docs/tasks/dev/TRAINING-COMPLETION-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md",
+        "src/features/home/training-readback.ts"
+      ],
+      "acceptance": [
+        "Exact confirmed version milestones determine completion",
+        "Saved undo and failed refresh never show stale completion",
+        "Pending/unknown and cross-scope guarded"
+      ],
+      "checks": [
+        "pnpm check",
+        "training completion browser",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "KNOWLEDGE-READ-CHECKLIST-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect verified dog-scoped readback and generation strategy; Security and Critic PROCEED v2, UIcritic BRIEF on panel6."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer: scope-safe verified readback plus exact milestone completion predicate."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Plan v7, synthetic RNWeb and mutation tests pass, full check 915 pass/1 skip, public iOS JS export pass; request independent QA."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS scoped; 13 training files, synthetic 3/3 to undo 2/3, pending/unknown, retry and error; full check and export pass; native/live untested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer approved after fixes; UIcritic partial visual findings documented; QA and checks pass; no native/live claim."
+        }
+      ],
+      "next_step": "Independent Reviewer approved after fixes; UIcritic partial visual findings documented; QA and checks pass; no native/live claim."
+    },
+    {
+      "id": "TRAINING-PROGRAM-IMAGES-01",
+      "title": "Stabilt bildspråk för träningsprogram",
+      "plan": "docs/tasks/dev/TRAINING-PROGRAM-IMAGES-01.md v2",
+      "risk_class": "M",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg3",
+      "write_paths": [
+        "assets/images/README.md",
+        "src/features/training/training-program-image.ts",
+        "src/features/training/PublishedTrainingScreen.tsx",
+        "src/features/training/README.md",
+        "tests/training-program-image.test.mjs",
+        "tests/training-screen-policy.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-training-program-images.py",
+        "docs/design/evidence/training-program-images-01",
+        "docs/tasks/dev/TRAINING-PROGRAM-IMAGES-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Stable explicit content identity and version mapping with fallback",
+        "Face visible in recommendations and banners",
+        "No new publication or content"
+      ],
+      "checks": [
+        "pnpm check",
+        "synthetic browser images",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-COMPLETION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect identity/version mapping, Critic v2 conditions, UIcritic BRIEF actual reference and four images."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer; actual crops and face boundaries will be tested in four program variants and fallback."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Explicit identity/version mapping, geometric face bounds and synthetic 375/430/fallback pass; full check 917 pass/1 skip and public iOS export pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS scoped including independently rerun RNWeb ordering/fallback; UIcritic reviewed all images, native/live not tested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer approved source mapping and scoped behavior; panel6 visual differences and native/live limits documented."
+        }
+      ],
+      "next_step": "Independent Reviewer approved source mapping and scoped behavior; panel6 visual differences and native/live limits documented."
+    },
+    {
+      "id": "DAILY-CLOCK-SCOPE-01",
+      "title": "Skydda vardagsflödet vid dygns- och tidszonsbyte",
+      "plan": "docs/tasks/dev/DAILY-CLOCK-SCOPE-01.md v1",
+      "risk_class": "H",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg4",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "tests/daily-clock-scope.test.mjs",
+        "docs/tasks/dev/DAILY-CLOCK-SCOPE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Prevent stale date read/write and stale UI publication",
+        "Keep unknown same-operation recovery and dog/account isolation",
+        "Exercise actual clock/scope code across midnight and foreground"
+      ],
+      "checks": [
+        "pnpm check",
+        "daily clock integration tests",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-PROGRAM-IMAGES-01"
+      ],
+      "status": "planned",
+      "history": [],
+      "next_step": "Architect, Security and Critic plan review."
+    },
+    {
+      "id": "DAILY-RETRY-ID-01",
+      "title": "Bevara rutinändringens ID vid återkontroll",
+      "plan": "docs/tasks/dev/DAILY-RETRY-ID-01.md v1",
+      "risk_class": "H",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg4",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/README.md",
+        "tests/daily-retry-id.test.mjs",
+        "docs/tasks/dev/DAILY-RETRY-ID-01.md",
+        "docs/tasks/dev/DAILY-CLOCK-SCOPE-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Exact same mutation ID, dog and day on explicit retry",
+        "Separate actions use distinct IDs"
+      ],
+      "checks": [
+        "pnpm check",
+        "actual callback retry test",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "TRAINING-PROGRAM-IMAGES-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Security identified actual RPC idempotency issue; Critic PROCEED with actual callback and exact retry coverage."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer; capture mutation UUID once before both checklist operation closures."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Real JSX callbacks, same-ID unknown retry and distinct next action pass; pnpm check 921 pass/1 skip and public iOS JS export pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS scoped; twelve daily test files and same captured operation; live RPC/RLS and native untested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer and Security approve scoped ID capture and tests; explicit retry is still a write."
+        }
+      ],
+      "next_step": "Independent Reviewer and Security approve scoped ID capture and tests; explicit retry is still a write."
+    },
+    {
+      "id": "EXPO-DATEPICKER-EVALUATION-01",
+      "title": "Utvärdera native datumväljare för Expo 57",
+      "plan": "docs/tasks/dev/EXPO-DATEPICKER-EVALUATION-01.md v1",
+      "risk_class": "L",
+      "mvp_requirement": "MVP-COMPLETION-261031 Expo-tillägg",
+      "write_paths": [
+        "docs/tasks/dev/EXPO-DATEPICKER-EVALUATION-01.md",
+        "docs/decisions/MASTER-LOG.md",
+        "docs/plans/UI-UX-NEXT-PACKAGES-2026-10-18.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Installed SDK57 behavior and existing picker contracts documented",
+        "No native behavior falsely claimed verified"
+      ],
+      "checks": [
+        "pnpm check",
+        "installed API/source inspection"
+      ],
+      "depends_on": [
+        "DAILY-RETRY-ID-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect inspected installed 57.0.21 source and existing fields; Critic PROCEED with platform distinctions."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Documentation-only evaluation, no dependency or app change."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Installed SDK57 and actual platform source inspected; docs record exact current contracts; full check 921 pass/1 skip."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA verified source distinctions and limits; native/timezone accessibility remains untested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Independent Reviewer approved corrected date/time distinction and documented source evidence; no app or dependency change."
+        }
+      ],
+      "next_step": "Independent Reviewer approved corrected date/time distinction and documented source evidence; no app or dependency change."
+    },
+    {
+      "id": "ROUTINE-SAVED-NOT-SELECTED-01",
+      "title": "Visa när sparad rutin inte lades till på dagen",
+      "plan": "docs/tasks/dev/ROUTINE-SAVED-NOT-SELECTED-01.md v7",
+      "risk_class": "H",
+      "mvp_requirement": "MVP-COMPLETION-261031 steg4",
+      "write_paths": [
+        "src/features/home/ProductWorkspace.tsx",
+        "src/features/home/RoutineNotSelectedNotice.tsx",
+        "src/features/home/daily-activity-recovery.ts",
+        "src/features/home/README.md",
+        "tests/routine-saved-not-selected.test.mjs",
+        "tests/dog-profile-delete.test.mjs",
+        "tools/visual-check/app.tsx",
+        "tools/visual-check/verify-routine-saved-not-selected.py",
+        "docs/design/evidence/routine-saved-not-selected-01",
+        "docs/tasks/dev/ROUTINE-SAVED-NOT-SELECTED-01.md",
+        "docs/tasks/dev/queue.json",
+        "docs/tasks/dev/rapport.md",
+        "docs/releases/HISTORY-2026.md"
+      ],
+      "acceptance": [
+        "Honest persistent owner-scoped notice without overwriting pending operations",
+        "No duplicate template or automatic selection after scope change",
+        "Dog/account isolation and explicit recovery"
+      ],
+      "checks": [
+        "pnpm check",
+        "actual two-stage async tests",
+        "synthetic UI",
+        "public iOS export"
+      ],
+      "depends_on": [
+        "EXPO-DATEPICKER-EVALUATION-01"
+      ],
+      "status": "done",
+      "history": [
+        {
+          "from": "planned",
+          "to": "ready",
+          "actor": "architect",
+          "evidence": "Architect, Security and Critic PROCEED v3; UIcritic BRIEF and dog/account deletion requirements recorded."
+        },
+        {
+          "from": "ready",
+          "to": "implementing",
+          "actor": "implementer",
+          "evidence": "Root sole writer; implement scope-gated persistent in-memory notice and exact operation retry semantics."
+        },
+        {
+          "from": "implementing",
+          "to": "qa",
+          "actor": "implementer",
+          "evidence": "Actual two-stage and callback harness, synthetic 375/430/140 UI, check 931 pass/1 skip and iOS JS export pass."
+        },
+        {
+          "from": "qa",
+          "to": "review",
+          "actor": "qa",
+          "evidence": "Independent QA PASS for scope, retry, dog/account deletion and synthetic UI. Native/live/RLS not tested."
+        },
+        {
+          "from": "review",
+          "to": "done",
+          "actor": "reviewer",
+          "evidence": "Reviewer and Security approve v7; UIcritic scoped review, untested 140% CTA and native limits recorded."
+        }
+      ],
+      "next_step": "Reviewer and Security approve v7; UIcritic scoped review, untested 140% CTA and native limits recorded."
     }
   ]
 }

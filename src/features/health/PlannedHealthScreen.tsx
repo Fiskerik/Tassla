@@ -1,5 +1,6 @@
+import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { AccessibilityInfo, findNodeHandle, Image, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, findNodeHandle, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DatePickerField, InfoModal, MessageCard, PrimaryButton, QuietButton, TimePickerField } from '../../components/AppPrimitives';
 import { BottomSheet, Button, Dialog } from '../../components/ui';
@@ -371,7 +372,7 @@ export function PlannedHealthScreen({
         ? 'Visar vald plan från Checklistan och upp till 40 närmaste planer.'
         : 'Visar de 40 närmaste planerna. Äldre planer kan saknas från listan.'}</MessageCard>}
       {recordsForView.length === 0 && checklistFocusState !== 'loading' && <View style={styles.emptyCard}>
-        <Image source={require('../../../assets/images/dog-resting.png')} style={styles.emptyImage}
+        <Image source={require('../../../assets/images/dog-resting.jpg')} style={styles.emptyImage}
           accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
         <View style={styles.emptyCopy}>
           <Text style={styles.emptyTitle}>Inga planer ännu</Text>
