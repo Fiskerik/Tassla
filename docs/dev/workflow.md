@@ -17,6 +17,9 @@ Codex huvudsession är koordinator. Följ den redan godkända MVP- och taskavgr�
 
 Varje task använder `docs/tasks/template.md` och anger: ID, exakt bascommit, mål, mandat-/beslutskällor som ska bevaras, uttryckliga undantag, relevanta läsdokument, planversion, en skrivägare, konkreta `write_paths`, beroenden, risk, acceptanskriterier med verifieringsbevis, faktiska kommandon, status, checkpoint och nästa steg. `tools/dev_flow.py` validerar bara de fält och övergångar det redan känner till; omfattning, faktisk diff, planversion, acceptans och testresultat måste granskas manuellt. Segmentgodkännande loggas bara när ett nytt uttryckligt Erik-besked behövs; tidigare beslut som täcker arbetet återanvänds.
 
+## Git-checkout och brancher
+Eriks arbetsflöde använder den befintliga checkouten. Fortsätt på den uttryckligen valda branchen/PR:en när en sådan finns. Skapa en vanlig Git-branch i samma checkout endast när ett nytt experiment eller en separat uppgift behöver isolering; skapa inte en extra `codex/...`-branch enbart för att bära ändringar. Skapa eller använd aldrig Git worktrees. Checkpointa eller committa innan branchbyte, håll en skrivare åt gången i checkouten och redovisa tydligt lokal branch, fjärrbranch och PR. Om arbete behöver separeras, gör det sekventiellt på brancher i samma checkout.
+
 ## Små deluppgifter och checkpointad körning
 Stora eller otydliga uppdrag får inte bli monolitiska koduppgifter. Dela dem före implementation i små, självständigt avslutningsbara vertikala delar. Varje del ska ha ett tydligt mål, avgränsat scope, berörda filer, beroenden, acceptanskriterium och konkret verifiering. Välj minsta logiska första del och redovisa vad som återstår; börja inte samtidigt på många features.
 
