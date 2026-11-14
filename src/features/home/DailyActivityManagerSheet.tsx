@@ -196,14 +196,15 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
     action?.();
   }
 
-  function startCreate() {
+  function startCreate(suggested = false) {
     setOpenedRoutineId(null);
     const firstItem = { id: Crypto.randomUUID(), label: '' };
     const anchorDate = localDateKeyToday();
     setIconPickerItemId(null);
     const nextDraft = { mode: 'create' as const, submissionId: Crypto.randomUUID(), routineId: null, baseRevision: null, sourceRoutine: null,
       initialLabel: '', initialChecklist: [firstItem], initialRepeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null }, anchorDate, newAnchorDate: anchorDate,
-      label: '', checklist: [firstItem], repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } };
+      label: suggested ? 'Lugn stund' : '', checklist: [suggested ? { ...firstItem, label: 'Ge plats för vila' } : firstItem],
+      repeat: { repeat_unit: null, repeat_interval: null, repeat_weekdays: null } };
     updateRecovery(nextDraft, null);
   }
 
@@ -316,7 +317,8 @@ export function DailyActivityManagerSheet({ visible, dailyScopeKey, onClose, foc
           onDelete={() => onDeleteRoutine?.(focusedRoutine)} onAdd={() => onAddRoutineToDay?.(focusedRoutine)}
           onRemove={() => { const row = selectedRoutines.get(focusedRoutine.id); if (row) onRemoveRoutineFromDay?.(row, focusedRoutine); }} />
         : managerSection === 'Rutiner' ? <View style={styles.section}>
-          <Button label="Skapa rutin" iconName="add-outline" accessibilityLabel="Skapa en ny rutin" disabled={unresolvedMutation || Boolean(draft)} onPress={startCreate} />
+          <Button label="Skapa rutin" iconName="add-outline" accessibilityLabel="Skapa en ny rutin" disabled={unresolvedMutation || Boolean(draft)} onPress={() => startCreate()} />
+          <Button variant="tertiary" label="Förslag: Lugn stund" accessibilityLabel="Använd förslaget Lugn stund som utkast" disabled={unresolvedMutation || Boolean(draft)} onPress={() => startCreate(true)} />
           {visibleRoutines.length ? <View style={styles.routineList}>{visibleRoutines.map((routine, index) => <MotionPressable key={routine.id}
             accessibilityRole="button" accessibilityLabel={`Öppna rutin ${routine.label}`} disabled={selectionLocked}
             style={({ pressed }) => [styles.summaryRow, index < visibleRoutines.length - 1 && styles.routineGroupSeparator, pressed && styles.pressed]}

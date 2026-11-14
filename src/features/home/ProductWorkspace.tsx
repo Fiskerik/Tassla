@@ -202,19 +202,19 @@ type PendingProfileMutation = { previous: OwnedDog; changes: OwnedDogProfileChan
 const PAGE_SIZE = 40;
 const WORKSPACE_REFRESH_AFTER_MS = 60_000;
 
-function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[], pinnedIds: ReadonlySet<string> = new Set()): DogEventRecord[] {
+function mergeConfirmedLogRows(fetched: readonly DogEventRecord[], baseline: readonly DogEventRecord[], current: readonly DogEventRecord[], pinnedIds: ReadonlySet<string> = new Set(), deletedIds: ReadonlySet<string> = new Set()): DogEventRecord[] {
   const baselineById = new Map(baseline.map((row) => [row.id, row]));
   const currentById = new Map(current.map((row) => [row.id, row]));
-  const deletedLocally = new Set(baseline.filter((row) => !currentById.has(row.id)).map((row) => row.id));
+  const deletedLocally = new Set([...deletedIds, ...baseline.filter((row) => !currentById.has(row.id)).map((row) => row.id)]);
   const changedLocally = new Map(current.filter((row) => baselineById.get(row.id) !== row).map((row) => [row.id, row]));
   const merged = new Map<string, DogEventRecord>();
   for (const row of fetched) {
     if (!deletedLocally.has(row.id)) merged.set(row.id, changedLocally.get(row.id) ?? row);
   }
   for (const row of current) {
-    if (pinnedIds.has(row.id) && !merged.has(row.id)) merged.set(row.id, row);
+    if (!deletedLocally.has(row.id) && pinnedIds.has(row.id) && !merged.has(row.id)) merged.set(row.id, row);
   }
-  for (const row of changedLocally.values()) merged.set(row.id, row);
+  for (const row of changedLocally.values()) if (!deletedLocally.has(row.id)) merged.set(row.id, row);
   return [...merged.values()].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
 }
 
@@ -237,8 +237,8 @@ function dailyMutationActionLabel(key: string): string {
   }
 }
 
-type LogReadFlight = { scope: string; generation: number; controller: AbortController; promise: Promise<boolean>; baseline: DogEventRecord[]; refreshRequested: boolean };
-type LogPaginationFlight = { scope: string; generation: number; controller: AbortController };
+type LogReadFlight = { scope: string; generation: number; controller: AbortController; promise: Promise<boolean>; baseline: DogEventRecord[]; refreshRequested: boolean; deletedIds: Set<string> };
+type LogPaginationFlight = { scope: string; generation: number; controller: AbortController; deletedIds: Set<string> };
 type TrainingWorkspaceSnapshot = Awaited<ReturnType<typeof fetchTrainingWorkspace>>;
 type WorkspaceResourceFlight<T> = { scope: string; generation: number; controller: AbortController; promise: Promise<T> };
 type ChecklistRangeView = { scope: string; status: 'loading' | 'ready' | 'partial' | 'error'; activities: HomeDailyActivity[]; failedSources: string[]; unresolvedCount: number; routines?: DailyRoutine[] };
@@ -952,6 +952,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }, [cancelLogCalendarRead, currentLogLifetime, deviceTimeZone, loadLogCalendarMarkers, logCalendarData.key, page]);
 
   const reloadEvents = useCallback((intent: 'initial' | 'refresh' = 'initial'): Promise<boolean> => {
+    if (accountDeleteInFlight.current || accountDeletionInvalidated.current) return Promise.resolve(false);
     const scope = currentLogLifetime;
     if (intent === 'refresh' && logPaginationFlight.current?.scope === scope) {
       logPaginationGeneration.current += 1;
@@ -978,7 +979,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     const controller = new AbortController();
     const baseline = eventRows.current.slice();
     const hasSnapshot = logDataLifetimeRef.current === scope;
-    const flight: LogReadFlight = { scope, generation, controller, promise: Promise.resolve(false), baseline, refreshRequested: intent === 'refresh' };
+    const flight: LogReadFlight = { scope, generation, controller, promise: Promise.resolve(false), baseline, refreshRequested: intent === 'refresh', deletedIds: new Set() };
     if (intent === 'refresh') {
       setLogRefreshing(true);
       setLogRefreshError(false);
@@ -987,13 +988,14 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setLogState('loading');
     }
     const isCurrent = () => mounted.current && !controller.signal.aborted
+      && !accountDeleteInFlight.current && !accountDeletionInvalidated.current
       && logReadGeneration.current === generation && logLifetime.current === scope && logReadFlight.current === flight;
     const promise = serializeEventRead(() => fetchDogEvents(client, dog.id, null, PAGE_SIZE, undefined, controller.signal)).then((rows) => {
       if (!isCurrent()) return false;
       const nextCursor = rows.length ? dogEventCursor(rows[rows.length - 1]) : null;
       const pinnedIds = new Set(logPinnedEventIds.current);
       if (logActiveEditorId.current) pinnedIds.add(logActiveEditorId.current);
-      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current, pinnedIds);
+      const merged = mergeConfirmedLogRows(rows, flight.baseline, eventRows.current, pinnedIds, flight.deletedIds);
       logPinnedEventIds.current.clear();
       logPageCursor.current = nextCursor;
       setLogLoadedThrough(nextCursor);
@@ -1008,8 +1010,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setLogRefreshError(false);
       return true;
     }).catch(() => {
-      if (!mounted.current || controller.signal.aborted || logReadGeneration.current !== generation
-        || logLifetime.current !== scope || logReadFlight.current !== flight) return false;
+      if (!mounted.current || controller.signal.aborted || accountDeleteInFlight.current || accountDeletionInvalidated.current
+        || logReadGeneration.current !== generation || logLifetime.current !== scope || logReadFlight.current !== flight) return false;
       if (flight.refreshRequested && hasSnapshot) {
         setLogRefreshError(true);
       } else if (!hasSnapshot) {
@@ -1019,7 +1021,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       return false;
     }).finally(() => {
       if (logReadFlight.current === flight) logReadFlight.current = null;
-      if (mounted.current && !controller.signal.aborted && logReadGeneration.current === generation && logLifetime.current === scope) {
+      if (mounted.current && !controller.signal.aborted && !accountDeleteInFlight.current && !accountDeletionInvalidated.current
+        && logReadGeneration.current === generation && logLifetime.current === scope) {
         setLogRefreshing(false);
       }
     });
@@ -2123,6 +2126,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   async function loadMoreEvents() {
+    if (accountDeleteInFlight.current || accountDeletionInvalidated.current) return;
     const lifetime = logLifetime.current;
     const existing = logPaginationFlight.current;
     if (existing?.scope === lifetime || loadingMore || !logHasMore.current) return;
@@ -2133,9 +2137,10 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     }
     const generation = ++logPaginationGeneration.current;
     const controller = new AbortController();
-    const flight: LogPaginationFlight = { scope: lifetime, generation, controller };
+    const flight: LogPaginationFlight = { scope: lifetime, generation, controller, deletedIds: new Set() };
     logPaginationFlight.current = flight;
     const isCurrent = () => mounted.current && !controller.signal.aborted
+      && !accountDeleteInFlight.current && !accountDeletionInvalidated.current
       && logPaginationGeneration.current === generation && logLifetime.current === lifetime
       && logPaginationFlight.current === flight;
     setLoadingMore(true);
@@ -2156,7 +2161,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         throw new Error('Log pagination did not advance');
       }
       setLoadMoreError(false);
-      const merged = mergeConfirmedLogRows([...baseline, ...next], baseline, eventRows.current);
+      const merged = mergeConfirmedLogRows([...baseline, ...next], baseline, eventRows.current, new Set(), flight.deletedIds);
       logPageCursor.current = nextCursor;
       setLogLoadedThrough(nextCursor);
       eventRows.current = merged;
@@ -2169,10 +2174,61 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     } finally {
       if (logPaginationFlight.current === flight) {
         logPaginationFlight.current = null;
-        if (mounted.current && !controller.signal.aborted && logPaginationGeneration.current === generation
-          && logLifetime.current === lifetime) setLoadingMore(false);
+        if (mounted.current && !controller.signal.aborted && !accountDeletionInvalidated.current
+          && logPaginationGeneration.current === generation && logLifetime.current === lifetime) setLoadingMore(false);
       }
     }
+  }
+
+  function releaseConfirmedInsertFlight(flightToken: string, lifetime: string) {
+    if (!isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current)
+      || logMutationFlight.current?.token !== flightToken) return;
+    logMutationFlight.current = finishLogMutationFlight(logMutationFlight.current, flightToken);
+    setLogBusy(false);
+  }
+
+  async function reloadAfterLogInsert(lifetime: string) {
+    const sharedRead = logReadFlight.current?.scope === lifetime;
+    await reloadEvents();
+    if (sharedRead && !accountDeleteInFlight.current && !accountDeletionInvalidated.current
+      && isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current)) {
+      await reloadEvents();
+    }
+  }
+
+  async function reconcileUncertainInsert(mutation: Extract<PendingLogMutation, { kind: 'insert' }>, flightToken: string, lifetime: string) {
+    const isCurrent = () => isLogMutationLifetimeCurrent(lifetime, logLifetime.current, mounted.current);
+    pendingLogMutation.current = mutation;
+    setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
+    let found: DogEventRecord | null = null;
+    try {
+      const result = await checkInsertRetryOperation(mutation.operation, async (id) => {
+        const row = await fetchDogEventById(client, dog.id, id);
+        return row && matchesDogEventOperation(row, mutation.operation) ? row : null;
+      });
+      found = result.found;
+    } catch {
+      // A failed read leaves the write outcome unknown; it must never trigger another insert.
+    }
+    if (!isCurrent()) return false;
+    const confirmed = found;
+    if (confirmed) {
+      const firstConfirmedLog = logState === 'ready' && eventRows.current.length === 0;
+      void analyticsService.track(firstConfirmedLog ? 'first_log' : 'meaningful_return');
+      pendingLogMutation.current = null;
+      const merged = [...eventRows.current.filter((event) => event.id !== confirmed.id), confirmed].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
+      eventRows.current = merged;
+      setEvents(merged);
+      setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
+      releaseConfirmedInsertFlight(flightToken, lifetime);
+      void reloadAfterLogInsert(lifetime).catch(() => {});
+      return true;
+    }
+    pendingLogMutation.current = null;
+    setQuickLogMutation(null);
+    releaseConfirmedInsertFlight(flightToken, lifetime);
+    void reloadAfterLogInsert(lifetime).catch(() => {});
+    return false;
   }
 
   async function runLogMutation(mutation: PendingLogMutation, ownedFlightToken?: string) {
@@ -2204,7 +2260,6 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
         if (mutation.kind === 'insert') {
           const confirmedEvent = outcome.value;
           if (confirmedEvent) {
-            logPinnedEventIds.current.add(confirmedEvent.id);
             const localEvent = toLogEvent(confirmedEvent);
             const merged = [...eventRows.current.filter((event) => event.id !== localEvent.id), confirmedEvent].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
             eventRows.current = merged;
@@ -2221,20 +2276,28 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
           setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
         }
         if (mutation.kind === 'delete' || mutation.kind === 'undo') {
+          if (logReadFlight.current?.scope === lifetime) logReadFlight.current.deletedIds.add(mutation.id);
+          if (logPaginationFlight.current?.scope === lifetime) logPaginationFlight.current.deletedIds.add(mutation.id);
           const remaining = eventRows.current.filter((event) => event.id !== mutation.id);
           eventRows.current = remaining;
           setEvents(remaining);
           setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
         }
         try {
-          await reloadEvents();
+          if (mutation.kind === 'insert' && outcome.value) {
+            releaseConfirmedInsertFlight(flightToken, lifetime);
+            await reloadAfterLogInsert(lifetime);
+          } else {
+            await reloadEvents();
+          }
         } catch {
           // The confirmed local row remains authoritative until a later reload succeeds.
         }
         return isCurrent();
       }
-      const presentationStatus = logMutationStatusForWriteOutcome(outcome.status);
+      const presentationStatus = mutation.kind === 'insert' ? 'unsure' : logMutationStatusForWriteOutcome(outcome.status);
       if (presentationStatus === 'unsure') {
+        if (mutation.kind === 'insert') return await reconcileUncertainInsert(mutation, flightToken, lifetime);
         pendingLogMutation.current = mutation;
         setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
         return false;
@@ -2244,6 +2307,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       return false;
     } catch {
       if (!isCurrent()) return false;
+      if (mutation.kind === 'insert') return await reconcileUncertainInsert(mutation, flightToken, lifetime);
       pendingLogMutation.current = mutation;
       setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
       return false;
@@ -2316,7 +2380,8 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
   }
 
   function cancelLogMutation() {
-    if (logMutationFlight.current || quickLogMutation?.status !== 'failed') return;
+    if (logMutationFlight.current || !quickLogMutation
+      || quickLogMutation.status !== 'failed') return;
     const pending = pendingLogMutation.current;
     if (!pending || quickLogMutation.id !== (pending.kind === 'insert' ? pending.operation.id : pending.id)) return;
     pendingLogMutation.current = null;
@@ -2336,32 +2401,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
       setLogBusy(true);
       setQuickLogMutation(toQuickLogMutationView(mutation, 'pending'));
       try {
-        const retryCheck = await checkInsertRetryOperation(mutation.operation, async (id) => {
-          const found = await fetchDogEventById(client, dog.id, id);
-          return found && matchesDogEventOperation(found, mutation.operation) ? found : null;
-        });
-        const found = retryCheck.found;
-        if (!isCurrent()) return false;
-        if (found) {
-          pendingLogMutation.current = null;
-          logPinnedEventIds.current.add(found.id);
-          const merged = [...eventRows.current.filter((event) => event.id !== found.id), found].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.id.localeCompare(a.id));
-          eventRows.current = merged;
-          setEvents(merged);
-          setQuickLogMutation(toQuickLogMutationView(mutation, 'saved'));
-          try {
-            await reloadEvents();
-            if (!isCurrent()) return false;
-          } catch {
-            if (!isCurrent()) return false;
-          }
-          return true;
-        }
-        return await runLogMutation({ ...mutation, operation: retryCheck.operation }, flightToken);
-      } catch {
-        if (!isCurrent()) return false;
-        setQuickLogMutation(toQuickLogMutationView(mutation, 'unsure'));
-        return false;
+        return await reconcileUncertainInsert(mutation, flightToken, lifetime);
       } finally {
         const ownsFlight = logMutationFlight.current?.token === flightToken;
         logMutationFlight.current = finishLogMutationFlight(logMutationFlight.current, flightToken);
@@ -3477,7 +3517,7 @@ export function ProductWorkspace({ client, dog, onDogUpdated, ownedDogs = [dog],
     if (!isCurrent()) return { status: 'unavailable' };
     const unresolvedWrite = pendingLogMutation.current || pendingHealthMutation.current.size > 0
       || pendingHealthHistoryMutation.current || pendingPlannedHealthMutation.current
-      || pendingProfileMutation.current || logMutationFlight.current || healthMutationInFlight.current
+      || pendingProfileMutation.current || logMutationFlight.current || logReadFlight.current || logPaginationFlight.current || healthMutationInFlight.current
       || healthHistoryMutationInFlight.current || plannedHealthMutationInFlight.current
       || profileMutationInFlight.current || trainingMutationLease.current !== null
       || dailyMutationBlocksAccountDeletion(dailyMutationInFlight.current,

@@ -272,3 +272,19 @@ export function operationAppliedToWorkspace(
     && !workspace.milestones.some(row => row.journey_id === journey.id && row.step_id === action.stepId);
   return journey.last_operation_id === operationId;
 }
+
+/** Mirrors the server's strictly greater position rule; ambiguous catalogs show no preview. */
+export function nextTrainingStepTitle(steps: readonly { id: string; position: number; title: string }[], currentStepId: string): string | null {
+  if (!Array.isArray(steps) || typeof currentStepId !== 'string' || !currentStepId || currentStepId.trim() !== currentStepId || !steps.length) return null;
+  const ids = new Set<string>(), positions = new Set<number>(), titles = new Set<string>();
+  for (const step of steps) {
+    if (!step || typeof step !== 'object' || typeof step.id !== 'string' || !step.id || step.id.trim() !== step.id
+      || !Number.isSafeInteger(step.position) || step.position < 1 || step.position > 2_147_483_647
+      || typeof step.title !== 'string' || !step.title.trim() || ids.has(step.id.toLowerCase()) || positions.has(step.position)
+      || titles.has(step.title.trim().toLocaleLowerCase('sv-SE'))) return null;
+    ids.add(step.id.toLowerCase()); positions.add(step.position); titles.add(step.title.trim().toLocaleLowerCase('sv-SE'));
+  }
+  const current = steps.find((step) => step.id === currentStepId);
+  if (!current) return null;
+  return steps.filter((step) => step.position > current.position).sort((a, b) => a.position - b.position)[0]?.title ?? null;
+}

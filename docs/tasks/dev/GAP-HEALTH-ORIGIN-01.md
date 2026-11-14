@@ -1,0 +1,7 @@
+# GAP-HEALTH-ORIGIN-01: tydligt ursprung på hälsosidan
+
+Bas: `d122622645eefb3f4c44ce488afea7105624d878` med lokala GAP-ändringar. I Hälsas översikt samt vaccinations- och veterinärflik beskriver sidhuvudet nu att användaren här samlar egna uppgifter och anger att vyn inte är en veterinärjournal. Den separata viktvyn beskriver på samma sätt var användaren samlar egna viktuppgifter. Det ändrar inte några lagrade uppgifter eller källor.
+
+Oberoende källgranskning fann att den lokala kodens planer, händelser och viktposter är ägarhanterade, i linje med hälsokontraktet; verklig live-dataproveniens har inte verifierats och ingen separat proveniens sparas per rad. Därför beskriver texten vad användaren samlar i vyn utan att påstå att varje enskild befintlig post har en verifierad källa. Oberoende visuell granskning av syntetisk RN Web-render 375 × 844 fann texten läsbar utan synlig överlappning eller avklippning. Mätt kontrast, större text, VoiceOver, iPhone och full panelmatch är inte verifierade. Render finns i `docs/design/evidence/gap-health-origin-01/health-375.png`.
+
+Syntetisk RN Web-kontroll verifierade att texten visas i översikten och den separata viktvyn; rendering av viktvyn finns i `docs/design/evidence/gap-health-origin-01/weight-375.png`. De slutliga justerade texterna är separat granskade i båda bilderna. `pnpm check` passerade med 1 007 godkända och ett överhoppat test. `git diff --check` passerade före denna dokumentuppdatering. Inga faktiska telefonprov eller TestFlight-distributioner har genomförts.

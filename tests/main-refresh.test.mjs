@@ -30,19 +30,19 @@ test('Log reads are scoped to account generation and active dog; old rows are hi
 test('Log refresh joins one scoped read and fences completion, failure and spinner cleanup', () => {
   assert.match(workspace, /if \(existing\?\.scope === scope\)[\s\S]{0,220}return existing\.promise/);
   assert.match(workspace, /logReadGeneration\.current === generation && logLifetime\.current === scope && logReadFlight\.current === flight/);
-  assert.match(workspace, /controller\.signal\.aborted \|\| logReadGeneration\.current !== generation[\s\S]{0,150}logLifetime\.current !== scope \|\| logReadFlight\.current !== flight/);
+  assert.match(workspace, /controller\.signal\.aborted \|\| accountDeleteInFlight\.current \|\| accountDeletionInvalidated\.current\s*\|\| logReadGeneration\.current !== generation[\s\S]{0,150}logLifetime\.current !== scope \|\| logReadFlight\.current !== flight/);
   assert.match(workspace, /\.finally\(\(\) => \{[\s\S]{0,220}logReadGeneration\.current === generation && logLifetime\.current === scope/);
   assert.match(workspace, /if \(logFlight\?\.scope === currentLogLifetime\)[\s\S]{0,160}logFlight\.controller\.abort\(\)/);
 });
 
 test('Log pagination aborts on scope change and fences stale completion and spinner cleanup', () => {
-  assert.match(workspace, /type LogPaginationFlight = \{ scope: string; generation: number; controller: AbortController \}/);
+  assert.match(workspace, /type LogPaginationFlight = \{ scope: string; generation: number; controller: AbortController; deletedIds: Set<string> \}/);
   assert.match(workspace, /const paginationFlight = logPaginationFlight\.current;\s*if \(paginationFlight\) \{\s*logPaginationGeneration\.current \+= 1;\s*paginationFlight\.controller\.abort\(\);\s*logPaginationFlight\.current = null;/);
   assert.match(workspace, /fetchDogEvents\(client, dog\.id, cursor, PAGE_SIZE, undefined, controller\.signal\)/);
   assert.match(workspace, /intent === 'refresh' && logPaginationFlight\.current\?\.scope === scope[\s\S]{0,200}logPaginationFlight\.current\.controller\.abort\(\)/);
   assert.match(workspace, /const baseline = eventRows\.current\.slice\(\);\s*const next = await fetchDogEvents\(client, dog\.id, cursor/);
-  assert.match(workspace, /const isCurrent = \(\) => mounted\.current && !controller\.signal\.aborted\s*&& logPaginationGeneration\.current === generation && logLifetime\.current === lifetime\s*&& logPaginationFlight\.current === flight/);
-  assert.match(workspace, /if \(logPaginationFlight\.current === flight\) \{\s*logPaginationFlight\.current = null;\s*if \(mounted\.current && !controller\.signal\.aborted && logPaginationGeneration\.current === generation\s*&& logLifetime\.current === lifetime\) setLoadingMore\(false\);/);
+  assert.match(workspace, /const isCurrent = \(\) => mounted\.current && !controller\.signal\.aborted\s*&& !accountDeleteInFlight\.current && !accountDeletionInvalidated\.current\s*&& logPaginationGeneration\.current === generation && logLifetime\.current === lifetime\s*&& logPaginationFlight\.current === flight/);
+  assert.match(workspace, /if \(logPaginationFlight\.current === flight\) \{\s*logPaginationFlight\.current = null;\s*if \(mounted\.current && !controller\.signal\.aborted && !accountDeletionInvalidated\.current\s*&& logPaginationGeneration\.current === generation\s*&& logLifetime\.current === lifetime\) setLoadingMore\(false\);/);
   assert.match(workspace, /paginationFlight\?\.scope === currentLogLifetime\)[\s\S]{0,200}paginationFlight\.controller\.abort\(\)/);
   assert.match(logScreen, /onOpenEvent=\{\(event\) => \{[\s\S]*?onViewChange\?\.\('today', \{ preserveEventId: event\.id \}\)/);
   assert.match(logScreen, /onActiveEditorChange\?\.\(editingId\)/);

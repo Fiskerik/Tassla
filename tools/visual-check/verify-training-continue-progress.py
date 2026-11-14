@@ -6,7 +6,7 @@ from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 
 base = os.environ['TASSLA_UI_BASE_URL'].rstrip('/')
-out = Path('docs/design/evidence/training-continue-progress-01')
+out = Path(os.environ.get('TASSLA_UI_EVIDENCE', 'docs/design/evidence/training-continue-progress-01'))
 out.mkdir(parents=True, exist_ok=True)
 results, errors = [], []
 
@@ -36,7 +36,12 @@ with sync_playwright() as p:
         ratio = bar.evaluate('''e => {const track=e.firstElementChild, fill=track.firstElementChild;
           return fill.getBoundingClientRect().width / track.getBoundingClientRect().width}''')
         assert abs(ratio-expected_value/100) < 0.02, (scenario, ratio)
-        if scenario == 'paused': expect(card).to_have_attribute('aria-label', re.compile('^Öppna'))
+        if scenario == 'paused':
+            expect(card).to_have_attribute('aria-label', re.compile('^Öppna.*pausad, senast valda övning'))
+            expect(card.get_by_text('Pausad', exact=True)).to_be_visible()
+            expect(card).not_to_have_attribute('aria-label', re.compile('aktivt steg'))
+        else:
+            expect(card).to_have_attribute('aria-label', re.compile('aktivt steg'))
         card.scroll_into_view_if_needed()
         page.wait_for_timeout(300)
         page.screenshot(path=str(out/f'{scenario}-375.png'))
@@ -61,19 +66,23 @@ with sync_playwright() as p:
     page.close()
     for pending, expected in [('pending','Sparar ändringen'),('unknown','Ändringen behöver kontrolleras')]:
         page=browser.new_page(viewport={'width':375,'height':844})
-        page.goto(base+f'/?screen=training&trainingScenario=unstarted&progression=confirmed&completionPending={pending}')
+        page.goto(base+f'/?screen=training&trainingScenario=unstarted&progression=paused&completionPending={pending}')
         card=page.get_by_role('button',name=re.compile('^Öppna träningsresan Trygg vardagsstart'))
         expect(card).to_contain_text(expected)
+        expect(card).not_to_contain_text('Pausad')
+        expect(card).not_to_have_attribute('aria-label', re.compile('pausad|aktivt steg'))
         expect(card.get_by_role('progressbar')).to_have_count(0)
         card.scroll_into_view_if_needed()
         page.screenshot(path=str(out/f'{pending}-375.png'))
         results.append(f'{pending}: no stale progress')
         page.close()
-    for query in ('trainingScenario=duplicate-steps&progression=confirmed', 'trainingScenario=unstarted&progression=confirmed&duplicateJourney=true'):
+    for query in ('trainingScenario=duplicate-steps&progression=paused', 'trainingScenario=unstarted&progression=paused&duplicateJourney=true'):
         page=browser.new_page(viewport={'width':375,'height':844})
         page.goto(base+'/?screen=training&'+query)
         card=page.get_by_role('button',name=re.compile('^Öppna träningsresan Trygg vardagsstart'))
         expect(card).to_contain_text('Framstegen kunde inte visas.')
+        expect(card).not_to_contain_text('Pausad')
+        expect(card).not_to_have_attribute('aria-label', re.compile('pausad|aktivt steg'))
         expect(card.get_by_role('progressbar')).to_have_count(0)
         results.append('invalid identity: no misleading progress')
         page.close()
@@ -89,12 +98,15 @@ with sync_playwright() as p:
     expect(card).not_to_contain_text('delmål')
     results.append('legacy: activity markings remain distinct')
     page.close()
-    for width,height,enlarged in [(320,667,False),(375,667,True),(430,844,False)]:
+    for width,height,enlarged,scenario in [(320,667,False,'confirmed'),(375,667,True,'paused'),(430,844,False,'paused')]:
         page=browser.new_page(viewport={'width':width,'height':height})
-        page.goto(base+'/?screen=training&trainingScenario=unstarted&progression=confirmed')
+        page.goto(base+f'/?screen=training&trainingScenario=unstarted&progression={scenario}')
         if enlarged:
             page.evaluate("""() => document.querySelectorAll('[dir=auto]').forEach(e => {const s=getComputedStyle(e);e.style.fontSize=parseFloat(s.fontSize)*1.4+'px';if(s.lineHeight!=='normal')e.style.lineHeight=parseFloat(s.lineHeight)*1.4+'px'})""")
-        card=page.get_by_role('button',name=re.compile('^Fortsätt träningsresan Trygg vardagsstart'))
+        card=page.get_by_role('button',name=re.compile('^(Fortsätt|Öppna) träningsresan Trygg vardagsstart'))
+        if scenario == 'paused':
+            expect(card).to_have_attribute('aria-label', re.compile('pausad, senast valda övning'))
+            expect(card.get_by_text('Pausad', exact=True)).to_be_visible()
         card.scroll_into_view_if_needed()
         box=card.bounding_box()
         assert box and box['width']>=44 and box['height']>=44 and box['x']>=0 and box['x']+box['width']<=width,box

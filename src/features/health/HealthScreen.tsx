@@ -106,7 +106,7 @@ export function HealthScreen(props: Props) {
     meta={planMeta(row, dateLabel)} onPress={() => openPlan(row.id)} />;
 
   return <View>
-    <PageHeading title="Hälsa" description="Vikt, planerade och genomförda hälsohändelser." />
+    <PageHeading title="Hälsa" description="Här samlar du egna uppgifter. Det här är inte en veterinärjournal." />
     <Tabs items={['Översikt', 'Vaccinationer', 'Veterinär', 'Vikt']} active={tab} onChange={setTab} variant="rev02-segmented" />
     {props.plannedLoadState === 'ready' && overdue.length ? <><SectionHeader title="Datum har passerat" /><View style={styles.rows}>{overdue.map((row) => renderPlan(row, `Planerad ${shortDate(row.due_on)}`))}</View></> : null}
     <SectionHeader title="Kommande" />

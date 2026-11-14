@@ -28,7 +28,7 @@ import type { LogEvent } from '../../src/features/puppy-log/log-model';
 import type { DogEventInsights, InsightsPeriod } from '../../src/features/puppy-log/insights-model';
 import type { InsightsLoadState } from '../../src/features/puppy-log/InsightsScreen';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { localDate } from '../../src/features/onboarding/dog';
+import { addMonthsClamped, localDate } from '../../src/features/onboarding/dog';
 
 // Synthetic published-shaped data for visual comparison; production reads the validated catalog.
 const phaseVisualFixture = CHECKLIST_TEMPLATES.map((template) => {
@@ -60,7 +60,11 @@ const dog: OwnedDog = {
   name: 'Luna',
   breed_id: 'golden',
   birth_date: ageScenario === 'missing' ? null : ageScenario === 'invalid' ? '2026-02-30'
-    : ageScenario === 'future' ? dateOffset(today, 30) : ageScenario === 'early' ? dateOffset(today, -30)
+    : ageScenario === 'future' ? dateOffset(today, 30) : ageScenario === 'birth' ? today
+      : ageScenario === 'six-months' ? addMonthsClamped(today, -6)
+      : ageScenario === 'near-adult' ? dateOffset(addMonthsClamped(today, -24), 1)
+      : ageScenario === 'adult-boundary' ? addMonthsClamped(today, -24)
+      : ageScenario === 'early' ? dateOffset(today, -30)
       : ageScenario === 'midpoint' ? dateOffset(today, -365) : ageScenario === 'adult' ? dateOffset(today, -900) : dateOffset(today, -77),
   age_display_unit: 'weeks',
 };

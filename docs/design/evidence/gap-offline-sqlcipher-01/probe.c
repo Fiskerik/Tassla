@@ -1,0 +1,5 @@
+#include <stdio.h>
+#include <sqlite3.h>
+#include <stdlib.h>
+static void run(sqlite3 *db,const char *label,const char *sql) {char *err=NULL; int rc=exsqlite3_exec(db,sql,NULL,NULL,&err); printf("%s rc=%d msg=%s\n",label,rc,err?err:"OK"); exsqlite3_free(err);}
+int main(void) {sqlite3 *a,*b,*c; remove("/tmp/tassla-sqlcipher-probe.db"); exsqlite3_open("/tmp/tassla-sqlcipher-probe.db",&a);run(a,"key","PRAGMA key='synthetic-only';");run(a,"create","PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; CREATE TABLE t (v TEXT); INSERT INTO t VALUES ('SYNTHETIC_ONLY_SECRET');");exsqlite3_open("/tmp/tassla-sqlcipher-probe.db",&b);run(b,"new-begin","BEGIN");run(b,"new-key-after-begin","PRAGMA key='synthetic-only';");run(b,"new-synchronous-in-tx","PRAGMA synchronous=FULL;");run(b,"new-read","SELECT * FROM t;");run(b,"new-commit","COMMIT");exsqlite3_close(b);exsqlite3_open("/tmp/tassla-sqlcipher-probe.db",&c);run(c,"wrong-key","PRAGMA key='wrong'; SELECT * FROM t;");exsqlite3_close(c);exsqlite3_close(a);return 0;}

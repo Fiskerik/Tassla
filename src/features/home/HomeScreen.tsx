@@ -266,7 +266,7 @@ export function HomeScreen({ dog, breed, content, contentState, events, logState
         </> : null}
         {trainingJourneyDisplay.pending?.status === 'pending' ? <Text style={styles.emptyText} accessibilityLiveRegion="polite">Ändringen av träningsresan sparas.</Text> : null}
         {trainingJourneyDisplay.pending?.status === 'unknown' ? <View style={styles.trainingJourneyPending}>
-          <Text style={styles.emptyText}>Den senaste ändringen behöver kontrolleras. Den räknas inte som sparad ännu.</Text>
+          <Text style={styles.emptyText}>Vi kunde inte se om ändringen sparades. Kontrollera den igen.</Text>
           {onRetryProgression ? <Button variant="tertiary" label="Kontrollera samma ändring igen"
             accessibilityLabel="Kontrollera samma träningsändring igen"
             onPress={() => onRetryProgression(trainingJourneyDisplay.pending!.action.programVersionId)} /> : null}

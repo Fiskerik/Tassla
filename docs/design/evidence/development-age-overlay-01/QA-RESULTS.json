@@ -1,0 +1,1187 @@
+{
+  "mode": "public",
+  "panel": "development",
+  "evidence_dir": "/tmp/overlay-qa",
+  "results": [
+    {
+      "check": "Development shows three voluntary phase suggestions at 375px",
+      "result": "PASS",
+      "row_count": 3
+    },
+    {
+      "check": "Development uses a 24/30 bold title with compact portrait spacing at 375px",
+      "result": "PASS",
+      "title_style": {
+        "fontSize": "24px",
+        "lineHeight": "30px",
+        "fontWeight": "700"
+      },
+      "title_box": {
+        "x": 68,
+        "y": 61,
+        "width": 239,
+        "height": 30
+      },
+      "hero_box": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "gap_pt": 13
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 29.28125,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 375px",
+      "result": "PASS",
+      "gap_pt": 92.703125,
+      "puppy_range": {
+        "x": 80.796875,
+        "y": 355.9375,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 220.203125,
+        "y": 353.9375,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 63.28125,
+        "y": 307.9375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 375px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 29.28125,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 375px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      }
+    },
+    {
+      "check": "Public Development empty-guide state returns to Home at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 375px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development shows three voluntary phase suggestions at 430px",
+      "result": "PASS",
+      "row_count": 3
+    },
+    {
+      "check": "Development uses a 24/30 bold title with compact portrait spacing at 430px",
+      "result": "PASS",
+      "title_style": {
+        "fontSize": "24px",
+        "lineHeight": "30px",
+        "fontWeight": "700"
+      },
+      "title_box": {
+        "x": 68,
+        "y": 61,
+        "width": 294,
+        "height": 30
+      },
+      "hero_box": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "gap_pt": 13
+    },
+    {
+      "check": "Development age pill has a 44pt touch target at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 35.0625,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development phase labels have breathing room at 430px",
+      "result": "PASS",
+      "gap_pt": 147.703125,
+      "puppy_range": {
+        "x": 80.796875,
+        "y": 386.875,
+        "width": 46.703125,
+        "height": 16
+      },
+      "adolescent_label": {
+        "x": 275.203125,
+        "y": 384.875,
+        "width": 61.421875,
+        "height": 20
+      }
+    },
+    {
+      "check": "Development age marker stays discoverable as a 44pt toggle at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 69.0625,
+        "y": 338.875,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development age pill toggles off and back on from the marker at 430px",
+      "result": "PASS",
+      "initial_pill": {
+        "x": 35.0625,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "Development hero retains its large unique generic image at 430px",
+      "result": "PASS",
+      "image_box": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      }
+    },
+    {
+      "check": "Public Development empty-guide state returns to Home at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Development render has no browser errors or horizontal overflow at 430px",
+      "result": "PASS",
+      "page_errors": []
+    },
+    {
+      "check": "Development short viewport scrolls with no horizontal overflow at 140% text proxy",
+      "result": "PASS",
+      "horizontal_overflow": false,
+      "scroll_height": 667
+    },
+    {
+      "check": "Last milestone link remains fully reachable above fixed navigation after scrolling",
+      "result": "PASS",
+      "row": {
+        "x": 37,
+        "y": 404.9375,
+        "width": 301,
+        "height": 69
+      },
+      "bottom_nav": {
+        "x": 0,
+        "y": 751,
+        "width": 375,
+        "height": 59
+      }
+    },
+    {
+      "check": "Development guide loading state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide retry invokes the supplied retry action",
+      "result": "PASS"
+    },
+    {
+      "check": "Development guide error state renders distinctly",
+      "result": "PASS"
+    },
+    {
+      "check": "Development missing birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development invalid birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "Development future birth date uses the neutral unknown-age state",
+      "result": "PASS"
+    },
+    {
+      "check": "birth age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.0,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 49,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth hidden marker remains a 44pt control at 320px",
+      "result": "PASS",
+      "box": {
+        "x": 36,
+        "y": 281,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "early age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "early linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.04097732843137255,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 57.359375,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.1053155637254902,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 70.484375,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal hidden marker remains a 44pt control at 320px",
+      "result": "PASS",
+      "box": {
+        "x": 57.484375,
+        "y": 281,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 53.34375,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.25168504901960786,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 100.34375,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 53.34375,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 104,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.5,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 151,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 104,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult age label overlays the image at 320px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 108,
+        "width": 272,
+        "height": 153
+      },
+      "pill": {
+        "x": 184,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult linear timeline and hit area fit at 320px",
+      "result": "PASS",
+      "position": 0.9986213235294118,
+      "track": {
+        "x": 58,
+        "y": 301,
+        "width": 204,
+        "height": 4
+      },
+      "marker": {
+        "x": 252.71875,
+        "y": 294,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 184,
+        "y": 209,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult hidden marker remains a 44pt control at 320px",
+      "result": "PASS",
+      "box": {
+        "x": 239.71875,
+        "y": 281,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 24,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.0,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 49,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth hidden marker remains a 44pt control at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 36,
+        "y": 307.9375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "early age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 24,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "early linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.041023166023166024,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 59.625,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 29.28125,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.10533301158301159,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 76.28125,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 29.28125,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal hidden marker remains a 44pt control at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 63.28125,
+        "y": 307.9375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 67.1875,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.2516891891891892,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 114.1875,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 67.1875,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 131.5,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.5,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 178.5,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 131.5,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult age label overlays the image at 375px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 327,
+        "height": 183.9375
+      },
+      "pill": {
+        "x": 239,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult linear timeline and hit area fit at 375px",
+      "result": "PASS",
+      "position": 0.9986124517374517,
+      "track": {
+        "x": 58,
+        "y": 327.9375,
+        "width": 259,
+        "height": 4
+      },
+      "marker": {
+        "x": 307.640625,
+        "y": 320.9375,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 239,
+        "y": 235.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult hidden marker remains a 44pt control at 375px",
+      "result": "PASS",
+      "box": {
+        "x": 294.640625,
+        "y": 307.9375,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 24,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.0,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 49,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "birth hidden marker remains a 44pt control at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 36,
+        "y": 338.875,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "early age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 24,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "early linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.041003184713375794,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 61.875,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 24,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 35.0625,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.10529458598726114,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 82.0625,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 35.0625,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "normal hidden marker remains a 44pt control at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 69.0625,
+        "y": 338.875,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 81.03125,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "six-months linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.25169187898089174,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 128.03125,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 81.03125,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 159,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "midpoint linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.5,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 206,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 159,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult age label overlays the image at 430px",
+      "result": "PASS",
+      "hero": {
+        "x": 24,
+        "y": 104,
+        "width": 382,
+        "height": 214.875
+      },
+      "pill": {
+        "x": 294,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult linear timeline and hit area fit at 430px",
+      "result": "PASS",
+      "position": 0.9986066878980892,
+      "track": {
+        "x": 58,
+        "y": 358.875,
+        "width": 314,
+        "height": 4
+      },
+      "marker": {
+        "x": 362.5625,
+        "y": 351.875,
+        "width": 18,
+        "height": 18
+      },
+      "pill": {
+        "x": 294,
+        "y": 266.875,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult hidden marker remains a 44pt control at 430px",
+      "result": "PASS",
+      "box": {
+        "x": 349.5625,
+        "y": 338.875,
+        "width": 44,
+        "height": 44
+      }
+    },
+    {
+      "check": "Linear marker increases monotonically from birth to nearly 24 months",
+      "result": "PASS",
+      "positions": {
+        "birth": 0.0,
+        "early": 0.041023166023166024,
+        "normal": 0.10533301158301159,
+        "six-months": 0.2516891891891892,
+        "midpoint": 0.5,
+        "near-adult": 0.9986124517374517
+      }
+    },
+    {
+      "check": "birth large-text pill fits at endpoint",
+      "result": "PASS",
+      "box": {
+        "x": 24,
+        "y": 263.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "near-adult large-text pill fits at endpoint",
+      "result": "PASS",
+      "box": {
+        "x": 239,
+        "y": 263.9375,
+        "width": 112,
+        "height": 44
+      }
+    },
+    {
+      "check": "adult age state does not show a puppy timeline at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "adult-boundary age state does not show a puppy timeline at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show a puppy timeline at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show a puppy timeline at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show a puppy timeline at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "adult age state does not show a puppy timeline at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "adult-boundary age state does not show a puppy timeline at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "missing age state does not show a puppy timeline at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "invalid age state does not show a puppy timeline at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "future age state does not show a puppy timeline at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Dog name ending in s renders without a duplicated genitive s at 430px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 375px",
+      "result": "PASS",
+      "button": {
+        "x": 102.046875,
+        "y": 104,
+        "width": 97.875,
+        "height": 44
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "999px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action wraps without portrait overlap at the 140% text proxy",
+      "result": "PASS",
+      "button": {
+        "x": 102.046875,
+        "y": 104,
+        "width": 128.171875,
+        "height": 44
+      },
+      "portrait": {
+        "x": 239,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 375px",
+      "result": "PASS"
+    },
+    {
+      "check": "Home phase action reads as a button and clears the portrait at 430px",
+      "result": "PASS",
+      "button": {
+        "x": 102.046875,
+        "y": 104,
+        "width": 97.875,
+        "height": 44
+      },
+      "portrait": {
+        "x": 294,
+        "y": 48,
+        "width": 112,
+        "height": 112
+      },
+      "clear": true,
+      "style": {
+        "background": "rgb(255, 252, 247)",
+        "borderColor": "rgb(33, 116, 72)",
+        "borderWidth": "1px",
+        "radius": "999px",
+        "labelColor": "rgb(33, 116, 72)",
+        "labelWeight": "700"
+      }
+    },
+    {
+      "check": "Home phase action opens the existing Development route at 430px",
+      "result": "PASS"
+    }
+  ],
+  "failures": []
+}

@@ -8,6 +8,7 @@ import { DatePickerField, MessageCard, TimePickerField } from '../../components/
 import { tokens } from '../../theme/tokens';
 import { localDate } from '../onboarding/dog';
 import { canonicalAccidentKinds, decideQuickLogPress, hasRecentCategoryLog, isCanonicalAccidentKinds, localDateTimeParts, LOG_ENTRY_TYPES, LOG_EVENT_LABELS, parseLocalDateTime, summarizePottyPatterns, type AccidentKind, type AccidentLogIntent, type LogEvent, type LogEventChanges, type LogEventType } from './log-model';
+import { unresolvedInsertForDay } from './log-pending-row';
 import { loadQuickLogLayout, saveQuickLogLayout } from './quick-log-layout-storage';
 import { DEFAULT_QUICK_LOG_LAYOUT, moveQuickLogType, type QuickLogLayout, type QuickLogLayoutType } from './quick-log-layout';
 import { LogDateCalendar } from './LogDateCalendar';
@@ -106,10 +107,7 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
   const oldestLoadedDate = loadedThrough && Number.isFinite(Date.parse(loadedThrough.occurredAt)) ? localDateTimeParts(loadedThrough.occurredAt).date : null;
   const hasOlderDateBoundary = oldestLoadedDate !== null && oldestLoadedDate < selectedDate;
   const dayReadComplete = !hasMore || hasOlderDateBoundary;
-  const pendingAdd = mutation?.kind === 'add' && mutation.status === 'pending'
-    && localDateTimeParts(mutation.occurredAt).date === selectedDate
-    && !displayedEvents.some((event) => event.id === mutation.id)
-    ? mutation : null;
+  const pendingAdd = unresolvedInsertForDay(mutation, selectedDate, displayedEvents.map((event) => event.id), (occurredAt) => localDateTimeParts(occurredAt).date);
   const timelineItems = useMemo(() => [
     ...selectedDateEvents.map((event) => ({ kind: 'event' as const, event, occurredAt: event.occurredAt })),
     ...(pendingAdd ? [{ kind: 'pending' as const, event: pendingAdd, occurredAt: pendingAdd.occurredAt }] : []),
@@ -421,7 +419,9 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
     {firstUseTip.visible ? <FirstUseTip text="Tryck på Fler för fler loggtyper." onDismiss={firstUseTip.dismiss} /> : null}
     <Toast visible={loadMoreError} tone="error" message="Äldre poster kunde inte hämtas" onRetry={onLoadMore ? () => { firstUseTip.dismiss(); return onLoadMore(); } : undefined} />
     <Toast visible={!editingEvent && mutation?.status === 'failed'} tone="error" message="Kunde inte spara" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} onCancel={() => { firstUseTip.dismiss(); onCancel?.(); if (mutation && mutation.kind !== 'add') setEditingId(null); }} />
-    <Toast visible={!editingEvent && mutation?.status === 'unsure'} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
+    {!editingEvent && mutation?.status === 'unsure' && mutation.kind !== 'add'
+      ? <Toast visible={true} tone="uncertain" onRetry={() => { firstUseTip.dismiss(); return retryMutation(); }} />
+      : null}
     <View style={styles.dateNavigator}>
       <MotionPressable accessibilityRole="button" accessibilityLabel="Visa föregående dag" onPress={() => setSelectedDate((date) => shiftLocalDate(date, -1))} style={({ pressed }) => [styles.dateButton, pressed && styles.datePressed]}>
         <Ionicons name="chevron-back" size={tokens.size.iconMd} color={tokens.colors.textPrimary} />
@@ -505,7 +505,8 @@ export function LogScreen({ events, onAdd, onUpdate, onDelete, mode = 'preview',
       {timelineItems.map((item, index) => {
         if (item.kind === 'pending') {
           const parts = localDateTimeParts(item.event.occurredAt);
-          return <ListRow key={`pending-${item.event.mutationId}`} variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[item.event.type]} meta="Sparar…" time={parts.time} category={item.event.type} accidentKinds={item.event.accidentKinds ?? null} accessibilityLabel={`${LOG_EVENT_LABELS[item.event.type]} ${parts.time}, sparar`} chevron={false} />;
+          const status = 'Sparar…';
+          return <ListRow key={`pending-${item.event.mutationId}`} variant="log-timeline" showDivider={index < timelineItems.length - 1} title={LOG_EVENT_LABELS[item.event.type]} meta={status} time={parts.time} category={item.event.type} accidentKinds={item.event.accidentKinds ?? null} accessibilityLabel={`${LOG_EVENT_LABELS[item.event.type]} ${parts.time}, ${status}`} chevron={false} />;
         }
         const event = item.event;
           const rowPending = mutation?.id === event.id && mutation.status === 'pending';

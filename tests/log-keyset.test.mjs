@@ -119,8 +119,9 @@ test('production page merge preserves local edits and deletes and fences stale f
   const output = { events: null, cursor: null, error: false, more: true, loading: false };
   let resolveFetch, calledCursor;
   const fetcher = async (_client, _dog, value) => { calledCursor = value; return await new Promise((resolve) => { resolveFetch = resolve; }); };
-  const names = ['logLifetime', 'logPaginationFlight', 'loadingMore', 'logHasMore', 'logPaginationGeneration', 'mounted', 'setLoadingMore', 'setLoadMoreError', 'serializeEventRead', 'logPageCursor', 'eventRows', 'fetchDogEvents', 'client', 'dog', 'PAGE_SIZE', 'dogEventCursor', 'setLogLoadedThrough', 'setEvents', 'setHasMore'];
-  const values = [lifetime, flight, false, hasMore, generation, { current: true }, (value) => { output.loading = value; }, (value) => { output.error = value; }, async (read) => read(), cursor, rows, fetcher, {}, { id: dogId }, 2, dogEventCursor, (value) => { output.cursor = value; }, (value) => { output.events = value; }, (value) => { output.more = value; }];
+  const names = ['accountDeleteInFlight', 'accountDeletionInvalidated', 'logLifetime', 'logPaginationFlight', 'loadingMore', 'logHasMore', 'logPaginationGeneration', 'mounted', 'setLoadingMore', 'setLoadMoreError', 'serializeEventRead', 'logPageCursor', 'eventRows', 'fetchDogEvents', 'client', 'dog', 'PAGE_SIZE', 'dogEventCursor', 'setLogLoadedThrough', 'setEvents', 'setHasMore'];
+  const deletionInFlight = { current: false }, invalidated = { current: false };
+  const values = [deletionInFlight, invalidated, lifetime, flight, false, hasMore, generation, { current: true }, (value) => { output.loading = value; }, (value) => { output.error = value; }, async (read) => read(), cursor, rows, fetcher, {}, { id: dogId }, 2, dogEventCursor, (value) => { output.cursor = value; }, (value) => { output.events = value; }, (value) => { output.more = value; }];
   const load = new Function(...names, `${code}\nreturn loadMoreEvents;`)(...values);
   const pending = load();
   while (!resolveFetch) await new Promise((resolve) => setImmediate(resolve));
@@ -156,6 +157,31 @@ test('production page merge preserves local edits and deletes and fences stale f
   assert.equal(output.cursor, null);
   assert.equal(output.error, true);
   assert.deepEqual(cursor.current, dogEventCursor(boundary));
+
+  hasMore.current = true; cursor.current = dogEventCursor(boundary); rows.current = [first, boundary];
+  output.events = null; resolveFetch = null;
+  const deletedDuringPage = load();
+  while (!resolveFetch) await new Promise((resolve) => setImmediate(resolve));
+  flight.current.deletedIds.add(older.id); // A row inserted and deleted after this read started.
+  resolveFetch([older]);
+  await deletedDuringPage;
+  assert.equal(output.events.some((row) => row.id === older.id), false);
+
+  for (const flag of [deletionInFlight, invalidated]) {
+    hasMore.current = true; cursor.current = dogEventCursor(boundary); rows.current = [first, boundary];
+    output.events = null; output.cursor = null; resolveFetch = null;
+    const pendingDeletion = load();
+    while (!resolveFetch) await new Promise((resolve) => setImmediate(resolve));
+    flag.current = true;
+    resolveFetch([older]);
+    await pendingDeletion;
+    assert.equal(output.events, null);
+    assert.equal(output.cursor, null);
+    resolveFetch = null;
+    await load();
+    assert.equal(resolveFetch, null, 'no new pagination starts during deletion');
+    flag.current = false;
+  }
 });
 
 test('a delayed first-page reload keeps an opened or confirmed older event without reviving a deletion', async () => {
@@ -174,8 +200,8 @@ test('a delayed first-page reload keeps an opened or confirmed older event witho
   let resolveFetch, rejectFetch;
   const fetcher = async () => await new Promise((resolve, reject) => { resolveFetch = resolve; rejectFetch = reject; });
   const activeEditor = { current: null };
-  const names = ['useCallback', 'currentLogLifetime', 'logReadFlight', 'logReadGeneration', 'logPaginationFlight', 'logPaginationGeneration', 'setLoadingMore', 'setLoadMoreError', 'eventRows', 'logDataLifetimeRef', 'setLogRefreshing', 'setLogRefreshError', 'setLogStateLifetime', 'setLogState', 'mounted', 'logLifetime', 'serializeEventRead', 'fetchDogEvents', 'client', 'dog', 'PAGE_SIZE', 'dogEventCursor', 'logPinnedEventIds', 'logActiveEditorId', 'logPageCursor', 'setLogLoadedThrough', 'setEvents', 'setLogDataLifetime', 'logHasMore', 'setHasMore'];
-  const values = [(fn) => fn, 'owner:dog', flight, logGeneration, paginationFlight, paginationGeneration, () => {}, () => {}, rows, { current: 'owner:dog' }, () => {}, (value) => { output.error = value; }, () => {}, (value) => { output.state = value; }, { current: true }, { current: 'owner:dog' }, async (read) => read(), fetcher, {}, { id: dogId }, 40, dogEventCursor, pins, activeEditor, cursor, (value) => { output.through = value; }, (value) => { output.events = value; }, () => {}, { current: false }, () => {}];
+  const names = ['accountDeleteInFlight', 'accountDeletionInvalidated', 'useCallback', 'currentLogLifetime', 'logReadFlight', 'logReadGeneration', 'logPaginationFlight', 'logPaginationGeneration', 'setLoadingMore', 'setLoadMoreError', 'eventRows', 'logDataLifetimeRef', 'setLogRefreshing', 'setLogRefreshError', 'setLogStateLifetime', 'setLogState', 'mounted', 'logLifetime', 'serializeEventRead', 'fetchDogEvents', 'client', 'dog', 'PAGE_SIZE', 'dogEventCursor', 'logPinnedEventIds', 'logActiveEditorId', 'logPageCursor', 'setLogLoadedThrough', 'setEvents', 'setLogDataLifetime', 'logHasMore', 'setHasMore'];
+  const values = [{ current: false }, { current: false }, (fn) => fn, 'owner:dog', flight, logGeneration, paginationFlight, paginationGeneration, () => {}, () => {}, rows, { current: 'owner:dog' }, () => {}, (value) => { output.error = value; }, () => {}, (value) => { output.state = value; }, { current: true }, { current: 'owner:dog' }, async (read) => read(), fetcher, {}, { id: dogId }, 40, dogEventCursor, pins, activeEditor, cursor, (value) => { output.through = value; }, (value) => { output.events = value; }, () => {}, { current: false }, () => {}];
   const reload = new Function(...names, `${code}\nreturn reloadEvents;`)(...values);
   const pending = reload('refresh');
   while (!resolveFetch) await new Promise((resolve) => setImmediate(resolve));

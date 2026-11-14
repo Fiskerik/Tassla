@@ -1,7 +1,7 @@
 # Tassla – GAP-analys, UX-rekommendationer och produktstrategi
 
-**Datum:** 2026-11-11  
-**Bas:** Senaste `main` efter merge av PR #42 (`feature/complete-mvp-journeys`)  
+**Datum:** 2026-11-11<br>
+**Bas:** Senaste `main` efter merge av PR #42 (`feature/complete-mvp-journeys`)<br>
 **Syfte:** Analysera Tassla som nästa generationens “BabyJourney för hundvalpar” – med fokus på användarupplevelse, innehåll, retention och långsiktig produktkvalitet. Målet är en app som känns genomtänkt och välarbetad, inte “AI-genererad”.
 
 ---
@@ -131,5 +131,6 @@ Appen får inte kännas feature-kompletterad eller teknisk. Den ska kännas lugn
 
 ---
 
-**Sammanfattning**  
+**Sammanfattning**
+
 Ni är på rätt spår med fokus på kompletta resor och micro-interactions. Det som skiljer en “bra valpapp” från “nästa BabyJourney för hundar” är känslan av lugn kompetens + emotionell koppling till just *denna* hund över tid. Fortsätt bygga det – och låt inte feature-bredd gå före att varje interaktion känns genomtänkt.

@@ -147,6 +147,7 @@ export function WeightScreen({
   if (!isCloud) return <View><AppBar mode="Back" title="Vikt" onAction={onBack} /><MessageCard>Här samlas hundens vikter när du har lagt till en vikt.</MessageCard></View>;
   return <View>
     <AppBar mode="Back" title="Vikt" onAction={onBack} />
+    <Text style={styles.origin}>Här samlar du egna viktuppgifter.</Text>
     <Toast visible={savedToastVisible} tone="success" confirmed message="Ändringen är sparad." autoDismissMs={2500}
       onAutoDismiss={() => setSavedToastVisible(false)} onExitComplete={() => setSavedToastVisible(false)} />
     {cloudLoadState === 'loading' && <MessageCard>Hämtar hundens vikthistorik…</MessageCard>}
@@ -209,6 +210,7 @@ export function WeightScreen({
 function formatWeight(value: number): string { return value.toLocaleString('sv-SE', { maximumFractionDigits: 3 }); }
 
 const styles = StyleSheet.create({
+  origin: { ...tokens.typography.body, color: tokens.colors.textSecondary },
   newAction: { marginTop: tokens.spacing.sm }, status: { gap: tokens.spacing.xs },
   recovery: { gap: tokens.spacing.xs, marginTop: tokens.spacing.sm }, recoveryActions: { flexDirection: 'row', gap: tokens.spacing.sm },
   editor: { gap: tokens.spacing.md }, formHeader: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },

@@ -1,0 +1,47 @@
+# Snabblogg med beständig kö — tekniskt underlag
+
+Status: isolerad oaktiverad protokollmodell och ett syntetiskt lagringsexperiment finns i GAP-OFFLINE-PROTOCOL-01 respektive GAP-OFFLINE-STORE-EXPERIMENT-01; ingen användbar kö är implementerad. Bas `d122622645eefb3f4c44ce488afea7105624d878` plus lokala GAP-checkpoints. Aktuell ägarbeställning omfattar offlinekö; den äldre noteringen om separat offlinebeslut ska inte användas för att fråga om önskemålet på nytt. Detta underlag väljer inte en färdig lagringsprodukt och godkänner inte distribution. Arkitekt, Security och Compliance har gjort read-only förhandsgranskning.
+
+## Användarkontrakt
+
+En snabbhändelse ska kunna få ett stabilt ID och synas omedelbart. Visa ”väntar på synk” först när lokal lagring verifierats; visa fel och behåll återhämtningsväg om den inte kan lagras. ”Synkar”, ”sparad” och ”sparstatus okänd” är olika tillstånd. Endast en serverbekräftad matchande rad ingår i ring och summeringar. Ingen haptik före serverbekräftelse enligt gällande särskilt haptikbeslut. En ej skickad post kan avbrytas lokalt; ångra av serverpost kräver bekräftad skrivning. Bevara skydd mot dubbeltryck och granska tvåsekundersregeln mot den aktuella beställningen innan dess kontrakt ändras.
+
+## Kritisk återspelningsrisk och beslut
+
+`dog_events.id` är primärnyckel endast så länge raden finns. Om servern sparar en händelse, appen avslutas före lokal avköning och raden därefter raderas på en annan enhet, kan frånvarande ID betyda antingen aldrig sparad eller sparad och sedan raderad. Ett UUID ensamt gör inte automatisk replay säker. Efter ett osäkert skickat försök ska en saknad eller avvikande rad därför **inte** automatiskt återinsättas. En köpost som bevisligen aldrig skickats får sändas; före varje nätanrop ska skickad/osäker avsikt vara hållbart registrerad. Fullt automatisk säker replay efter okänt utfall kräver ett beständigt serverkvitto/tombstone eller annat verifierat serverkontrakt. Välj fail-closed återhämtning tills sådant kontrakt är implementerat och verifierat.
+
+## Lagring och livscykel
+
+Lagra minsta nödvändiga strukturerade snabbhändelse: ägar- och hundscope, mutations-/händelse-ID, kategori, tid, nödvändiga olyckstyper, schema och status. Lagra inte token, anteckning eller rå payload i loggar. Serien av lokala köändringar måste vara serialiserad och ha integritetskontroll, verifierbar skrivning/radering, begränsad kapacitet och tydliga fel för full lagring eller korruption. Fånga konto, hund och generation före varje försök; ködata får aldrig visas eller skickas för annat konto. Återstart får inte omvandla ett oklart skickat försök till ett obevisat nytt.
+
+SecureStore är redan använt för små ägarspecifika markörer men har ingen verifierad flerpostkö eller enumerering. Expo FileSystem används för temporär PDF, inte verifierad krypterad transaktionell kö. Installerad Expo Crypto har AES-GCM och SecureStore har enhetsspecifika nyckelalternativ, men kombinationens atomiska filersättning, nyckel- och backuplivslängd samt native-kraschbeteende är inte bevisade. Välj lagring först efter versionsspecifik API-kontroll, hotmodell och ett litet experiment; lagra inte kö-JSON okrypterad som genväg.
+
+Kö och aktiv sändning måste samordnas med utloggning, konto-/hundbyte samt hund- och kontoradering. Ge ägaren begriplig hantering av osynkade händelser innan data försvinner; hindra samtidig replay, rensa rätt scope och rapportera om lokal rensning inte kan verifieras. Skydda mot att sent svar från tidigare generation ändrar aktuellt konto. Ingen ny bakgrundssynk utlovas: första lösningen kan synka medan appen är aktiv.
+
+## Genomförandeordning
+
+1. Beskriv exakta tillståndsövergångar och retention-/raderingsbeteende; gör ett begränsat lagringsexperiment med syntetiska data och utan produktaktivering. Verifiera installerade API:er och atomiska fel-/kraschfall.
+2. Specificera och implementera serverkvitto om automatisk retry efter tvetydig skrivning behövs, med isolering, RLS, radering och negativa SQL-integrationsprov. Alternativt ge en begriplig fail-closed återhämtning som inte automatiskt återskapar raderade poster.
+3. Implementera en avgränsad vertikal resa: lokalt verifierat köande, synlig status, aktiv-app-synk och bekräftad sammanräkning. Testa köfullhet, korruption, parallella tryck, offline, timeout, återstart, kontobyte och gammalt svar.
+4. Koppla hund-/kontoradering och utloggning, inklusive osynkade poster, lokalt cleanup och felåterhämtning. Kontrollera att ingen post kan komma tillbaka från raderad kontext.
+5. Kör oberoende Security/Compliance/QA/review, riktig utvecklingsdatabas/RLS och fysiskt iOS-krasch-/återstartsprov. Dokumentera faktisk gallring, backup och användarinformation före användning med riktiga konton. Inga sådana kontroller eller någon juridisk certifiering är utförda här.
+
+Separat, mindre prestandadel kan frigöra befintlig single-flight efter validerad serverbekräftad insert men före långsam återläsning. Den kräver tokenägt frigörande, livstidsisolering och tester för överlappande läsning/skrivning samt för att nästa toast ersätter föregående ångramöjlighet. Den är inte en offlinekö och får inte marknadsföras som en sådan.
+
+## Fördjupad serverutredning
+
+En möjlig RPC kan skriva händelse och separat kvitto i samma transaktion. Kvittot kan behålla request-ID och payloadfingeravtryck samt en nullable länk till händelsen; radering av enskild händelse lämnar tombstone medan hund-/kontoradering tar bort kvittot med motsvarande scope. Återspelning kan skilja skapad, befintlig, raderad och konflikt; den får inte läcka andra ägares data. Den måste följa befintlig låsordning för användare och hund, kontrollera ägarskap efter låsning och inte återställa originaltext som aktuell sanning efter redigering.
+
+Ett sådant kvitto skyddar inte automatiskt gamla klienters direkta INSERT-rättigheter. Att ta bort dessa kan bryta kompatibilitet; en trigger som enbart läser kvittot utan gemensam transaktionslåsning bevisar inte säkerhet vid samtidiga operationer. Specificera därför tydligt skyddets omfattning, gemensam låsordning och kompatibilitet och prova samtidiga transaktioner på verklig PostgreSQL före påstådd replaygaranti. Detta är en designkandidat, inte migrerad eller testad funktion.
+
+## Installerade lagrings-API:er — kraschgräns
+
+Källgranskning av installerad `expo-secure-store` 57.0.4: iOS använder `SecItemAdd`/`SecItemUpdate`, medan delete-anropens OS-status inte kontrolleras av modulen. Androids `saveEncryptedItem` returnerar `SharedPreferences.commit()`-resultatet men `setItemImpl` använder inte returvärdet. Varken framgångssvar eller omedelbar readback bevisar därmed ensamt att en ny snapshot överlever process-/OS-krasch. iOS-enhetens keychain-/backupbeteende och faktisk radering behöver provas separat. `expo-file-system` 57.0.7:s iOS-skrivning är inte atomisk och overwrite vid flytt tar bort destinationen före flytt; en krypterad temporär fil plus `move` är därför inte i sig en verifierad atomisk ersättning.
+
+Konsekvens: om sändning sker efter en läsbar men inte hållbart lagrad `attempting`-markör kan en krasch återställa en äldre `queued`-version och senare replay återskapa en raderad post. Modellen får inte användas för automatisk sändning förrän lagringsadaptern faktiskt uppfyller dess persistensbarriär eller ett verifierat serverkvitto eliminerar denna risk. Som konservativ reserv kan även alla återlästa queued-poster efter okänt avslut behandlas som potentiellt skickade, med uttrycklig återhämtningsväg; detta kräver separat kontrakt och får inte antyda att posterna har synkats. Ett oaktiverat syntetiskt experiment får inte tolkas som bevis för kraschhållbarhet.
+
+## SQLite/SQLCipher-kandidat (SDK57)
+
+Expo SDK57:s installerade `bundledNativeModules.json` anger `expo-sqlite ~57.0.3`; paketet är inte installerat som appdependency. Källgranskning av dess paket och ett begränsat experiment med dess vendrade SQLCipher-källa på Linux/OpenSSL visar en möjlig transaktionell krypterad databas, inte en verifierad iOS-lösning. SQLCipher kräver Expo-plugin med `useSQLCipher: true` och en ny native build. Standard `withTransactionAsync` är inte exklusiv; `withExclusiveTransactionAsync` öppnar en ny anslutning och påbörjar transaktionen före callback. SQLCipher-nyckel och säkerhetsinställningar måste därför kontrolleras för varje anslutning. I Linuxprovet gick `PRAGMA synchronous=FULL` inte att ställa efter `BEGIN`; en kandidat behöver initiera och verifiera nyckel, journal och synchronous före transaktionen och serialisera skrivägarskapet.
+
+Med syntetiska data på Linux/OpenSSL gav WAL/FULL-provet ingen rad efter hårt processavbrott före COMMIT och en rad efter COMMIT och återöppning; syntetisk klartext hittades inte i stängda DB-/WAL-/SHM-filer och fel nyckel avvisades. Detta bevisar inte Expo-bridge, iOS/CommonCrypto, operativsystems-/strömavbrottshållbarhet eller korrekt backup. Paketets `deleteDatabase` tar enligt källgranskningen endast basfilen; sidojournaler, öppna anslutningar, nyckelrensning, fysisk cleanup och faktisk backuphantering behöver egen säker implementation och nativeprov. iOS-databaskatalogen är enligt källan under `documentDirectory/SQLite`; ingen slutsats om faktisk iCloud-backup eller file protection är verifierad. Appens exportkrypteringsdeklaration behöver sakligt granskas före eventuell distribution med SQLCipher; ändra inte deklarationen på antagande.

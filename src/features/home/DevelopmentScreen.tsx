@@ -2,7 +2,6 @@ import { EditorialImage as Image } from '../../components/ui/EditorialImage';
 import { useMemo, useState } from 'react';
 import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Svg, { Path } from 'react-native-svg';
 import { AppBar, Button, Skeleton } from '../../components/ui';
 import { MessageCard } from '../../components/AppPrimitives';
 import { MotionPressable } from '../../components/ui/Motion';
@@ -35,6 +34,9 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   const ageProgress = useMemo(() => age && age.stage !== 'VUXEN' ? progressToAdultStage(birthDate, today) : null, [age, birthDate, today]);
   const phaseLabel = age ? formatStage(age.stage) : null;
   const [context, setContext] = useState<ChecklistContext>('by_age');
+  const [ageLabelVisible, setAgeLabelVisible] = useState(true);
+  const [heroWidth, setHeroWidth] = useState(0);
+  const [bubbleWidth, setBubbleWidth] = useState<number>(tokens.size.developmentAgeMarkerWidth);
   const ageWeeks = homeAgeInWeeks(birthDate, today);
   const phase = developmentPhase(phaseTemplates, ageWeeks, context);
 
@@ -42,12 +44,22 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
     <View style={styles.heroSection}>
       <AppBar mode="Back" title={developmentTitle(dogName)} actionLabel="Tillbaka till Hem" onAction={onBack} variant="compact" titleVariant="screen" />
 
-      <View style={styles.hero} testID="development-hero">
+      <View style={styles.hero} testID="development-hero" onLayout={(event) => setHeroWidth(event.nativeEvent.layout.width)}>
         <Image source={require('../../../assets/images/development-hero-puppy-black-tan-forest-wide.jpg')} style={styles.heroImage} resizeMode="cover"
           accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
+        {ageProgress !== null && age && age.stage !== 'VUXEN' && ageLabelVisible ? <MotionPressable
+          testID="development-age-pill" accessibilityRole="button"
+          accessibilityLabel={`Dölj åldersmarkeringen ${age.label}. Fas ${formatStage(age.stage)}.`}
+          accessibilityHint="Döljer åldersetiketten. Tryck sedan på markören för att visa den igen."
+          onLayout={(event) => setBubbleWidth(event.nativeEvent.layout.width)}
+          onPress={() => setAgeLabelVisible(false)}
+          style={[styles.ageBubbleTouch, { left: Math.max(0, Math.min(Math.max(0, heroWidth - bubbleWidth),
+            tokens.spacing.md + tokens.size.touchMin / 2 + Math.max(0, heroWidth - 2 * tokens.spacing.md - tokens.size.touchMin) * ageProgress - bubbleWidth / 2)) }]}>
+          <View style={styles.ageBubble}><Text style={styles.ageBubbleText}>{age.label}</Text></View>
+        </MotionPressable> : null}
       </View>
       <View style={styles.ageJourney} testID="development-age-journey">
-        {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeArc progress={ageProgress} currentAge={age.label} stage={age.stage} />
+        {ageProgress !== null && age && age.stage !== 'VUXEN' ? <AgeTimeline progress={ageProgress} currentAge={age.label} stage={age.stage} ageLabelVisible={ageLabelVisible} onShowAge={() => setAgeLabelVisible(true)} />
           : age?.stage === 'VUXEN' ? <View style={styles.matureAge}>
           <Text style={styles.matureAgeLabel}>KRONOLOGISK ÅLDER</Text>
           <Text style={styles.matureAgeValue}>{age.label}</Text>
@@ -123,62 +135,24 @@ export function DevelopmentScreen({ dogName, birthDate, today, guides, guidesSta
   </View>;
 }
 
-function AgeArc({ progress, currentAge, stage }: { progress: number; currentAge: string; stage: 'VALP' | 'UNGHUND' }) {
-  const [ageLabelVisible, setAgeLabelVisible] = useState(true);
-  const width = tokens.size.developmentAgeArcWidth;
-  const height = tokens.size.developmentAgeArcHeight;
-  const centerY = height - tokens.size.developmentAgeArcStroke / 2;
-  const radiusX = (width - tokens.size.developmentAgeArcStroke) / 2;
-  const radiusY = centerY - (tokens.size.developmentAgeArcStroke + 10) / 2;
-  const markerSize = tokens.size.developmentAgeArcStroke + 10;
-  const bubbleWidth = tokens.size.developmentAgeMarkerWidth;
-  const angle = (1 - progress) * Math.PI;
-  const markerX = width / 2 + radiusX * Math.cos(angle);
-  const markerY = centerY - radiusY * Math.sin(angle);
-  const startX = tokens.size.developmentAgeArcStroke / 2;
-  const endX = width - tokens.size.developmentAgeArcStroke / 2;
-  const arcPath = `M ${startX} ${centerY} A ${radiusX} ${radiusY} 0 0 1 ${endX} ${centerY}`;
-  const progressPath = progress > 0 ? `M ${startX} ${centerY} A ${radiusX} ${radiusY} 0 0 1 ${markerX} ${markerY}` : null;
-  const bubbleLeft = Math.max(0, Math.min(width - bubbleWidth, markerX - bubbleWidth / 2));
-  const bubbleTop = markerY < tokens.size.chipMd + tokens.spacing.xs ? markerY + tokens.spacing.md : markerY - tokens.size.chipMd - tokens.spacing.xs;
-  const bubbleHitWidth = bubbleWidth + 16;
-  const bubbleButtonLeft = Math.max(0, Math.min(width - bubbleHitWidth, bubbleLeft - 8));
-  const bubbleButtonTop = Math.max(0, Math.min(height - tokens.size.touchMin, bubbleTop - 6));
-  const markerHitSize = tokens.size.touchMin;
-  const markerButtonLeft = markerX - markerHitSize / 2;
-  const markerButtonTop = markerY - markerHitSize / 2;
+function AgeTimeline({ progress, currentAge, stage, ageLabelVisible, onShowAge }: { progress: number; currentAge: string; stage: 'VALP' | 'UNGHUND'; ageLabelVisible: boolean; onShowAge: () => void }) {
+  const [width, setWidth] = useState(0);
+  const hitSize = tokens.size.touchMin;
+  const markerSize = tokens.size.developmentAgeMarkerDiameter;
+  const trackWidth = Math.max(0, width - hitSize);
+  const markerX = hitSize / 2 + trackWidth * progress;
   const phaseName = formatStage(stage);
-  return <View style={styles.arcBlock}>
-    <View style={styles.arcAccessible}>
-      <View testID="development-age-arc-clip" style={styles.arcClip}>
-        <Svg testID="development-age-arc-svg" accessible={false} importantForAccessibility="no-hide-descendants" pointerEvents="none"
-          width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={styles.arcSvg}>
-          <Path testID="development-age-arc-track" d={arcPath} fill="none" stroke={tokens.colors.borderStrong}
-            strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" />
-          {progressPath ? <Path testID="development-age-progress" d={progressPath} fill="none" stroke={tokens.colors.home.greenStrong}
-            strokeWidth={tokens.size.developmentAgeArcStroke} strokeLinecap="round" /> : null}
-        </Svg>
-        {[0.25, 0.5, 0.75].map((tick) => {
-          const tickAngle = (1 - tick) * Math.PI;
-          const left = width / 2 + radiusX * Math.cos(tickAngle);
-          const top = centerY - radiusY * Math.sin(tickAngle);
-          return <View key={tick} style={[styles.arcTick, progress >= tick && styles.arcTickReached, { left: left - 3, top: top - 3 }]} />;
-        })}
-        {ageLabelVisible ? <View testID="development-age-marker" style={[styles.arcCurrent, { width: markerSize, height: markerSize, borderRadius: markerSize / 2,
-          left: markerX - markerSize / 2, top: markerY - markerSize / 2 }]} /> : null}
+  return <View style={styles.timelineBlock} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+    <View testID="development-age-timeline" style={styles.timelineTrackArea}>
+      <View testID="development-age-timeline-track" style={styles.timelineTrack}>
+        <View testID="development-age-progress" style={[styles.timelineProgress, { width: `${progress * 100}%` }]} />
       </View>
-      {ageLabelVisible ? <MotionPressable testID="development-age-pill" accessibilityRole="button"
-        accessibilityLabel={`Dölj åldersmarkeringen ${currentAge}. Fas ${phaseName}.`}
-        accessibilityHint="Döljer åldersetiketten. Tryck sedan på markören för att visa den igen."
-        onPress={() => setAgeLabelVisible(false)} style={[styles.ageBubbleTouch, { width: bubbleHitWidth, height: tokens.size.touchMin,
-          left: bubbleButtonLeft, top: bubbleButtonTop }]}>
-        <View style={styles.ageBubble}><Text style={styles.ageBubbleText}>{currentAge}</Text></View>
-      </MotionPressable> : <MotionPressable testID="development-age-marker-toggle" accessibilityRole="button"
-        accessibilityLabel={`Visa åldersmarkeringen ${currentAge}. Fas ${phaseName}.`}
-        onPress={() => setAgeLabelVisible(true)} style={[styles.markerToggle, { width: markerHitSize, height: markerHitSize,
-          borderRadius: markerHitSize / 2, left: markerButtonLeft, top: markerButtonTop }]}>
-        <View style={[styles.markerToggleDot, { width: markerSize, height: markerSize, borderRadius: markerSize / 2 }]} />
-      </MotionPressable>}
+      {ageLabelVisible ? <View testID="development-age-marker" accessible={false} style={[styles.timelineMarker, { left: markerX - markerSize / 2 }]} />
+        : <MotionPressable testID="development-age-marker-toggle" accessibilityRole="button"
+          accessibilityLabel={`Visa åldersmarkeringen ${currentAge}. Fas ${phaseName}.`}
+          onPress={onShowAge} style={[styles.markerToggle, { left: markerX - hitSize / 2 }]}>
+          <View style={styles.markerToggleDot} />
+        </MotionPressable>}
     </View>
     <View style={styles.phaseLegend}>
       <View style={styles.phaseLegendGroup}><View style={[styles.phaseLegendDot, styles.puppyLegendDot]} /><Text style={styles.phaseLegendText}>Valp</Text><Text style={styles.phaseRange}>0–6 mån</Text></View>
@@ -228,11 +202,11 @@ function formatStage(stage: 'VALP' | 'UNGHUND' | 'VUXEN'): string {
 }
 
 const styles = StyleSheet.create({
-  page: { gap: tokens.spacing.sm, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
+  page: { gap: tokens.spacing.md, paddingBottom: tokens.spacing.xl, marginHorizontal: -tokens.layout.pageInset, paddingHorizontal: tokens.layout.pageInset, backgroundColor: tokens.colors.home.canvas },
   heroSection: { alignSelf: 'stretch' },
   hero: { position: 'relative', alignSelf: 'stretch', aspectRatio: tokens.size.developmentHeroAspectRatio, borderRadius: tokens.radius.lg, overflow: 'hidden', backgroundColor: tokens.colors.home.progressTrack },
   heroImage: { width: '100%', height: '100%' },
-  ageJourney: { alignSelf: 'stretch', marginTop: tokens.spacing.sm, borderRadius: tokens.radius.lg, minHeight: tokens.size.developmentAgeJourneyHeight, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.xs, backgroundColor: tokens.colors.home.card },
+  ageJourney: { alignSelf: 'stretch', marginTop: tokens.spacing.md, borderRadius: tokens.radius.lg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: tokens.spacing.md, paddingVertical: tokens.spacing.sm, backgroundColor: tokens.colors.home.card },
   currentStage: { flexDirection: 'row', alignItems: 'flex-start', gap: tokens.spacing.md },
   currentStageIcon: { width: tokens.size.touchMin, height: tokens.size.touchMin, borderRadius: tokens.radius.md, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card },
   currentStageCopy: { flex: 1, gap: tokens.spacing.xs },
@@ -242,19 +216,17 @@ const styles = StyleSheet.create({
   phasePill: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.xs, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenFill },
   phaseDot: { width: 7, height: 7, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.onPrimary },
   phaseText: { ...tokens.typography.caption, lineHeight: 18, fontWeight: '700', color: tokens.colors.onPrimary },
-  arcBlock: { alignItems: 'center', gap: tokens.spacing.xs / 2 },
-  arcAccessible: { width: tokens.size.developmentAgeArcWidth, height: tokens.size.developmentAgeArcHeight + tokens.spacing.md + tokens.spacing.xs, overflow: 'visible' },
-  arcClip: { position: 'relative', width: tokens.size.developmentAgeArcWidth, height: tokens.size.developmentAgeArcHeight + tokens.spacing.md + tokens.spacing.xs, overflow: 'visible' },
-  arcSvg: { position: 'absolute', top: 0, left: 0 },
-  arcTick: { position: 'absolute', width: 6, height: 6, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.borderStrong },
-  arcTickReached: { backgroundColor: tokens.colors.home.greenStrong },
-  arcCurrent: { position: 'absolute', borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
-  ageBubbleTouch: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  ageBubble: { width: tokens.size.developmentAgeMarkerWidth, minHeight: tokens.size.chipMd, paddingHorizontal: tokens.spacing.sm, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.greenStrong },
-  markerToggle: { position: 'absolute', alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.card, borderWidth: 1, borderColor: tokens.colors.home.greenStrong },
-  markerToggleDot: { borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
+  timelineBlock: { alignSelf: 'stretch', gap: tokens.spacing.xs / 2 },
+  ageBubbleTouch: { position: 'absolute', bottom: tokens.spacing.sm, minHeight: tokens.size.touchMin, minWidth: tokens.size.developmentAgeMarkerWidth, maxWidth: '100%', alignItems: 'center', justifyContent: 'center' },
+  ageBubble: { alignSelf: 'stretch', minHeight: tokens.size.chipMd, paddingHorizontal: tokens.spacing.sm, paddingVertical: tokens.spacing.xs, borderRadius: tokens.radius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: tokens.colors.home.developmentAgeOverlay },
   ageBubbleText: { ...tokens.typography.smallCaption, fontWeight: '700', color: tokens.colors.onPrimary },
-  phaseLegend: { width: tokens.size.developmentAgeArcWidth, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: tokens.spacing.md, rowGap: tokens.spacing.xs },
+  timelineTrackArea: { height: tokens.size.touchMin, justifyContent: 'center' },
+  timelineTrack: { height: tokens.size.developmentAgeTrackThickness, marginHorizontal: tokens.size.touchMin / 2, borderRadius: tokens.radius.full, backgroundColor: tokens.colors.borderStrong, overflow: 'hidden' },
+  timelineProgress: { height: '100%', borderRadius: tokens.radius.full, backgroundColor: tokens.colors.home.greenStrong },
+  timelineMarker: { position: 'absolute', top: (tokens.size.touchMin - tokens.size.developmentAgeMarkerDiameter) / 2, width: tokens.size.developmentAgeMarkerDiameter, height: tokens.size.developmentAgeMarkerDiameter, borderRadius: tokens.radius.full, borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
+  markerToggle: { position: 'absolute', top: 0, width: tokens.size.touchMin, height: tokens.size.touchMin, alignItems: 'center', justifyContent: 'center' },
+  markerToggleDot: { width: tokens.size.developmentAgeMarkerDiameter, height: tokens.size.developmentAgeMarkerDiameter, borderRadius: tokens.radius.full, borderWidth: 2, borderColor: tokens.colors.home.card, backgroundColor: tokens.colors.home.greenStrong },
+  phaseLegend: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: tokens.spacing.md, rowGap: tokens.spacing.xs },
   phaseLegendGroup: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flexShrink: 1, gap: tokens.spacing.xs },
   phaseLegendDot: { width: 8, height: 8, borderRadius: tokens.radius.full },
   puppyLegendDot: { backgroundColor: tokens.colors.category.walk.fg },

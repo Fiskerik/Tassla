@@ -1,7 +1,7 @@
 # CHECKLIST-UI-LUNA-DETAIL — fryst checkpoint
 
-Datum: 2026-10-13  
-Basrevision: `1f2419e9d9821c6b9af1a4d6daa6cc62bc853203`  
+Datum: 2026-10-13<br>
+Basrevision: `1f2419e9d9821c6b9af1a4d6daa6cc62bc853203`<br>
 Köstatus: `done` efter independent QA PASS och Reviewer PASS.
 
 ## Fryst diff

@@ -160,3 +160,18 @@ test('program completion requires every distinct published step for the same jou
   assert.equal(paused.canStartOrResume, true);
   assert.equal(view([a]).allMilestonesConfirmed, false, 'undo removes the derived completion status');
 });
+
+test('next exercise preview mirrors strict server position ordering and rejects ambiguous catalogs', () => {
+  const steps=[{id:'a',position:1,title:'Först'},{id:'b',position:4,title:'Nästa'},{id:'c',position:9,title:'Sist'}];
+  assert.equal(model.nextTrainingStepTitle([steps[2],steps[0],steps[1]],'a'),'Nästa');
+  assert.equal(model.nextTrainingStepTitle(steps,'b'),'Sist');
+  assert.equal(model.nextTrainingStepTitle(steps,'c'),null);
+  assert.equal(model.nextTrainingStepTitle(steps,'missing'),null);
+  for(const invalid of [
+    [steps[0],{...steps[1],id:'a'}], [steps[0],{...steps[1],id:'A'}],
+    [steps[0],{...steps[1],position:1}], [steps[0],{...steps[1],position:0}],
+    [steps[0],{...steps[1],position:1.5}], [steps[0],{...steps[1],title:''}],
+    [steps[0],{...steps[1],title:' FÖRST '}], [steps[0],{...steps[1],id:''}],
+    [steps[0],null],
+  ]) assert.equal(model.nextTrainingStepTitle(invalid,'a'),null);
+});

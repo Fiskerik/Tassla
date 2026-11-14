@@ -472,64 +472,72 @@ def verify_development_states(browser) -> None:
 
 
 def verify_development_progress(browser) -> None:
-    progress_lengths: dict[str, float] = {}
-    for width in (375, 430):
-        for scenario in ('early', 'normal', 'midpoint'):
-            page = browser.new_page(viewport={'width': width, 'height': 844})
+    positions: dict[str, float] = {}
+    for width in (320, 375, 430):
+        for scenario in ('birth', 'early', 'normal', 'six-months', 'midpoint', 'near-adult'):
+            page = browser.new_page(viewport={'width': width, 'height': 667 if width == 320 else 844})
             page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
+            track = page.get_by_test_id('development-age-timeline-track')
             progress = page.get_by_test_id('development-age-progress')
-            track = page.get_by_test_id('development-age-arc-track')
-            arc_clip = page.get_by_test_id('development-age-arc-clip')
             marker = page.get_by_test_id('development-age-marker')
-            expect(progress).to_be_visible()
+            pill = page.get_by_test_id('development-age-pill')
             expect(track).to_be_visible()
-            progress_attributes = progress.evaluate("element => ({ stroke: element.getAttribute('stroke'), linecap: element.getAttribute('stroke-linecap'), d: element.getAttribute('d'), length: element.getTotalLength() })")
-            track_attributes = track.evaluate("element => ({ stroke: element.getAttribute('stroke'), d: element.getAttribute('d') })")
-            endpoint = progress.evaluate("element => { const values = element.getAttribute('d').match(/[-+]?(?:\\d*\\.)?\\d+(?:e[-+]?\\d+)?/gi).map(Number); return values.slice(-2); }")
-            clip_box = arc_clip.bounding_box()
-            marker_box = marker.bounding_box()
-            marker_center = [marker_box['x'] + marker_box['width'] / 2 - clip_box['x'], marker_box['y'] + marker_box['height'] / 2 - clip_box['y']] if clip_box and marker_box else None
-            marker_error = max(abs(endpoint[index] - marker_center[index]) for index in (0, 1)) if marker_center else None
-            record(f'{scenario} age renders a green progress arc over a neutral track at {width}px',
-                   progress_attributes['stroke'] in ('#217448', 'rgb(33, 116, 72)')
-                   and track_attributes['stroke'] in ('#536257', 'rgb(83, 98, 87)')
-                   and progress_attributes['d'] != track_attributes['d']
-                   and progress_attributes['linecap'] == 'round'
-                   and marker_error is not None and marker_error < 1.5,
-                   {'progress': progress_attributes, 'track': track_attributes, 'progress_endpoint': endpoint,
-                    'marker_center_in_arc': marker_center, 'endpoint_error_pt': marker_error})
-            if width == 375:
-                progress_lengths[scenario] = float(progress_attributes['length'])
-            page.screenshot(path=str(OUT / f'development-progress-{scenario}-{width}.png'), full_page=True)
-            if scenario == 'normal':
-                age_label = page.get_by_test_id('development-age-pill')
-                age_label_box = age_label.bounding_box()
-                record(f'Age label remains a 44pt control at {width}px',
-                       age_label_box is not None and age_label_box['width'] >= 44 and age_label_box['height'] >= 44,
-                       {'box': age_label_box})
-                age_label.click()
-                expect(page.get_by_test_id('development-age-progress')).to_be_visible()
-                marker = page.get_by_test_id('development-age-marker-toggle')
-                marker.click()
-                expect(page.get_by_test_id('development-age-pill')).to_be_visible()
-                record(f'Age progress remains visible when the age label is hidden and restored at {width}px', True)
+            expect(marker).to_be_visible()
+            track_box, progress_box, marker_box, pill_box = (element.bounding_box() for element in (track, progress, marker, pill))
+            assert track_box and progress_box and marker_box and pill_box
+            hero_box = page.get_by_test_id('development-hero').bounding_box()
+            assert hero_box
+            record(f'{scenario} age label overlays the image at {width}px',
+                   pill_box['x'] >= hero_box['x'] and pill_box['x'] + pill_box['width'] <= hero_box['x'] + hero_box['width'] + 1
+                   and pill_box['y'] >= hero_box['y'] and pill_box['y'] + pill_box['height'] <= hero_box['y'] + hero_box['height'] + 1,
+                   {'hero': hero_box, 'pill': pill_box})
+            position = (marker_box['x'] + marker_box['width'] / 2 - track_box['x']) / track_box['width']
+            end = progress_box['x'] + progress_box['width']
+            record(f'{scenario} linear timeline and hit area fit at {width}px',
+                   abs(end - (marker_box['x'] + marker_box['width'] / 2)) < 1.5
+                   and -0.01 <= position <= 1.01 and pill_box['x'] >= 0
+                   and pill_box['x'] + pill_box['width'] <= width and pill_box['height'] >= 44 and pill_box['width'] >= 44
+                   and page.evaluate('document.documentElement.scrollWidth <= innerWidth'),
+                   {'position': position, 'track': track_box, 'marker': marker_box, 'pill': pill_box})
+            if width == 375: positions[scenario] = position
+            if scenario in ('birth', 'normal', 'near-adult'):
+                page.screenshot(path=str(OUT / f'development-linear-{scenario}-{width}.png'), full_page=True)
+                pill.click()
+                toggle = page.get_by_test_id('development-age-marker-toggle')
+                expect(toggle).to_be_visible()
+                box = toggle.bounding_box()
+                record(f'{scenario} hidden marker remains a 44pt control at {width}px',
+                       bool(box and box['width'] >= 44 and box['height'] >= 44 and box['x'] >= 0 and box['x'] + box['width'] <= width), {'box': box})
+                toggle.click()
+                expect(pill).to_be_visible()
             page.close()
+    record('Linear marker increases monotonically from birth to nearly 24 months',
+           all(positions.get(a, -1) < positions.get(b, -1) for a, b in zip(
+               ('birth', 'early', 'normal', 'six-months', 'midpoint'),
+               ('early', 'normal', 'six-months', 'midpoint', 'near-adult'))), {'positions': positions})
 
-    record('Age arc length increases monotonically from early puppy to normal puppy to midpoint',
-           progress_lengths.get('early', 0) < progress_lengths.get('normal', 0) < progress_lengths.get('midpoint', 0),
-           {'lengths': progress_lengths})
+    for scenario in ('birth', 'near-adult'):
+        page = browser.new_page(viewport={'width': 375, 'height': 667})
+        page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
+        page.evaluate("""() => document.querySelectorAll('[dir=auto]').forEach(e => {
+          const s=getComputedStyle(e); e.style.fontSize=parseFloat(s.fontSize)*1.4+'px';
+          if(s.lineHeight!=='normal') e.style.lineHeight=parseFloat(s.lineHeight)*1.4+'px'; })""")
+        pill = page.get_by_test_id('development-age-pill')
+        box = pill.bounding_box()
+        record(f'{scenario} large-text pill fits at endpoint', bool(box and box['x'] >= 0 and box['x'] + box['width'] <= 375
+               and box['height'] >= 44 and page.evaluate('document.documentElement.scrollWidth <= innerWidth')), {'box': box})
+        page.screenshot(path=str(OUT / f'development-linear-{scenario}-text140.png'), full_page=True)
+        page.close()
 
     for width in (375, 430):
-        for scenario in ('adult', 'missing', 'invalid', 'future'):
+        for scenario in ('adult', 'adult-boundary', 'missing', 'invalid', 'future'):
             page = browser.new_page(viewport={'width': width, 'height': 844})
             page.goto(development_url(age_scenario=scenario), wait_until='networkidle')
-            expect(page.get_by_test_id('development-age-progress')).to_have_count(0)
-            expect(page.get_by_test_id('development-age-arc-track')).to_have_count(0)
-            if scenario == 'adult':
+            expect(page.get_by_test_id('development-age-timeline-track')).to_have_count(0)
+            if scenario in ('adult', 'adult-boundary'):
                 expect(page.get_by_text('Vuxen', exact=True)).to_be_visible()
-            page.screenshot(path=str(OUT / f'development-age-{scenario}-{width}.png'), full_page=True)
             page.close()
-            record(f'{scenario} age state does not show an inapplicable age arc at {width}px', True)
+            record(f'{scenario} age state does not show a puppy timeline at {width}px', True)
 
     for width in (375, 430):
         page = browser.new_page(viewport={'width': width, 'height': 844})

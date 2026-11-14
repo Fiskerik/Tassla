@@ -34,11 +34,12 @@ test('quick log has truthful loading, empty, failure, mutation and confirmed und
     assert.ok(screen.includes(copy), `missing state copy: ${copy}`);
   }
   assert.match(screen, /mutation\?\.status === 'unsure'/);
+  assert.doesNotMatch(screen, /Kontrollera logghändelsens status|Avsluta kontroll|endInsertCheckId|Sparstatus behöver kontrolleras/);
   assert.match(screen, /mutation\?\.status === 'saved'/);
   assert.match(screen, /onUndo=\{mutation\?\.status === 'saved' && mutation\.kind === 'add'[\s\S]*?onUndo\?\.\(mutation\.id\)/);
   assert.match(workspace, /setQuickLogMutation\(toQuickLogMutationView\(mutation, 'saved'\)\)/);
   assert.match(workspace, /pendingLogMutation\.current = mutation/);
-  assert.match(workspace, /const retryCheck = await checkInsertRetryOperation\(mutation\.operation, async \(id\) =>/);
+  assert.match(workspace, /const result = await checkInsertRetryOperation\(mutation\.operation, async \(id\) =>/);
 });
 
 test('delete snapshot replaces its source row and exits only after a token-matched saved result', () => {
@@ -94,9 +95,10 @@ test('legacy row editing and deletion remain reachable from workspace and previe
   assert.match(screen, /tryck för att ändra/);
 });
 
-test('pending mutations show once on their row, success toast expires, and partial paging offers retry', () => {
+test('initial inserts show once while pending, success toast expires, and partial paging offers retry', () => {
   assert.match(screen, /kind: 'add' \| 'update' \| 'delete' \| 'undo'/);
-  assert.match(screen, /mutation\?\.kind === 'add' && mutation\.status === 'pending'/);
+  assert.match(screen, /unresolvedInsertForDay\(mutation, selectedDate/);
+  assert.match(screen, /const status = 'Sparar…'/);
   assert.match(screen, /rowPending = mutation\?\.id === event\.id && mutation\.status === 'pending'/);
   assert.match(screen, /rowPending \? ', sparar' : ''/);
   assert.doesNotMatch(screen, /status === 'pending' && <Toast/);

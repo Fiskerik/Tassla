@@ -7,6 +7,7 @@ import { AppBar, BottomSheet, Button, Card, Dialog, Progress, SectionHeader, Tab
 import type { HistoricalTrainingStepDetail, PausedTrainingProgress, PublishedTrainingProgram } from '../../data/workspace-data';
 import {
   emptyTrainingProgression,
+  nextTrainingStepTitle,
   progressionForProgram,
   trainingProgressionPresentation,
   type PendingTrainingProgression,
@@ -397,7 +398,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
         <Text style={styles.body}>Träningsresan kunde inte hämtas just nu. Aktivitetsmarkeringarna finns kvar.</Text>
         <Button variant="tertiary" label="Försök igen" accessibilityLabel="Hämta träningsresan igen" onPress={onRetry} />
       </View> : waitingForRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Läs in träningsresan igen.</Text><Button variant="tertiary" label="Hämta igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : pendingOperation?.status === 'unknown' ? <View style={styles.emptyCard}>
-        <Text style={styles.body}>{progressionMessage?.programId === program.id ? progressionMessage.message : 'Den senaste ändringen behöver kontrolleras innan ni fortsätter.'}</Text>
+        <Text style={styles.body}>{progressionMessage?.programId === program.id ? progressionMessage.message : 'Vi kunde inte se om ändringen sparades. Kontrollera den igen.'}</Text>
         <Button variant="secondary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma träningsändring igen" loading={busy}
           disabled={Boolean(busyStepKey)} onPress={() => { void retryProgression(program.id); }} />
       </View> : pendingOperation?.status === 'pending' ? <View style={styles.emptyCard}>
@@ -452,11 +453,16 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
     const lastPassWentWell = latestSessionForStep?.feedback === 'worked_as_planned';
     const currentMilestone = currentProgression.milestones.find((item) => item.step_id === stepId);
     const milestone = Boolean(currentMilestone);
+    const nextTitle = view.journey.state === 'active' && view.canGoNext && view.currentStepConfirmed
+      && !pendingOperation && !busyStepKey && !waitingForRefresh && Boolean(onApplyProgression)
+      && progression.journeys.filter((journey) => journey.program_version_id === program.id).length === 1
+      && currentProgression.milestones.filter((item) => item.step_id === stepId).length === 1
+      ? nextTrainingStepTitle(program.steps, stepId) : null;
     return <View style={styles.journeySection} testID={`training-journey-step-${program.id}-${stepId}`}>
       {progressionMessage?.programId === program.id && pendingOperation?.status !== 'unknown' && !feedbackPickerOpen
         ? <Text accessibilityLiveRegion="polite" style={styles.progressionMessage}>{progressionMessage.message}</Text> : null}
       {waitingForRefresh ? <View style={styles.emptyCard}><Text style={styles.body}>Ändringen är sparad. Läs in träningsresan igen.</Text><Button variant="tertiary" label="Hämta igen" accessibilityLabel="Hämta träningsresan igen" onPress={() => { setAwaitingProgressionRefresh(null); onRetry(); }} /></View> : pendingOperation?.status === 'unknown' ? <View style={styles.emptyCard}>
-        <Text style={styles.body}>{progressionMessage?.programId === program.id ? progressionMessage.message : 'Den senaste ändringen behöver kontrolleras innan ni fortsätter.'}</Text>
+        <Text style={styles.body}>{progressionMessage?.programId === program.id ? progressionMessage.message : 'Vi kunde inte se om ändringen sparades. Kontrollera den igen.'}</Text>
         <Button variant="secondary" label="Kontrollera samma ändring igen" accessibilityLabel="Kontrollera samma träningsändring igen" loading={busy}
           disabled={Boolean(busyStepKey)} onPress={() => { void retryProgression(program.id); }} />
       </View> : view.canLogSession ? <>
@@ -510,6 +516,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
           </View>
         </View> : null}
         {!feedbackPickerOpen ? <View style={styles.journeyActions}>
+          {nextTitle ? <Text testID="training-next-preview" style={styles.noteCompact}>Nästa övning: {nextTitle}</Text> : null}
           {view.canGoNext ? <MotionPressable accessibilityRole="button" accessibilityLabel="Fortsätt till nästa träningssteg"
             accessibilityState={{ disabled: Boolean(busyStepKey) || !onApplyProgression, busy }}
             disabled={Boolean(busyStepKey) || !onApplyProgression}
@@ -759,7 +766,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
             accessibilityLabel={continuationJourney
               ? continuationUnresolved ? `Öppna träningsresan ${continuationProgram.title}, ${continuationSaving ? 'sparar ändringen' : 'ändringen behöver kontrolleras'}`
                 : continuationProgressUnavailable ? `Öppna träningsresan ${continuationProgram.title}, framstegen kunde inte visas`
-                  : `${continuationJourney.state === 'paused' ? 'Öppna' : 'Fortsätt'} träningsresan ${continuationProgram.title}, aktivt steg ${continuationStep.title}, ${journeyStepProgressLabel(continuationView?.confirmedMilestones ?? 0, continuationProgram.steps.length)}, ${journeySessionCountLabel(continuationView?.loggedSessions ?? 0)}`
+                  : `${continuationJourney.state === 'paused' ? 'Öppna' : 'Fortsätt'} träningsresan ${continuationProgram.title}, ${continuationJourney.state === 'paused' ? 'pausad, senast valda övning' : 'aktivt steg'} ${continuationStep.title}, ${journeyStepProgressLabel(continuationView?.confirmedMilestones ?? 0, continuationProgram.steps.length)}, ${journeySessionCountLabel(continuationView?.loggedSessions ?? 0)}`
               : `Fortsätt ${continuationProgram.title}, nästa övning ${continuationStep.title}, ${exerciseProgressLabel(continuationProgram)}`}>
             <View style={styles.continuationCard}>
               <Image source={require('../../../assets/images/training-next-step-puppy-corgi-home.jpg')} style={styles.nextImage} resizeMode="cover" accessible={false} accessibilityElementsHidden importantForAccessibility="no" />
@@ -767,6 +774,7 @@ export function PublishedTrainingScreen({ ageWeeks, programs, paused, busyStepKe
                 <Text style={styles.programTitle}>{continuationProgram.title}</Text>
                 <Text style={styles.recommendationTitle}>{continuationStep.title}</Text>
                 {continuationUnresolved ? <Text style={styles.stepMeta}>{continuationSaving ? 'Sparar ändringen…' : 'Ändringen behöver kontrolleras'}</Text> : continuationProgressUnavailable ? <Text style={styles.stepMeta}>Framstegen kunde inte visas.</Text> : continuationView && continuationJourney ? <>
+                  {continuationJourney.state === 'paused' ? <Text style={styles.stepMeta}>Pausad</Text> : null}
                   <View aria-hidden accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                     <Progress key={`${continuationProgram.id}:${continuationJourney.id}`} value={continuationView.confirmedMilestones / continuationProgram.steps.length * 100}
                       label={journeyStepProgressLabel(continuationView.confirmedMilestones, continuationProgram.steps.length)} />

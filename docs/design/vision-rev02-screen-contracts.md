@@ -20,12 +20,14 @@ Kodankare: `src/features/home/HomeScreen.tsx`, `ProductWorkspace.tsx`, `daily-ac
 
 ## Panel 2 — Utveckling
 
+Ägarbeslut 2026-11-12 ersätter rev02-bildens halvcirkel med en rak horisontell tidslinje; övriga designmål kvarstår.
+
 - **Uppgift/ingång:** förstå valpens aktuella ålder och kommande faser; öppnas från Hemmets åldersområde när destinationen finns. Hem behåller vald flik.
-- **Komposition:** tillbaka + `{namn}s utveckling` → stort mjukt rundat porträtt → överlagrad åldersbåge med veckokapsel och ändpunkter Valp/Unghund → glödlampa och aktuell fas → kortet `Nästa milstolpar` med grupperade rader.
-- **Form/färg:** porträtt omkring 60–70 % av innehållsbredden i höjd; åldersbåge cirka 64–80 pt hög över bildens nederdel, aktuell grön markör, neutrala övriga. Gul fasikon. Milstolpssymboler på blå/gul/grön/varm orange yta efter ämne, inte identiskt gröna. Fotoassetens varma päls/gröna miljö bidrar till helheten.
-- **Objekt/handling:** ålder från befintligt födelsedatum. Fas/milstolpar från publicerade, sakgranskade och versionerade källor. Rad öppnar verklig guide; åldersbåge är kronologisk ålder, inte uppnådd färdighet. Definiera bågens start/slutålder i implementationplanen, inga godtyckliga progressprocent.
+- **Komposition:** tillbaka + `{namn}s utveckling` → stort mjukt rundat porträtt → ålderskapsel med cirka 80 % opak bakgrund över bilden → rak horisontell ålderstidslinje och faslegend Valp/Unghund → glödlampa och aktuell fas → kortet `Nästa milstolpar` med grupperade rader.
+- **Form/färg:** porträtt omkring 60–70 % av innehållsbredden i höjd; luft mellan de större blocken; separat rak ålderstidslinje under bilden med tunn neutral bana, grön förfluten del och rund grön åldersmarkör. Gul fasikon. Milstolpssymboler på blå/gul/grön/varm orange yta efter ämne, inte identiskt gröna. Fotoassetens varma päls/gröna miljö bidrar till helheten.
+- **Objekt/handling:** ålder från befintligt födelsedatum. Fas/milstolpar från publicerade, sakgranskade och versionerade källor. Rad öppnar verklig guide; ålderstidslinjen är kronologisk ålder, inte uppnådd färdighet. Banan sträcker sig från födelse till 24 kalendermånader, inga godtyckliga progressprocent.
 - **Lucka/tillstånd:** dedikerad vy och milstolpsmodell är byggberoenden. Visa ärligt saknat innehåll/ålder, inte bildens fasta veckor eller medicinska normalitetsbedömningar. Exempelfoto för review och produktionsfallback granskas separat.
-- **Acceptans:** jämför porträttets dominans, bågens placering, aktuell fas och grupperade milstolpar vid 375/430. Hela sidan får scrolla. Ingen falsk klickaffordans på Hem innan utvecklingsdestinationen är byggd.
+- **Acceptans:** jämför porträttets dominans, tidslinjens placering, aktuell fas och grupperade milstolpar vid 375/430. Hela sidan får scrolla. Ingen falsk klickaffordans på Hem innan utvecklingsdestinationen är byggd.
 
 ## Panel 3 — Dagens framsteg
 

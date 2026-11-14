@@ -1,0 +1,20 @@
+{
+  "results": [
+    "active: confirmed milestones and sessions shown separately",
+    "confirmed: confirmed milestones and sessions shown separately",
+    "complete: confirmed milestones and sessions shown separately",
+    "paused: confirmed milestones and sessions shown separately",
+    "journey switch: new bar begins at its own verified value",
+    "pending: no stale progress",
+    "unknown: no stale progress",
+    "invalid identity: no misleading progress",
+    "invalid identity: no misleading progress",
+    "read error: no continuation progress",
+    "legacy: activity markings remain distinct",
+    "320x667: card fits and remains tappable",
+    "375x667 text140: card fits and remains tappable",
+    "430x844: card fits and remains tappable"
+  ],
+  "errors": [],
+  "limits": "Synthetic RN Web does not map the native accessibilityValue object to aria-valuenow; labels and visual fill are checked. CSS text scaling is not native Dynamic Type; live data not tested."
+}

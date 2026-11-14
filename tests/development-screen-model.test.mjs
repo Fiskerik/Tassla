@@ -37,3 +37,19 @@ test('development groups voluntary published phase suggestions with separate sou
   assert.match(developmentScreen, /<ContentSources sources=\{phase\.sources/);
   assert.doesNotMatch(developmentScreen, /Nästa milstolpar|generalDevelopmentMilestones/);
 });
+
+test('linear timeline position follows calendar days up to the clamped 24 month endpoint', async () => {
+  const ts = await import('typescript');
+  const helpers = developmentScreen.match(/function progressToAdultStage[\s\S]*?(?=\nfunction formatStage)/)?.[0];
+  assert.ok(helpers);
+  const js = ts.default.transpileModule(helpers, { compilerOptions: { target: ts.default.ScriptTarget.ES2022 } }).outputText;
+  const progress = new Function(`${js}\nreturn progressToAdultStage;`)();
+  assert.equal(progress('2024-02-29', '2024-02-29'), 0);
+  assert.ok(progress('2024-02-29', '2024-08-29') > 0);
+  assert.ok(progress('2024-02-29', '2026-02-27') > 0.99);
+  assert.equal(progress('2024-02-29', '2026-02-28'), null);
+  assert.equal(progress('2024-01-31', '2026-01-31'), null);
+  assert.equal(progress(null, '2026-01-01'), null);
+  assert.equal(progress('2026-02-30', '2026-03-01'), null);
+  assert.equal(progress('2026-03-02', '2026-03-01'), null);
+});

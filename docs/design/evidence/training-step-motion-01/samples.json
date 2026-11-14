@@ -1,228 +1,234 @@
 [
   {
-    "time": 147.60000000000582,
+    "time": 122.5,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "0.85"
   },
   {
-    "time": 156,
+    "time": 160.20000000298023,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.859181"
+    "opacity": "0.86798"
   },
   {
-    "time": 174.5,
+    "time": 165.3999999910593,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.873079"
+    "opacity": "0.9232"
   },
   {
-    "time": 189.39999999999418,
+    "time": 178.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.902356"
+    "opacity": "0.929045"
   },
   {
-    "time": 207.10000000000582,
+    "time": 190.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.921994"
+    "opacity": "0.942838"
   },
   {
-    "time": 224.70000000001164,
+    "time": 204.70000000298023,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.941847"
+    "opacity": "0.954717"
   },
   {
-    "time": 239.60000000000582,
+    "time": 251,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.957201"
+    "opacity": "0.964824"
   },
   {
-    "time": 257.30000000001746,
+    "time": 266.09999999403954,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.96827"
+    "opacity": "0.98882"
   },
   {
-    "time": 273.3999999999942,
+    "time": 273.5,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.978295"
+    "opacity": "0.993098"
   },
   {
-    "time": 289.70000000001164,
+    "time": 288.59999999403954,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.985948"
+    "opacity": "0.99465"
   },
   {
-    "time": 306.8999999999942,
+    "time": 305.20000000298023,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.991272"
+    "opacity": "0.997156"
   },
   {
-    "time": 323.20000000001164,
+    "time": 321.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.995237"
+    "opacity": "0.998873"
   },
   {
-    "time": 340.70000000001164,
+    "time": 338.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.997656"
+    "opacity": "0.999707"
   },
   {
-    "time": 356.6000000000058,
+    "time": 355.59999999403954,
     "step": "Steg 2/3",
     "transform": "none",
-    "opacity": "0.999196"
+    "opacity": "0.999976"
   },
   {
-    "time": 373.20000000001164,
-    "step": "Steg 2/3",
-    "transform": "none",
-    "opacity": "0.999809"
-  },
-  {
-    "time": 389.5,
-    "step": "Steg 2/3",
-    "transform": "none",
-    "opacity": "0.999989"
-  },
-  {
-    "time": 406.1000000000058,
+    "time": 372.20000000298023,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 422.6000000000058,
+    "time": 390.20000000298023,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 439.6000000000058,
+    "time": 405.5,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 455.8999999999942,
+    "time": 422,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 472.3999999999942,
+    "time": 437.59999999403954,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 489.30000000001746,
+    "time": 454.29999999701977,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 505.80000000001746,
+    "time": 470.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 522.7000000000116,
+    "time": 487.70000000298023,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 539.3999999999942,
+    "time": 504.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 555.8999999999942,
+    "time": 520.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 572.7000000000116,
+    "time": 537.5999999940395,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 589.5,
+    "time": 554.7999999970198,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 606.1000000000058,
+    "time": 570.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 622.7000000000116,
+    "time": 587.5,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 639.3000000000175,
+    "time": 610.7000000029802,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 656.3000000000175,
+    "time": 620.7999999970198,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 672.6000000000058,
+    "time": 637.7000000029802,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 689.3999999999942,
+    "time": 654.2000000029802,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 705.8999999999942,
+    "time": 670.7999999970198,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 723,
+    "time": 687.5999999940395,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 739.3000000000175,
+    "time": 704.2000000029802,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
   },
   {
-    "time": 755.8000000000175,
+    "time": 721,
+    "step": "Steg 2/3",
+    "transform": "none",
+    "opacity": "1"
+  },
+  {
+    "time": 737.5999999940395,
+    "step": "Steg 2/3",
+    "transform": "none",
+    "opacity": "1"
+  },
+  {
+    "time": 754.0999999940395,
+    "step": "Steg 2/3",
+    "transform": "none",
+    "opacity": "1"
+  },
+  {
+    "time": 770.8999999910593,
     "step": "Steg 2/3",
     "transform": "none",
     "opacity": "1"
